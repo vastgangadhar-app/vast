@@ -1,0 +1,624 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.smartpaymoney"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="24"
+8-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml
+9        android:targetSdkVersion="33" />
+9-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml
+10
+11    <uses-feature
+11-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:6:3-8:31
+12        android:name="android.hardware.usb.host"
+12-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:7:5-45
+13        android:required="true" />
+13-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:8:5-28
+14
+15    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+15-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:9:3-92
+15-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:9:20-89
+16    <uses-permission android:name="android.permission.INTERNET" />
+16-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:10:3-65
+16-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:10:20-62
+17    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+17-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:11:3-79
+17-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:11:20-76
+18    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+18-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:12:3-77
+18-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:12:20-74
+19    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
+19-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:13:3-78
+19-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:13:20-75
+20    <uses-permission android:name="android.permission.READ_CONTACTS" />
+20-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:14:3-70
+20-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:14:20-67
+21    <uses-permission android:name="android.permission.CAMERA" />
+21-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:15:3-63
+21-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:15:20-60
+22    <uses-permission android:name="com.mantra.mfs110.rdservice.permission.signature" />
+22-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:16:3-86
+22-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:16:20-83
+23    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+23-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:17:3-71
+23-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:17:20-68
+24    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+24-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:18:3-77
+24-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:18:20-74
+25    <uses-permission android:name="android.permission.WRITE_EMBEDDED_SUBSCRIPTIONS" />
+25-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:19:3-85
+25-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:19:20-82
+26    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+26-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:20:3-73
+26-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:20:20-70
+27    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
+27-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:21:3-75
+27-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:21:20-72
+28    <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
+28-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:22:3-84
+28-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:22:20-81
+29
+30    <uses-feature
+30-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:23:3-25:32
+31        android:name="android.hardware.telephony"
+31-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:24:5-46
+32        android:required="false" />
+32-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:25:5-29
+33
+34    <uses-permission android:name="android.permission.READ_SMS" />
+34-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:26:3-65
+34-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:26:20-62
+35    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+35-->[in.payu:payu-checkout-pro-ui:1.8.2] C:\Users\user\.gradle\caches\transforms-3\697ce44fc4a1b6a44ff34211fd00be44\transformed\jetified-payu-checkout-pro-ui-1.8.2\AndroidManifest.xml:13:5-76
+35-->[in.payu:payu-checkout-pro-ui:1.8.2] C:\Users\user\.gradle\caches\transforms-3\697ce44fc4a1b6a44ff34211fd00be44\transformed\jetified-payu-checkout-pro-ui-1.8.2\AndroidManifest.xml:13:22-73
+36    <uses-permission android:name="android.permission.BLUETOOTH" />
+36-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:12:5-14:48
+36-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:13:9-52
+37    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" /> <!-- Android12 的蓝牙权限 如果您的应用与已配对的蓝牙设备通信或者获取当前手机蓝牙是否打开 -->
+37-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:15:5-17:48
+37-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:16:9-58
+38    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" /> <!-- Android12 的蓝牙权限 如果您的应用查找蓝牙设备（如蓝牙低功耗 (BLE) 外围设备） -->
+38-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:19:5-21:48
+38-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:20:9-60
+39    <uses-permission
+39-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:23:5-26:31
+40        android:name="android.permission.BLUETOOTH_SCAN"
+40-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:24:9-57
+41        android:usesPermissionFlags="neverForLocation" /> <!-- Android12 的蓝牙权限 如果您的应用使当前设备可被其他蓝牙设备检测到 -->
+41-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:25:9-55
+42    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+42-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:28:5-30:48
+42-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:29:9-62
+43
+44    <uses-feature
+44-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:32:5-34:35
+45        android:name="android.hardware.bluetooth"
+45-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:33:9-50
+46        android:required="true" />
+46-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:34:9-32
+47
+48    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+48-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:40:5-80
+48-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:40:22-77
+49    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+49-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:41:5-81
+49-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:41:22-78
+50    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+50-->[:react-native-biometrics] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-biometrics\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:9:5-72
+50-->[:react-native-biometrics] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-biometrics\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:9:22-69
+51    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+51-->[:react-native-biometrics] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-biometrics\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:10:5-74
+51-->[:react-native-biometrics] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-biometrics\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:10:22-71
+52
+53    <uses-feature
+53-->[:react-native-camera] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-camera\android\build\intermediates\merged_manifest\mlkitRelease\AndroidManifest.xml:11:5-13:36
+54        android:name="android.hardware.camera"
+54-->[:react-native-camera] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-camera\android\build\intermediates\merged_manifest\mlkitRelease\AndroidManifest.xml:12:9-47
+55        android:required="false" />
+55-->[:react-native-camera] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-camera\android\build\intermediates\merged_manifest\mlkitRelease\AndroidManifest.xml:13:9-33
+56    <uses-feature
+56-->[:react-native-camera] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-camera\android\build\intermediates\merged_manifest\mlkitRelease\AndroidManifest.xml:14:5-16:36
+57        android:name="android.hardware.camera.autofocus"
+57-->[:react-native-camera] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-camera\android\build\intermediates\merged_manifest\mlkitRelease\AndroidManifest.xml:15:9-57
+58        android:required="false" />
+58-->[:react-native-camera] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-camera\android\build\intermediates\merged_manifest\mlkitRelease\AndroidManifest.xml:16:9-33
+59
+60    <queries>
+60-->[in.payu:upisdk:1.7.2] C:\Users\user\.gradle\caches\transforms-3\344d0b82c06945a37d5f670417d45373\transformed\jetified-upisdk-1.7.2\AndroidManifest.xml:14:5-24:15
+61        <intent>
+61-->[in.payu:upisdk:1.7.2] C:\Users\user\.gradle\caches\transforms-3\344d0b82c06945a37d5f670417d45373\transformed\jetified-upisdk-1.7.2\AndroidManifest.xml:15:9-23:18
+62            <action android:name="android.intent.action.VIEW" />
+62-->[in.payu:upisdk:1.7.2] C:\Users\user\.gradle\caches\transforms-3\344d0b82c06945a37d5f670417d45373\transformed\jetified-upisdk-1.7.2\AndroidManifest.xml:16:13-65
+62-->[in.payu:upisdk:1.7.2] C:\Users\user\.gradle\caches\transforms-3\344d0b82c06945a37d5f670417d45373\transformed\jetified-upisdk-1.7.2\AndroidManifest.xml:16:21-62
+63
+64            <category android:name="android.intent.category.BROWSABLE" />
+64-->[in.payu:upisdk:1.7.2] C:\Users\user\.gradle\caches\transforms-3\344d0b82c06945a37d5f670417d45373\transformed\jetified-upisdk-1.7.2\AndroidManifest.xml:18:13-74
+64-->[in.payu:upisdk:1.7.2] C:\Users\user\.gradle\caches\transforms-3\344d0b82c06945a37d5f670417d45373\transformed\jetified-upisdk-1.7.2\AndroidManifest.xml:18:23-71
+65
+66            <data
+66-->[in.payu:upisdk:1.7.2] C:\Users\user\.gradle\caches\transforms-3\344d0b82c06945a37d5f670417d45373\transformed\jetified-upisdk-1.7.2\AndroidManifest.xml:20:13-22:40
+67                android:host="pay"
+67-->[in.payu:upisdk:1.7.2] C:\Users\user\.gradle\caches\transforms-3\344d0b82c06945a37d5f670417d45373\transformed\jetified-upisdk-1.7.2\AndroidManifest.xml:21:17-35
+68                android:scheme="upi" />
+68-->[in.payu:upisdk:1.7.2] C:\Users\user\.gradle\caches\transforms-3\344d0b82c06945a37d5f670417d45373\transformed\jetified-upisdk-1.7.2\AndroidManifest.xml:22:17-37
+69        </intent>
+70        <intent>
+70-->[:pw_ekyc:] C:\Users\user\.gradle\caches\transforms-3\de47079372524cb217b3492e1635de56\transformed\jetified-pw_ekyc\AndroidManifest.xml:12:9-14:18
+71            <action android:name="android.intent.action.MAIN" />
+71-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:48:9-61
+71-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:48:17-58
+72        </intent>
+73    </queries> <!-- Required by older versions of Google Play services to create IID tokens -->
+74    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+74-->[com.google.android.gms:play-services-iid:17.0.0] C:\Users\user\.gradle\caches\transforms-3\7b64537815d67e73df8c0405851c7773\transformed\jetified-play-services-iid-17.0.0\AndroidManifest.xml:23:5-82
+74-->[com.google.android.gms:play-services-iid:17.0.0] C:\Users\user\.gradle\caches\transforms-3\7b64537815d67e73df8c0405851c7773\transformed\jetified-play-services-iid-17.0.0\AndroidManifest.xml:23:22-79
+75
+76    <permission
+76-->[androidx.core:core:1.10.1] C:\Users\user\.gradle\caches\transforms-3\608c5449133da7b785f10a05a7579320\transformed\core-1.10.1\AndroidManifest.xml:22:5-24:47
+77        android:name="com.smartpaymoney.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+77-->[androidx.core:core:1.10.1] C:\Users\user\.gradle\caches\transforms-3\608c5449133da7b785f10a05a7579320\transformed\core-1.10.1\AndroidManifest.xml:23:9-81
+78        android:protectionLevel="signature" />
+78-->[androidx.core:core:1.10.1] C:\Users\user\.gradle\caches\transforms-3\608c5449133da7b785f10a05a7579320\transformed\core-1.10.1\AndroidManifest.xml:24:9-44
+79
+80    <uses-permission android:name="com.smartpaymoney.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+80-->[androidx.core:core:1.10.1] C:\Users\user\.gradle\caches\transforms-3\608c5449133da7b785f10a05a7579320\transformed\core-1.10.1\AndroidManifest.xml:26:5-97
+80-->[androidx.core:core:1.10.1] C:\Users\user\.gradle\caches\transforms-3\608c5449133da7b785f10a05a7579320\transformed\core-1.10.1\AndroidManifest.xml:26:22-94
+81
+82    <uses-feature
+82-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:28:5-30:36
+83        android:name="android.hardware.camera.front"
+83-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:29:9-53
+84        android:required="false" />
+84-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:30:9-33
+85    <uses-feature
+85-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:36:5-38:36
+86        android:name="android.hardware.camera.flash"
+86-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:37:9-53
+87        android:required="false" />
+87-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:38:9-33
+88    <uses-feature
+88-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:39:5-41:36
+89        android:name="android.hardware.screen.landscape"
+89-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:40:9-57
+90        android:required="false" />
+90-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:41:9-33
+91    <uses-feature
+91-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:42:5-44:36
+92        android:name="android.hardware.wifi"
+92-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:43:9-45
+93        android:required="false" />
+93-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:44:9-33
+94
+95    <uses-permission android:name="com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE" />
+95-->[com.android.installreferrer:installreferrer:1.1.2] C:\Users\user\.gradle\caches\transforms-3\d68339adac2d76c908e7afafa42e28a0\transformed\jetified-installreferrer-1.1.2\AndroidManifest.xml:9:5-110
+95-->[com.android.installreferrer:installreferrer:1.1.2] C:\Users\user\.gradle\caches\transforms-3\d68339adac2d76c908e7afafa42e28a0\transformed\jetified-installreferrer-1.1.2\AndroidManifest.xml:9:22-107
+96
+97    <application
+97-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:27:3-52:17
+98        android:name="com.smartpaymoney.MainApplication"
+98-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:29:5-36
+99        android:allowBackup="false"
+99-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:34:5-32
+100        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+100-->[androidx.core:core:1.10.1] C:\Users\user\.gradle\caches\transforms-3\608c5449133da7b785f10a05a7579320\transformed\core-1.10.1\AndroidManifest.xml:28:18-86
+101        android:icon="@mipmap/ic_launcher"
+101-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:32:5-39
+102        android:label="@string/app_name"
+102-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:30:5-37
+103        android:largeHeap="true"
+103-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:35:5-29
+104        android:requestLegacyExternalStorage="true"
+104-->[:pw_ekyc:] C:\Users\user\.gradle\caches\transforms-3\de47079372524cb217b3492e1635de56\transformed\jetified-pw_ekyc\AndroidManifest.xml:19:9-52
+105        android:roundIcon="@mipmap/ic_launcher_round"
+105-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:33:5-50
+106        android:supportsRtl="true"
+106-->[:pw_ekyc:] C:\Users\user\.gradle\caches\transforms-3\de47079372524cb217b3492e1635de56\transformed\jetified-pw_ekyc\AndroidManifest.xml:20:9-35
+107        android:theme="@style/AppTheme"
+107-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:36:5-36
+108        android:usesCleartextTraffic="true" >
+108-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:31:5-40
+109        <activity
+109-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:38:5-51:16
+110            android:name="com.smartpaymoney.MainActivity"
+110-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:39:7-35
+111            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+111-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:41:7-116
+112            android:exported="true"
+112-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:44:7-30
+113            android:label="@string/app_name"
+113-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:40:7-39
+114            android:launchMode="singleTask"
+114-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:42:7-38
+115            android:theme="@style/BootTheme"
+115-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:45:7-39
+116            android:windowSoftInputMode="adjustResize" >
+116-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:43:7-49
+117            <intent-filter>
+117-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:47:7-50:23
+118                <action android:name="android.intent.action.MAIN" />
+118-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:48:9-61
+118-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:48:17-58
+119
+120                <category android:name="android.intent.category.LAUNCHER" />
+120-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:49:9-69
+120-->E:\NativeProject(24 sept 2024)\smartpaymoney2\android\app\src\main\AndroidManifest.xml:49:19-66
+121            </intent-filter>
+122        </activity>
+123        <activity
+123-->[:react-native-device-number] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-device-number\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:10:9-14:20
+124            android:name="com.reactlibrary.devicenumber.DeviceNumberActivity"
+124-->[:react-native-device-number] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-device-number\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:11:13-78
+125            android:noHistory="true"
+125-->[:react-native-device-number] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-device-number\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:12:13-37
+126            android:theme="@android:style/Theme.Dialog" >
+126-->[:react-native-device-number] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-device-number\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:13:13-56
+127        </activity>
+128        <activity
+128-->[in.payu:payu-checkout-pro-ui:1.8.2] C:\Users\user\.gradle\caches\transforms-3\697ce44fc4a1b6a44ff34211fd00be44\transformed\jetified-payu-checkout-pro-ui-1.8.2\AndroidManifest.xml:18:9-20:52
+129            android:name="com.payu.ui.view.activities.CheckoutActivity"
+129-->[in.payu:payu-checkout-pro-ui:1.8.2] C:\Users\user\.gradle\caches\transforms-3\697ce44fc4a1b6a44ff34211fd00be44\transformed\jetified-payu-checkout-pro-ui-1.8.2\AndroidManifest.xml:19:13-72
+130            android:screenOrientation="portrait" />
+130-->[in.payu:payu-checkout-pro-ui:1.8.2] C:\Users\user\.gradle\caches\transforms-3\697ce44fc4a1b6a44ff34211fd00be44\transformed\jetified-payu-checkout-pro-ui-1.8.2\AndroidManifest.xml:20:13-49
+131
+132        <meta-data
+132-->[in.payu:payu-checkout-pro-ui:1.8.2] C:\Users\user\.gradle\caches\transforms-3\697ce44fc4a1b6a44ff34211fd00be44\transformed\jetified-payu-checkout-pro-ui-1.8.2\AndroidManifest.xml:22:9-24:57
+133            android:name="preloaded_fonts"
+133-->[in.payu:payu-checkout-pro-ui:1.8.2] C:\Users\user\.gradle\caches\transforms-3\697ce44fc4a1b6a44ff34211fd00be44\transformed\jetified-payu-checkout-pro-ui-1.8.2\AndroidManifest.xml:23:13-43
+134            android:resource="@array/preloaded_fonts" />
+134-->[in.payu:payu-checkout-pro-ui:1.8.2] C:\Users\user\.gradle\caches\transforms-3\697ce44fc4a1b6a44ff34211fd00be44\transformed\jetified-payu-checkout-pro-ui-1.8.2\AndroidManifest.xml:24:13-54
+135
+136        <activity
+136-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:49:9-51:52
+137            android:name="in.credopay.payment.sdk.BluetoothActivity"
+137-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:50:13-69
+138            android:theme="@style/CredopayTheme" />
+138-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:51:13-49
+139        <activity
+139-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:52:9-54:52
+140            android:name="in.credopay.payment.sdk.HomeActivity"
+140-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:53:13-64
+141            android:theme="@style/CredopayTheme" />
+141-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:54:13-49
+142        <activity
+142-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:55:9-57:52
+143            android:name="in.credopay.payment.sdk.LoginActivity"
+143-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:56:13-65
+144            android:theme="@style/CredopayTheme" />
+144-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:57:13-49
+145        <activity
+145-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:58:9-60:52
+146            android:name="in.credopay.payment.sdk.PaymentActivity"
+146-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:59:13-67
+147            android:theme="@style/CredopayTheme" />
+147-->[in.credopay.payment.sdk:vm30-payment-sdk:3.0.20] C:\Users\user\.gradle\caches\transforms-3\1d19a080f02b4a75fb4ea92434e5a478\transformed\jetified-vm30-payment-sdk-3.0.20\AndroidManifest.xml:60:13-49
+148        <activity
+148-->[in.payu:payu-custom-browser:7.13.2] C:\Users\user\.gradle\caches\transforms-3\7e5cc7bd2b6be08992dcfc48fc86cb1f\transformed\jetified-payu-custom-browser-7.13.2\AndroidManifest.xml:18:9-21:63
+149            android:name="com.payu.custombrowser.CBActivity"
+149-->[in.payu:payu-custom-browser:7.13.2] C:\Users\user\.gradle\caches\transforms-3\7e5cc7bd2b6be08992dcfc48fc86cb1f\transformed\jetified-payu-custom-browser-7.13.2\AndroidManifest.xml:19:13-61
+150            android:screenOrientation="portrait"
+150-->[in.payu:payu-custom-browser:7.13.2] C:\Users\user\.gradle\caches\transforms-3\7e5cc7bd2b6be08992dcfc48fc86cb1f\transformed\jetified-payu-custom-browser-7.13.2\AndroidManifest.xml:20:13-49
+151            android:windowSoftInputMode="stateAlwaysHidden" /> <!-- <activity -->
+151-->[in.payu:payu-custom-browser:7.13.2] C:\Users\user\.gradle\caches\transforms-3\7e5cc7bd2b6be08992dcfc48fc86cb1f\transformed\jetified-payu-custom-browser-7.13.2\AndroidManifest.xml:21:13-60
+152        <!-- android:name="com.minkasu.android.twofa.sdk.MinkasuSDKActivity" -->
+153        <!-- android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" /> -->
+154        <meta-data
+154-->[in.payu:payu-custom-browser:7.13.2] C:\Users\user\.gradle\caches\transforms-3\7e5cc7bd2b6be08992dcfc48fc86cb1f\transformed\jetified-payu-custom-browser-7.13.2\AndroidManifest.xml:26:9-28:68
+155            android:name="io.sentry.uuid.com.payu.custombrowser"
+155-->[in.payu:payu-custom-browser:7.13.2] C:\Users\user\.gradle\caches\transforms-3\7e5cc7bd2b6be08992dcfc48fc86cb1f\transformed\jetified-payu-custom-browser-7.13.2\AndroidManifest.xml:27:13-65
+156            android:value="8abb59b6-feb9-4191-bac5-b35edf3497fc" />
+156-->[in.payu:payu-custom-browser:7.13.2] C:\Users\user\.gradle\caches\transforms-3\7e5cc7bd2b6be08992dcfc48fc86cb1f\transformed\jetified-payu-custom-browser-7.13.2\AndroidManifest.xml:28:13-65
+157
+158        <provider
+158-->[:react-native-image-picker] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-image-picker\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:10:9-18:20
+159            android:name="com.imagepicker.ImagePickerProvider"
+159-->[:react-native-image-picker] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-image-picker\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:11:13-63
+160            android:authorities="com.smartpaymoney.imagepickerprovider"
+160-->[:react-native-image-picker] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-image-picker\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:12:13-71
+161            android:exported="false"
+161-->[:react-native-image-picker] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-image-picker\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:13:13-37
+162            android:grantUriPermissions="true" >
+162-->[:react-native-image-picker] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-image-picker\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:14:13-47
+163            <meta-data
+163-->[:react-native-image-picker] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-image-picker\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:15:13-17:70
+164                android:name="android.support.FILE_PROVIDER_PATHS"
+164-->[:react-native-image-picker] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-image-picker\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:16:17-67
+165                android:resource="@xml/imagepicker_provider_paths" />
+165-->[:react-native-image-picker] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-image-picker\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:17:17-67
+166        </provider>
+167        <provider
+167-->[:react-native-share] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-share\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:10:9-18:20
+168            android:name="cl.json.RNShareFileProvider"
+168-->[:react-native-share] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-share\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:11:13-55
+169            android:authorities="com.smartpaymoney.rnshare.fileprovider"
+169-->[:react-native-share] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-share\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:12:13-72
+170            android:exported="false"
+170-->[:react-native-share] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-share\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:13:13-37
+171            android:grantUriPermissions="true" >
+171-->[:react-native-share] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-share\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:14:13-47
+172            <meta-data
+172-->[:react-native-image-picker] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-image-picker\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:15:13-17:70
+173                android:name="android.support.FILE_PROVIDER_PATHS"
+173-->[:react-native-image-picker] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-image-picker\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:16:17-67
+174                android:resource="@xml/share_download_paths" />
+174-->[:react-native-image-picker] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-image-picker\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:17:17-67
+175        </provider>
+176        <provider
+176-->[:react-native-webview] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-webview\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:10:9-18:20
+177            android:name="com.reactnativecommunity.webview.RNCWebViewFileProvider"
+177-->[:react-native-webview] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-webview\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:11:13-83
+178            android:authorities="com.smartpaymoney.fileprovider"
+178-->[:react-native-webview] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-webview\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:12:13-64
+179            android:exported="false"
+179-->[:react-native-webview] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-webview\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:13:13-37
+180            android:grantUriPermissions="true" >
+180-->[:react-native-webview] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-webview\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:14:13-47
+181            <meta-data
+181-->[:react-native-image-picker] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-image-picker\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:15:13-17:70
+182                android:name="android.support.FILE_PROVIDER_PATHS"
+182-->[:react-native-image-picker] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-image-picker\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:16:17-67
+183                android:resource="@xml/file_provider_paths" />
+183-->[:react-native-image-picker] E:\NativeProject(24 sept 2024)\smartpaymoney2\node_modules\react-native-image-picker\android\build\intermediates\merged_manifest\release\AndroidManifest.xml:17:17-67
+184        </provider>
+185
+186        <activity
+186-->[in.payu:upisdk:1.7.2] C:\Users\user\.gradle\caches\transforms-3\344d0b82c06945a37d5f670417d45373\transformed\jetified-upisdk-1.7.2\AndroidManifest.xml:27:9-30:63
+187            android:name="com.payu.upisdk.upiintent.PaymentResponseUpiSdkActivity"
+187-->[in.payu:upisdk:1.7.2] C:\Users\user\.gradle\caches\transforms-3\344d0b82c06945a37d5f670417d45373\transformed\jetified-upisdk-1.7.2\AndroidManifest.xml:28:13-83
+188            android:theme="@style/Theme.AppCompat.Transparent.NoActionBar"
+188-->[in.payu:upisdk:1.7.2] C:\Users\user\.gradle\caches\transforms-3\344d0b82c06945a37d5f670417d45373\transformed\jetified-upisdk-1.7.2\AndroidManifest.xml:29:13-75
+189            android:windowSoftInputMode="stateAlwaysHidden" />
+189-->[in.payu:upisdk:1.7.2] C:\Users\user\.gradle\caches\transforms-3\344d0b82c06945a37d5f670417d45373\transformed\jetified-upisdk-1.7.2\AndroidManifest.xml:30:13-60
+190        <activity
+190-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\user\.gradle\caches\transforms-3\abf1e0a8bb4ead08c14f2e0e3bd3d53e\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:23:9-27:75
+191            android:name="com.google.android.gms.auth.api.signin.internal.SignInHubActivity"
+191-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\user\.gradle\caches\transforms-3\abf1e0a8bb4ead08c14f2e0e3bd3d53e\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:24:13-93
+192            android:excludeFromRecents="true"
+192-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\user\.gradle\caches\transforms-3\abf1e0a8bb4ead08c14f2e0e3bd3d53e\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:25:13-46
+193            android:exported="false"
+193-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\user\.gradle\caches\transforms-3\abf1e0a8bb4ead08c14f2e0e3bd3d53e\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:26:13-37
+194            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+194-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\user\.gradle\caches\transforms-3\abf1e0a8bb4ead08c14f2e0e3bd3d53e\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:27:13-72
+195        <!--
+196            Service handling Google Sign-In user revocation. For apps that do not integrate with
+197            Google Sign-In, this service will never be started.
+198        -->
+199        <service
+199-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\user\.gradle\caches\transforms-3\abf1e0a8bb4ead08c14f2e0e3bd3d53e\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:33:9-37:51
+200            android:name="com.google.android.gms.auth.api.signin.RevocationBoundService"
+200-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\user\.gradle\caches\transforms-3\abf1e0a8bb4ead08c14f2e0e3bd3d53e\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:34:13-89
+201            android:exported="true"
+201-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\user\.gradle\caches\transforms-3\abf1e0a8bb4ead08c14f2e0e3bd3d53e\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:35:13-36
+202            android:permission="com.google.android.gms.auth.api.signin.permission.REVOCATION_NOTIFICATION"
+202-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\user\.gradle\caches\transforms-3\abf1e0a8bb4ead08c14f2e0e3bd3d53e\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:36:13-107
+203            android:visibleToInstantApps="true" />
+203-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\user\.gradle\caches\transforms-3\abf1e0a8bb4ead08c14f2e0e3bd3d53e\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:37:13-48
+204        <service
+204-->[com.google.android.gms:play-services-mlkit-text-recognition:16.3.0] C:\Users\user\.gradle\caches\transforms-3\2f2356ad2988ff747fbfc97ac4b263dd\transformed\jetified-play-services-mlkit-text-recognition-16.3.0\AndroidManifest.xml:9:9-15:19
+205            android:name="com.google.mlkit.common.internal.MlKitComponentDiscoveryService"
+205-->[com.google.android.gms:play-services-mlkit-text-recognition:16.3.0] C:\Users\user\.gradle\caches\transforms-3\2f2356ad2988ff747fbfc97ac4b263dd\transformed\jetified-play-services-mlkit-text-recognition-16.3.0\AndroidManifest.xml:10:13-91
+206            android:directBootAware="true"
+206-->[com.google.mlkit:common:17.2.0] C:\Users\user\.gradle\caches\transforms-3\0ddda34e3f21ab87feec49008657055f\transformed\jetified-common-17.2.0\AndroidManifest.xml:17:13-43
+207            android:exported="false" >
+207-->[com.google.android.gms:play-services-mlkit-text-recognition:16.3.0] C:\Users\user\.gradle\caches\transforms-3\2f2356ad2988ff747fbfc97ac4b263dd\transformed\jetified-play-services-mlkit-text-recognition-16.3.0\AndroidManifest.xml:11:13-37
+208            <meta-data
+208-->[com.google.android.gms:play-services-mlkit-text-recognition:16.3.0] C:\Users\user\.gradle\caches\transforms-3\2f2356ad2988ff747fbfc97ac4b263dd\transformed\jetified-play-services-mlkit-text-recognition-16.3.0\AndroidManifest.xml:12:13-14:85
+209                android:name="com.google.firebase.components:com.google.mlkit.vision.text.internal.TextRegistrar"
+209-->[com.google.android.gms:play-services-mlkit-text-recognition:16.3.0] C:\Users\user\.gradle\caches\transforms-3\2f2356ad2988ff747fbfc97ac4b263dd\transformed\jetified-play-services-mlkit-text-recognition-16.3.0\AndroidManifest.xml:13:17-114
+210                android:value="com.google.firebase.components.ComponentRegistrar" />
+210-->[com.google.android.gms:play-services-mlkit-text-recognition:16.3.0] C:\Users\user\.gradle\caches\transforms-3\2f2356ad2988ff747fbfc97ac4b263dd\transformed\jetified-play-services-mlkit-text-recognition-16.3.0\AndroidManifest.xml:14:17-82
+211            <meta-data
+211-->[com.google.android.gms:play-services-mlkit-barcode-scanning:16.2.0] C:\Users\user\.gradle\caches\transforms-3\6e5ccd6de5fe28706558ca02fd2a9807\transformed\jetified-play-services-mlkit-barcode-scanning-16.2.0\AndroidManifest.xml:12:13-14:85
+212                android:name="com.google.firebase.components:com.google.mlkit.vision.barcode.internal.BarcodeRegistrar"
+212-->[com.google.android.gms:play-services-mlkit-barcode-scanning:16.2.0] C:\Users\user\.gradle\caches\transforms-3\6e5ccd6de5fe28706558ca02fd2a9807\transformed\jetified-play-services-mlkit-barcode-scanning-16.2.0\AndroidManifest.xml:13:17-120
+213                android:value="com.google.firebase.components.ComponentRegistrar" />
+213-->[com.google.android.gms:play-services-mlkit-barcode-scanning:16.2.0] C:\Users\user\.gradle\caches\transforms-3\6e5ccd6de5fe28706558ca02fd2a9807\transformed\jetified-play-services-mlkit-barcode-scanning-16.2.0\AndroidManifest.xml:14:17-82
+214            <meta-data
+214-->[com.google.android.gms:play-services-mlkit-face-detection:16.2.0] C:\Users\user\.gradle\caches\transforms-3\3360b2391a2c1b77015f8d25e4d16d9c\transformed\jetified-play-services-mlkit-face-detection-16.2.0\AndroidManifest.xml:12:13-14:85
+215                android:name="com.google.firebase.components:com.google.mlkit.vision.face.internal.FaceRegistrar"
+215-->[com.google.android.gms:play-services-mlkit-face-detection:16.2.0] C:\Users\user\.gradle\caches\transforms-3\3360b2391a2c1b77015f8d25e4d16d9c\transformed\jetified-play-services-mlkit-face-detection-16.2.0\AndroidManifest.xml:13:17-114
+216                android:value="com.google.firebase.components.ComponentRegistrar" />
+216-->[com.google.android.gms:play-services-mlkit-face-detection:16.2.0] C:\Users\user\.gradle\caches\transforms-3\3360b2391a2c1b77015f8d25e4d16d9c\transformed\jetified-play-services-mlkit-face-detection-16.2.0\AndroidManifest.xml:14:17-82
+217            <meta-data
+217-->[com.google.mlkit:vision-common:16.5.0] C:\Users\user\.gradle\caches\transforms-3\fe7148d0eeff4d6258e9c60bd4e4bde2\transformed\jetified-vision-common-16.5.0\AndroidManifest.xml:12:13-14:85
+218                android:name="com.google.firebase.components:com.google.mlkit.vision.common.internal.VisionCommonRegistrar"
+218-->[com.google.mlkit:vision-common:16.5.0] C:\Users\user\.gradle\caches\transforms-3\fe7148d0eeff4d6258e9c60bd4e4bde2\transformed\jetified-vision-common-16.5.0\AndroidManifest.xml:13:17-124
+219                android:value="com.google.firebase.components.ComponentRegistrar" />
+219-->[com.google.mlkit:vision-common:16.5.0] C:\Users\user\.gradle\caches\transforms-3\fe7148d0eeff4d6258e9c60bd4e4bde2\transformed\jetified-vision-common-16.5.0\AndroidManifest.xml:14:17-82
+220            <meta-data
+220-->[com.google.mlkit:common:17.2.0] C:\Users\user\.gradle\caches\transforms-3\0ddda34e3f21ab87feec49008657055f\transformed\jetified-common-17.2.0\AndroidManifest.xml:20:13-22:85
+221                android:name="com.google.firebase.components:com.google.mlkit.common.internal.CommonComponentRegistrar"
+221-->[com.google.mlkit:common:17.2.0] C:\Users\user\.gradle\caches\transforms-3\0ddda34e3f21ab87feec49008657055f\transformed\jetified-common-17.2.0\AndroidManifest.xml:21:17-120
+222                android:value="com.google.firebase.components.ComponentRegistrar" />
+222-->[com.google.mlkit:common:17.2.0] C:\Users\user\.gradle\caches\transforms-3\0ddda34e3f21ab87feec49008657055f\transformed\jetified-common-17.2.0\AndroidManifest.xml:22:17-82
+223        </service>
+224
+225        <provider
+225-->[com.google.mlkit:common:17.2.0] C:\Users\user\.gradle\caches\transforms-3\0ddda34e3f21ab87feec49008657055f\transformed\jetified-common-17.2.0\AndroidManifest.xml:9:9-13:38
+226            android:name="com.google.mlkit.common.internal.MlKitInitProvider"
+226-->[com.google.mlkit:common:17.2.0] C:\Users\user\.gradle\caches\transforms-3\0ddda34e3f21ab87feec49008657055f\transformed\jetified-common-17.2.0\AndroidManifest.xml:10:13-78
+227            android:authorities="com.smartpaymoney.mlkitinitprovider"
+227-->[com.google.mlkit:common:17.2.0] C:\Users\user\.gradle\caches\transforms-3\0ddda34e3f21ab87feec49008657055f\transformed\jetified-common-17.2.0\AndroidManifest.xml:11:13-69
+228            android:exported="false"
+228-->[com.google.mlkit:common:17.2.0] C:\Users\user\.gradle\caches\transforms-3\0ddda34e3f21ab87feec49008657055f\transformed\jetified-common-17.2.0\AndroidManifest.xml:12:13-37
+229            android:initOrder="99" />
+229-->[com.google.mlkit:common:17.2.0] C:\Users\user\.gradle\caches\transforms-3\0ddda34e3f21ab87feec49008657055f\transformed\jetified-common-17.2.0\AndroidManifest.xml:13:13-35
+230
+231        <activity
+231-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\user\.gradle\caches\transforms-3\2c122af7e8ba98cc3e22590c343fb814\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:9-173
+232            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+232-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\user\.gradle\caches\transforms-3\2c122af7e8ba98cc3e22590c343fb814\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:19-85
+233            android:exported="false"
+233-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\user\.gradle\caches\transforms-3\2c122af7e8ba98cc3e22590c343fb814\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:146-170
+234            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+234-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\user\.gradle\caches\transforms-3\2c122af7e8ba98cc3e22590c343fb814\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:86-145
+235
+236        <meta-data
+236-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\user\.gradle\caches\transforms-3\223133207ca7608e62ec04b5ba7b3d45\transformed\jetified-play-services-basement-18.4.0\AndroidManifest.xml:6:9-122
+237            android:name="com.google.android.gms.version"
+237-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\user\.gradle\caches\transforms-3\223133207ca7608e62ec04b5ba7b3d45\transformed\jetified-play-services-basement-18.4.0\AndroidManifest.xml:6:20-65
+238            android:value="@integer/google_play_services_version" />
+238-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\user\.gradle\caches\transforms-3\223133207ca7608e62ec04b5ba7b3d45\transformed\jetified-play-services-basement-18.4.0\AndroidManifest.xml:6:66-119
+239        <meta-data
+239-->[in.payu:payu-sdk:7.2.1] C:\Users\user\.gradle\caches\transforms-3\fc49404fc3fb7e5ef894b2193c748e86\transformed\jetified-payu-sdk-7.2.1\AndroidManifest.xml:12:9-14:68
+240            android:name="io.sentry.uuid.com.payu.india"
+240-->[in.payu:payu-sdk:7.2.1] C:\Users\user\.gradle\caches\transforms-3\fc49404fc3fb7e5ef894b2193c748e86\transformed\jetified-payu-sdk-7.2.1\AndroidManifest.xml:13:13-57
+241            android:value="8bd385bc-5c65-4869-b56e-cb6310635f11" />
+241-->[in.payu:payu-sdk:7.2.1] C:\Users\user\.gradle\caches\transforms-3\fc49404fc3fb7e5ef894b2193c748e86\transformed\jetified-payu-sdk-7.2.1\AndroidManifest.xml:14:13-65
+242
+243        <provider
+243-->[in.payu:payu-crash-logger:1.1.11] C:\Users\user\.gradle\caches\transforms-3\c48421791ad88a736e2a155cb9de8aec\transformed\jetified-payu-crash-logger-1.1.11\AndroidManifest.xml:16:9-24:20
+244            android:name="androidx.startup.InitializationProvider"
+244-->[in.payu:payu-crash-logger:1.1.11] C:\Users\user\.gradle\caches\transforms-3\c48421791ad88a736e2a155cb9de8aec\transformed\jetified-payu-crash-logger-1.1.11\AndroidManifest.xml:17:13-67
+245            android:authorities="com.smartpaymoney.androidx-startup"
+245-->[in.payu:payu-crash-logger:1.1.11] C:\Users\user\.gradle\caches\transforms-3\c48421791ad88a736e2a155cb9de8aec\transformed\jetified-payu-crash-logger-1.1.11\AndroidManifest.xml:18:13-68
+246            android:exported="false" >
+246-->[in.payu:payu-crash-logger:1.1.11] C:\Users\user\.gradle\caches\transforms-3\c48421791ad88a736e2a155cb9de8aec\transformed\jetified-payu-crash-logger-1.1.11\AndroidManifest.xml:19:13-37
+247            <meta-data
+247-->[in.payu:payu-crash-logger:1.1.11] C:\Users\user\.gradle\caches\transforms-3\c48421791ad88a736e2a155cb9de8aec\transformed\jetified-payu-crash-logger-1.1.11\AndroidManifest.xml:21:13-23:52
+248                android:name="com.payu.crashlogger.CrashProviderInitializer"
+248-->[in.payu:payu-crash-logger:1.1.11] C:\Users\user\.gradle\caches\transforms-3\c48421791ad88a736e2a155cb9de8aec\transformed\jetified-payu-crash-logger-1.1.11\AndroidManifest.xml:22:17-77
+249                android:value="androidx.startup" />
+249-->[in.payu:payu-crash-logger:1.1.11] C:\Users\user\.gradle\caches\transforms-3\c48421791ad88a736e2a155cb9de8aec\transformed\jetified-payu-crash-logger-1.1.11\AndroidManifest.xml:23:17-49
+250            <meta-data
+250-->[androidx.emoji2:emoji2:1.2.0] C:\Users\user\.gradle\caches\transforms-3\84cbd3f1f7882eb328eeb01b779acf92\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
+251                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+251-->[androidx.emoji2:emoji2:1.2.0] C:\Users\user\.gradle\caches\transforms-3\84cbd3f1f7882eb328eeb01b779acf92\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:30:17-75
+252                android:value="androidx.startup" />
+252-->[androidx.emoji2:emoji2:1.2.0] C:\Users\user\.gradle\caches\transforms-3\84cbd3f1f7882eb328eeb01b779acf92\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:31:17-49
+253            <meta-data
+253-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\user\.gradle\caches\transforms-3\a151fd1e727b4d0ceb9e9066c7c09f79\transformed\jetified-lifecycle-process-2.6.1\AndroidManifest.xml:29:13-31:52
+254                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+254-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\user\.gradle\caches\transforms-3\a151fd1e727b4d0ceb9e9066c7c09f79\transformed\jetified-lifecycle-process-2.6.1\AndroidManifest.xml:30:17-78
+255                android:value="androidx.startup" />
+255-->[androidx.lifecycle:lifecycle-process:2.6.1] C:\Users\user\.gradle\caches\transforms-3\a151fd1e727b4d0ceb9e9066c7c09f79\transformed\jetified-lifecycle-process-2.6.1\AndroidManifest.xml:31:17-49
+256            <meta-data
+256-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:29:13-31:52
+257                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+257-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:30:17-85
+258                android:value="androidx.startup" />
+258-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:31:17-49
+259        </provider>
+260        <provider
+260-->[com.squareup.picasso:picasso:2.8] C:\Users\user\.gradle\caches\transforms-3\bc1d2787b2ab8d0a9f102106ce48cb12\transformed\jetified-picasso-2.8\AndroidManifest.xml:8:9-11:40
+261            android:name="com.squareup.picasso.PicassoProvider"
+261-->[com.squareup.picasso:picasso:2.8] C:\Users\user\.gradle\caches\transforms-3\bc1d2787b2ab8d0a9f102106ce48cb12\transformed\jetified-picasso-2.8\AndroidManifest.xml:9:13-64
+262            android:authorities="com.smartpaymoney.com.squareup.picasso"
+262-->[com.squareup.picasso:picasso:2.8] C:\Users\user\.gradle\caches\transforms-3\bc1d2787b2ab8d0a9f102106ce48cb12\transformed\jetified-picasso-2.8\AndroidManifest.xml:10:13-72
+263            android:exported="false" />
+263-->[com.squareup.picasso:picasso:2.8] C:\Users\user\.gradle\caches\transforms-3\bc1d2787b2ab8d0a9f102106ce48cb12\transformed\jetified-picasso-2.8\AndroidManifest.xml:11:13-37
+264
+265        <activity
+265-->[:pspwDmt:] C:\Users\user\.gradle\caches\transforms-3\2df55caca94fab28e05addc0c215a217\transformed\jetified-pspwDmt\AndroidManifest.xml:13:9-15:40
+266            android:name="it.services.pspwdmt.ui.ServiceActivity"
+266-->[:pspwDmt:] C:\Users\user\.gradle\caches\transforms-3\2df55caca94fab28e05addc0c215a217\transformed\jetified-pspwDmt\AndroidManifest.xml:14:13-66
+267            android:exported="false" />
+267-->[:pspwDmt:] C:\Users\user\.gradle\caches\transforms-3\2df55caca94fab28e05addc0c215a217\transformed\jetified-pspwDmt\AndroidManifest.xml:15:13-37
+268        <activity
+268-->[:pspwDmt:] C:\Users\user\.gradle\caches\transforms-3\2df55caca94fab28e05addc0c215a217\transformed\jetified-pspwDmt\AndroidManifest.xml:16:9-19:42
+269            android:name="it.services.pspwdmt.ui.DmtHostActivity"
+269-->[:pspwDmt:] C:\Users\user\.gradle\caches\transforms-3\2df55caca94fab28e05addc0c215a217\transformed\jetified-pspwDmt\AndroidManifest.xml:17:13-66
+270            android:exported="false"
+270-->[:pspwDmt:] C:\Users\user\.gradle\caches\transforms-3\2df55caca94fab28e05addc0c215a217\transformed\jetified-pspwDmt\AndroidManifest.xml:18:13-37
+271            android:theme="@style/ppi" />
+271-->[:pspwDmt:] C:\Users\user\.gradle\caches\transforms-3\2df55caca94fab28e05addc0c215a217\transformed\jetified-pspwDmt\AndroidManifest.xml:19:13-39
+272        <activity
+272-->[:pspwDmt:] C:\Users\user\.gradle\caches\transforms-3\2df55caca94fab28e05addc0c215a217\transformed\jetified-pspwDmt\AndroidManifest.xml:20:9-60
+273            android:name="com.lib.sps.KycActivity"
+273-->[:pspwDmt:] C:\Users\user\.gradle\caches\transforms-3\2df55caca94fab28e05addc0c215a217\transformed\jetified-pspwDmt\AndroidManifest.xml:20:19-57
+274            android:exported="false"
+274-->[:pw_ekyc:] C:\Users\user\.gradle\caches\transforms-3\de47079372524cb217b3492e1635de56\transformed\jetified-pw_ekyc\AndroidManifest.xml:25:13-37
+275            android:windowSoftInputMode="adjustResize" />
+275-->[:pw_ekyc:] C:\Users\user\.gradle\caches\transforms-3\de47079372524cb217b3492e1635de56\transformed\jetified-pw_ekyc\AndroidManifest.xml:26:13-55
+276        <activity
+276-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:47:9-53:63
+277            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+277-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:48:13-74
+278            android:clearTaskOnLaunch="true"
+278-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:49:13-45
+279            android:screenOrientation="sensorLandscape"
+279-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:50:13-56
+280            android:stateNotNeeded="true"
+280-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:51:13-42
+281            android:theme="@style/zxing_CaptureTheme"
+281-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:52:13-54
+282            android:windowSoftInputMode="stateAlwaysHidden" />
+282-->[com.journeyapps:zxing-android-embedded:4.3.0] C:\Users\user\.gradle\caches\transforms-3\e3008bf4c7e2c476507bed9522c38f3e\transformed\jetified-zxing-android-embedded-4.3.0\AndroidManifest.xml:53:13-60
+283
+284        <service
+284-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\user\.gradle\caches\transforms-3\030ea5ec5730407e84e499b1c93021fa\transformed\jetified-transport-backend-cct-2.3.3\AndroidManifest.xml:29:9-35:19
+285            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
+285-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\user\.gradle\caches\transforms-3\030ea5ec5730407e84e499b1c93021fa\transformed\jetified-transport-backend-cct-2.3.3\AndroidManifest.xml:30:13-103
+286            android:exported="false" >
+286-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\user\.gradle\caches\transforms-3\030ea5ec5730407e84e499b1c93021fa\transformed\jetified-transport-backend-cct-2.3.3\AndroidManifest.xml:31:13-37
+287            <meta-data
+287-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\user\.gradle\caches\transforms-3\030ea5ec5730407e84e499b1c93021fa\transformed\jetified-transport-backend-cct-2.3.3\AndroidManifest.xml:32:13-34:39
+288                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
+288-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\user\.gradle\caches\transforms-3\030ea5ec5730407e84e499b1c93021fa\transformed\jetified-transport-backend-cct-2.3.3\AndroidManifest.xml:33:17-94
+289                android:value="cct" />
+289-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\user\.gradle\caches\transforms-3\030ea5ec5730407e84e499b1c93021fa\transformed\jetified-transport-backend-cct-2.3.3\AndroidManifest.xml:34:17-36
+290        </service>
+291        <service
+291-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\user\.gradle\caches\transforms-3\910773ec94cc6d8b3a398a470790bbba\transformed\jetified-transport-runtime-2.2.6\AndroidManifest.xml:26:9-30:19
+292            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
+292-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\user\.gradle\caches\transforms-3\910773ec94cc6d8b3a398a470790bbba\transformed\jetified-transport-runtime-2.2.6\AndroidManifest.xml:27:13-117
+293            android:exported="false"
+293-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\user\.gradle\caches\transforms-3\910773ec94cc6d8b3a398a470790bbba\transformed\jetified-transport-runtime-2.2.6\AndroidManifest.xml:28:13-37
+294            android:permission="android.permission.BIND_JOB_SERVICE" >
+294-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\user\.gradle\caches\transforms-3\910773ec94cc6d8b3a398a470790bbba\transformed\jetified-transport-runtime-2.2.6\AndroidManifest.xml:29:13-69
+295        </service>
+296
+297        <receiver
+297-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\user\.gradle\caches\transforms-3\910773ec94cc6d8b3a398a470790bbba\transformed\jetified-transport-runtime-2.2.6\AndroidManifest.xml:32:9-34:40
+298            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"
+298-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\user\.gradle\caches\transforms-3\910773ec94cc6d8b3a398a470790bbba\transformed\jetified-transport-runtime-2.2.6\AndroidManifest.xml:33:13-132
+299            android:exported="false" />
+299-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\user\.gradle\caches\transforms-3\910773ec94cc6d8b3a398a470790bbba\transformed\jetified-transport-runtime-2.2.6\AndroidManifest.xml:34:13-37
+300        <receiver
+300-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:34:9-52:20
+301            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+301-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:35:13-76
+302            android:directBootAware="false"
+302-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:36:13-44
+303            android:enabled="true"
+303-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:37:13-35
+304            android:exported="true"
+304-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:38:13-36
+305            android:permission="android.permission.DUMP" >
+305-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:39:13-57
+306            <intent-filter>
+306-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:40:13-42:29
+307                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+307-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:17-91
+307-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:41:25-88
+308            </intent-filter>
+309            <intent-filter>
+309-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:43:13-45:29
+310                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+310-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:17-85
+310-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:44:25-82
+311            </intent-filter>
+312            <intent-filter>
+312-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:46:13-48:29
+313                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+313-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:17-88
+313-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:47:25-85
+314            </intent-filter>
+315            <intent-filter>
+315-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:49:13-51:29
+316                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+316-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:17-95
+316-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\user\.gradle\caches\transforms-3\53734919d7714c74ce0abccb3923adf7\transformed\jetified-profileinstaller-1.3.0\AndroidManifest.xml:50:25-92
+317            </intent-filter>
+318        </receiver>
+319
+320        <meta-data
+320-->[in.payu:paymentparamhelper:2.3.1] C:\Users\user\.gradle\caches\transforms-3\f49d5dcd04b8715ba36dbc5bdf3eca51\transformed\jetified-paymentparamhelper-2.3.1\AndroidManifest.xml:12:9-14:68
+321            android:name="io.sentry.uuid.com.payu.paymentparamhelper"
+321-->[in.payu:paymentparamhelper:2.3.1] C:\Users\user\.gradle\caches\transforms-3\f49d5dcd04b8715ba36dbc5bdf3eca51\transformed\jetified-paymentparamhelper-2.3.1\AndroidManifest.xml:13:13-70
+322            android:value="77ba26d0-e060-4cab-9724-7de3ba329aa2" />
+322-->[in.payu:paymentparamhelper:2.3.1] C:\Users\user\.gradle\caches\transforms-3\f49d5dcd04b8715ba36dbc5bdf3eca51\transformed\jetified-paymentparamhelper-2.3.1\AndroidManifest.xml:14:13-65
+323    </application>
+324
+325</manifest>

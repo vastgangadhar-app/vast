@@ -1,0 +1,21 @@
+import React from 'react';
+
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import LoginScreen from '../../features/login/LoginScreen';
+import SignUpScreen from '../../features/signup/SignUpScreen';
+
+const Stack = createNativeStackNavigator();
+
+export const AuthNavigator = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        gestureEnabled: false,
+      }}
+      initialRouteName="LoginScreen">
+      <Stack.Screen name="LoginScreen" component={LoginScreen} />
+      <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
+    </Stack.Navigator>
+  );
+};

@@ -1,0 +1,1027 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, FlatList, NativeModules, Linking, AsyncStorage } from 'react-native';
+import { hScale, wScale } from '../../utils/styles/dimensions';
+import { useNavigation } from '../../utils/navigation/NavigationService';
+import useAxiosHook from '../../utils/network/AxiosClient';
+import { APP_URLS } from '../../utils/network/urls';
+import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
+import { useLocationHook } from '../../utils/hooks/useLocationHook';
+import { RootState } from '../../reduxUtils/store';
+import { useSelector } from 'react-redux';
+import { encrypt } from '../../utils/encryptionUtils';
+import DynamicButton from '../drawer/button/DynamicButton';
+import { colors, FontSize } from '../../utils/styles/theme';
+import LinearGradient from 'react-native-linear-gradient';
+import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
+// import Qrcodsvg from '../drawer/svgimgcomponents/Qrcode';
+import NetBanksvg from '../drawer/svgimgcomponents/NetBanksvg';
+import DebitCardsvg from '../drawer/svgimgcomponents/DebitCardsvg';
+// import CreditCardsvg from '../drawer/svgimgcomponents/NetBanksvg copy';
+import Distributorsvg from '../drawer/svgimgcomponents/Distributorsvg';
+import Adminsvg from '../drawer/svgimgcomponents/Adminsvg';
+import WalletSvg from '../drawer/svgimgcomponents/Walletsvg';
+import Upisvg from '../drawer/svgimgcomponents/Upisvg';
+import Upipaymentoptionssvg from '../drawer/svgimgcomponents/Upipaymentoptionssvg';
+import Internationalcardsvg from '../drawer/svgimgcomponents/Internationalcardsvg';
+import QrcodSvg from '../drawer/svgimgcomponents/QrcodSvg';
+import QrcodAddmoneysvg from '../drawer/svgimgcomponents/QrcodAddmoneysvg';
+import CreditCardsvg from '../drawer/svgimgcomponents/CreditCardsvg';
+import uuid from 'react-native-uuid';
+
+const AddMoneyOptions = ({ route }) => {
+    const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+    const color1 = `${colorConfig.secondaryColor}20`
+    const { amount, jsonData } = route.params;
+    const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
+        useDeviceInfoHook();
+    const { latitude, longitude } = useLocationHook();
+    const { userId } = useSelector((state: RootState) => state.userInfo);
+    const { get, post } = useAxiosHook();
+    const navigation = useNavigation<any>();
+    const [upich, setupichs] = useState('');
+    const [charges, setCharges] = useState([]);
+    const [chgs, setChgs] = useState('');
+    const [Merchantkey, setMerchantkey] = useState('');
+    const [Merchantid, setMerchantid] = useState('');
+    const [marsalt, setMarsalt] = useState('');
+    const [USERID, setUSERID] = useState('');
+    const [Privatekey, setPrivatekey] = useState('');
+    const [txnsuccessUrl, setTxnsuccessUrl] = useState('');
+    const [txnfailureUrl, setTxnfailureUrl] = useState('');
+    const [merchemail, setMerchemail] = useState('');
+    const [merchmobile, setMerchmobile] = useState('');
+    const [mrchname, setMrchname] = useState('');
+    const [buttontxt, setButtontxt] = useState('Upi');
+    const [qrts, setQrts] = useState('');
+    const [generatedid, setGeneratedid] = useState('');
+    const [qrcode1, setQrcode1] = useState('');
+
+    const [phonepeMin, setPhonepeMin] = useState('');
+    const [phonepeMax, setPhonepeMax] = useState('');
+    const [checkFun, setCheckFun] = useState('UPI');
+    const [isLoading, setIsLoading] = useState(true);
+    const [upiid, setUpiid] = useState('');
+    const [minamnt, setMinamnt] = useState('');
+    const [maxamnt, setMaxamnt] = useState('');
+    const [perdaylimit, setPerdaylimit] = useState('');
+    const [uselimit, setUselimit] = useState('');
+    const [limitmessage, setLimitmessage] = useState('');
+    const [dealerUpiStatus, setDealerUpiStatus] = useState('');
+    const [dealerUpiid, setDealerUpiid] = useState('');
+    const [dealerCapping, setDealerCapping] = useState('');
+    const [dealerAmmount, setDealerAmmount] = useState('');
+    const [dealerId, setDealerId] = useState('');
+    useEffect(() => {
+        upiCharges();
+        getCharges();
+        console.log(route)
+        console.log('route data', jsonData['WalletChargesenc']);
+
+        console.log('route data', jsonData[0]['debitCardcharges']);
+    }, []);
+    const getCharges = useCallback(async () => {
+        console.log('Clicked:', amount);
+
+        try {
+            const userInfo = await get({ url: `${APP_URLS.addmoneyChg}${amount}` });
+
+            setCharges(userInfo);
+            // setCharges(Object.entries(userInfo.WalletChargesenc));
+            console.log(userInfo);
+        } catch (error) {
+            console.error('Error fetching charges:', error);
+        }
+    }, []);
+    const handleOptionClick = (optionName) => {
+        if (optionName == 'QR Code') {
+            setButtontxt('QR Code');
+            setCheckFun('QR Code')
+        } else if (optionName == 'Creditcard') {
+
+            setButtontxt('Credit card');
+            setCheckFun('Creditcard')
+            const creditCardValues = getPaymentMethodValues('Creditcard', charges);
+            console.log(creditCardValues);
+            setChgs(creditCardValues);
+
+        } else if (optionName == 'Wallet') {
+            setButtontxt('Wallet');
+
+            const creditCardValues = getPaymentMethodValues('Wallet', charges);
+            console.log(creditCardValues);
+            setChgs(creditCardValues);
+            setCheckFun('Wallet')
+
+        } else if (optionName == 'debitCardcharges') {
+            setButtontxt('Debit Card');
+
+            const creditCardValues = getPaymentMethodValues('debitCardcharges', charges);
+            console.log(creditCardValues);
+            setChgs(creditCardValues);
+            setCheckFun('debitCardcharges')
+        } else if (optionName == 'Netbanking') {
+            setButtontxt('Net Banking');
+
+            const creditCardValues = getPaymentMethodValues('Netbanking', charges);
+            console.log(creditCardValues);
+            setChgs(creditCardValues);
+            setCheckFun('Netbanking')
+        } else if (optionName == 'UPI') {
+            setButtontxt('UPI');
+            setCheckFun('UPI')
+        } else if (optionName == 'Self UPI') {
+            setButtontxt('Self UPI');
+
+            setCheckFun('Self UPI');
+
+        } else if (optionName == 'Request to Admin') {
+            setButtontxt('Request to Admin');
+
+            setCheckFun('Request to Admin');
+
+        }
+    };
+
+    const handleOptionClick2 = (optionName) => {
+        console.log('optionName', optionName);
+        if (optionName === 'QR Code') {
+            upiqr();
+        } else if (optionName === 'Creditcard') {
+
+            gatewaytype('CC')
+
+
+        } else if (optionName === 'Wallet') {
+
+            gatewaytype('WA')
+
+        } else if (optionName === 'debitCardcharges') {
+
+            gatewaytype('DC')
+        } else if (optionName === 'Netbanking') {
+
+            gatewaytype('NB')
+        } else if (optionName === 'UPI') {
+            setButtontxt('UPI');
+            upists();
+            gatewaytype('UP')
+        } else if (optionName === 'Self UPI') {
+            upists2();
+            console.log('Self UPI:', optionName);
+        } else if (optionName === 'Request to Admin') {
+            setButtontxt('Request to Admin');
+
+            navigation.navigate("ReqToAdmin", { amount });
+
+        }
+    };
+    const upiCharges = useCallback(async () => {
+        try {
+            const userInfo = await get({ url: `${APP_URLS.upicharges}` });
+            setupichs(userInfo);
+            console.log('upicharges', userInfo);
+        } catch (error) {
+            console.error('Error fetching charges:', error);
+        }
+    }, [get,]);
+    const phonepestatus = useCallback(async () => {
+
+        try {
+            const data = await get({ url: `${APP_URLS.phonepestatus}` });
+            const resp = data["Status"];
+            const msz = data["Message"];
+            const phonepeMinValue = data["minmium"].toString();
+            const phonepeMaxValue = data["maximium"].toString();
+
+            setPhonepeMin(phonepeMinValue);
+            setPhonepeMax(phonepeMaxValue);
+
+            const phonepeam = parseFloat(amount);
+            const phonepeMin1 = parseFloat(phonepeMinValue);
+            const phonepemaxx1 = parseFloat(phonepeMaxValue);
+
+            if (phonepeam >= phonepeMin1 && phonepeam <= phonepemaxx1) {
+                if (resp === "Success") {
+                    phonepe();
+
+                } else {
+                    showAlert(msz);
+                }
+            } else {
+                showAmountRangeSnackBar(phonepeMin1, phonepemaxx1);
+            }
+        } catch (error) {
+
+        }
+
+
+    }, [])
+
+
+    const phonepe = useCallback(async () => {
+
+        try {
+            const data = await post({ url: `${APP_URLS.phonepeurl}Amount=${amount}` });
+            const Status = data["Status"];
+            const url = data["RESULT"];
+            const supported = await Linking.canOpenURL(url);
+
+            if (Status) {
+                if (supported) {
+                    await Linking.openURL(url);
+                } else {
+                    console.log("Don't know how to open URI: ", url);
+                }
+            } else {
+                showAlert(url);
+            }
+
+        } catch (error) {
+
+        }
+    }, [])
+    const upiqr = async () => {
+
+        try {
+            const data = await get({ url: `${APP_URLS.upitxChk}` });
+
+            console.log('upiqr', data);
+            const statuss = data["ShowQR"];
+            const msz = data["msg"];
+/*             {"ShowQR": "PRICEBASE", "msg":
+                 {"idno": 34,
+                     "maximium": 10000, "minmium": 1, "status": true, "types": "VAR_QR"}} */
+            if (statuss === "PRICEBASE") {
+                const min = msz["minmium"].toString();
+                const max = msz["maximium"].toString();
+
+                const amount1 = parseFloat(amount);
+                const min1 = parseFloat(min);
+                const maxx1 = parseFloat(max);
+console.log(amount1 >= min1 && amount1 <= maxx1)
+                if (amount1 >= min1 && amount1 <= maxx1) {
+                    Qrcodestatus(amount);
+
+
+                } else {
+                    Alert.alert(
+                        'Invalid Amount',
+                        `For UPI Amount Should be between ₹${min1} to ₹${maxx1}`,
+                        [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+                        { cancelable: false }
+                    );
+                }
+            } else {
+                Qrcodestatus(amount);
+            }
+
+        } catch (error) {
+            console.error('Error fetching charges:', error);
+        }
+    };
+
+
+    const Qrcodestatus = useCallback(async (amnt) => {
+        try {
+          const response = await post({ url: `${APP_URLS.UPIQR}` });
+          console.log("=============================================================================");
+
+          console.log(response);
+      if(response.name==="ICICI"){
+        const status = response["qrstatus"];
+        const msz = response["msg"];
+        const qrtsresponse = response["qrstatus"];
+        const generatedidresponse = response["GeneratedUniqueid"];
+        const qrcode1response = response["QR"];
+        if (response.status === true) {
+             navigation.navigate("QRCodePage",{qrcode1response,generatedidresponse,amnt});
+
+
+
+
+           } else {
+               showAlert(msz);
+           }
+
+
+      }
+          else if (response && response.status && response.qrstatus === "OK") {
+            navigation.navigate("UpiQrCodes", { response,amnt });
+            console.log("QR is valid, proceed with payment.");
+          } else {
+            console.log("QR status is not OK, try again.");
+          }
+        } catch (error) {
+          console.error("Error fetching QR status:", error);
+        }
+      }, []);
+       /*  try {
+
+            const data = await get({ url: `${APP_URLS.genQr}amountqr=${amnt}` });
+
+            const status = data["Status"];
+            const msz = data["Message"];
+            const qrtsData = data["Success"];
+            const generatedidData = data["GeneratedUniqueid"];
+            const qrcode1Data = data["QRCODE"];
+            navigation.navigate("QRCodePage", { qrcode1Data, generatedidData, qrtsData, amnt, msz });
+
+            setQrts(qrtsData);
+            setGeneratedid(generatedidData);
+            setQrcode1(qrcode1Data);
+
+            if (status === "Success" || msz === "Create") {
+             // navigation.navigate("QRCodePage",{qrcode1Data,generatedidData,qrtsData,amnt});
+
+
+
+
+            } else {
+                showAlert(msz);
+            }
+
+        } catch (error) {
+
+        } */
+ 
+    const showAlert = (message) => {
+        Alert.alert(
+            'Error',
+            message,
+            [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+            { cancelable: false }
+        );
+    };
+    const showAmountRangeSnackBar = (min, max) => {
+        Alert.alert(
+            'Invalid Amount',
+            `For UPI Amount Should be between ₹${min} To ₹${max}`,
+            [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+            { cancelable: false }
+        );
+    };
+    const upists = useCallback(async () => {
+        const Model = await getMobileDeviceId();
+
+
+        try {
+
+
+            const response = await get({ url: `${APP_URLS.upistatus}` });
+
+
+
+            const ActiveApi = response['ActiveApi']
+            if (ActiveApi === ActiveApi) {
+                const payuamount = parseFloat(route.params['amount']);
+                const paymin = parseFloat(response['Minqr']);
+                const paymaxx = parseFloat(response['Maxqr']);
+                if (payuamount >= paymin && payuamount <= paymaxx) {
+                    console.log('is ok')
+                    gatewaytype('UPI');
+                } else {
+                    Alert.alert(
+                        'Warning',
+                        `For UPI Amount should be between ₹ ${paymin} To ₹ ${paymaxx}`,
+                        [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+                        { cancelable: false }
+                    );
+                }
+            } else if (ActiveApi === 'PHONEPE') {
+                phonepestatus();
+            }
+
+        } catch (error) {
+
+        }
+
+    }, []);
+    const upists2 = useCallback(async () => {
+        const Model = await getMobileDeviceId();
+
+
+        try {
+
+
+            const response = await get({ url: `${APP_URLS.upistatus}` });
+            console.log(response);
+            const ActiveApi = response['ActiveApi']
+            const y = response['Status']
+            if (y === 'Y') {
+                upiuserDet();
+                const payuamount = parseFloat(route.params['amount']);
+                const paymin = parseFloat(response['Minqr']);
+                const paymaxx = parseFloat(response['Maxqr']);
+                if (payuamount >= paymin && payuamount <= paymaxx) {
+                    console.log('is ok')
+
+                } else {
+                    Alert.alert(
+                        'Warning',
+                        `For UPI Amount should be between ₹ ${paymin} To ₹ ${paymaxx}`,
+                        [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+                        { cancelable: false }
+                    );
+                }
+            } else {
+                Alert.alert(
+                    'Warning',
+                    `${y}`,
+                    [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+                    { cancelable: false }
+                );
+            }
+
+        } catch (error) {
+
+        }
+
+    }, []);
+
+    const upiuserDet = (async () => {
+        try {
+            const data = await get({ url: `${APP_URLS.upiUserDetails}` });
+
+            const status = data["Status"].toString();
+            const msz = data["Message"];
+
+            setIsLoading(false);
+
+            if (status === "true") {
+                const upiId = data["VPAID"].toString();
+                const minAmount = data["Minamount"].toString();
+                const maxAmount = data["Maxamount"].toString();
+                const perDayLimit = data["PerdayLimit"].toString();
+                const useLimit = data["UpiUseLimit"].toString();
+                const limitMessage = data["PerdayLimitmsg"].toString();
+                const dealerUpiStatus = data["Dealer status"].toString();
+                const dealerUpiid = data["Dealer_VPAID"].toString();
+                const dealerCapping = data["Dealer_caption"].toString();
+
+                setUpiid(upiId);
+                setMinamnt(minAmount);
+                setMaxamnt(maxAmount);
+                setPerdaylimit(perDayLimit);
+                setUselimit(useLimit);
+                setLimitmessage(limitMessage);
+                setDealerUpiStatus(dealerUpiStatus);
+                setDealerUpiid(dealerUpiid);
+                setDealerCapping(dealerCapping);
+
+                const perday = parseFloat(perDayLimit);
+                const useday = parseFloat(useLimit);
+                const amountt = parseFloat(amount);
+                const min = parseFloat(minAmount);
+                const maxx = parseFloat(maxAmount);
+                const cappAmount = parseFloat(dealerCapping);
+
+                if (dealerUpiStatus === "true") {
+                    const dealerBal = parseFloat(data["Dealer Balance"].toString());
+                    const payAmmot = dealerBal - amountt;
+
+                    if (amountt <= dealerBal) {
+                        if (payAmmot > cappAmount) {
+                            if (amountt >= min && amountt <= maxx) {
+                                // Navigate to UpipageDealerUpiId
+                                console.log('Navigate to UpipageDealerUpiId');
+
+                            } else {
+                                Alert.alert(
+                                    'Invalid Amount',
+                                    `For UPI Amount Should be between ₹${min} to ₹${maxx}`,
+                                    [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+                                    { cancelable: false }
+                                );
+                            }
+                        } else {
+                            Alert.alert(
+                                'Error',
+                                'Dealer Capping Is Low Please Contact To Admin',
+                                [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+                                { cancelable: false }
+                            );
+                        }
+                    } else {
+                        Alert.alert(
+                            'Error',
+                            'Dealer Amount Is Low Please Contact To Dealer',
+                            [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+                            { cancelable: false }
+                        );
+                    }
+                } else {
+                    if (useday <= perday) {
+                        if (amountt >= min && amountt <= maxx) {
+                            console.log('Navigate to Upimainpage');
+                        } else {
+                            Alert.alert(
+                                'Invalid Amount',
+                                `For UPI Amount Should be between ₹${min} to ₹${maxx}`,
+                                [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+                                { cancelable: false }
+                            );
+                        }
+                    } else {
+                        Alert.alert(
+                            'Error',
+                            limitMessage,
+                            [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+                            { cancelable: false }
+                        );
+                    }
+                }
+            } else {
+                Alert.alert(
+                    'Error',
+                    `${msz} !!`,
+                    [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+                    { cancelable: false }
+                );
+            }
+            console.log(data);
+        } catch (error) {
+
+        }
+    })
+    const [payUParams,setPayUParams]= useState({})
+    const gatewaytype = useCallback(async (type) => {
+        console.log('type', type);
+
+        try {
+            const data = await post({ url: `${APP_URLS.Chkpayu}type=${type}` })
+            setPayUParams(data);
+            console.log(data);
+
+            var resp = data["Response"];
+            var msz = data["Message"];
+            if (resp == "Success") {
+                setMerchantkey(data["Merchantkey"]);
+                setMerchantid(data["Merchantid"]);
+                setMarsalt(data["MerchantSalt"]);
+                setUSERID(data["USERID"]);
+                setPrivatekey(data["Privatekey"]);
+                setTxnsuccessUrl(data["txnsuccessUrl"]);
+                setTxnfailureUrl(data["txnfailureUrl"]);
+                setMerchemail(data["email"]);
+                setMerchmobile(data["mobile"]);
+                setMrchname(data["name"]);
+
+                if (type == "CC") {
+
+                    Apitransitionsencrypt("CC",data);
+
+                } else if (type == "DC") {
+                    Apitransitionsencrypt('DC',data);
+
+
+                } else if (type == "WA") {
+
+                    Apitransitionsencrypt('WA',data);
+
+                } else if (type == "NB") {
+
+
+                    Apitransitionsencrypt('NB',data);
+                } else if (type == "UPI") {
+                    Apitransitionsencrypt('UP',data);
+
+                }
+            } else {
+                Alert.alert(
+                    'Warning',
+                    ` ${msz} +!!!`,
+                    [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+                    { cancelable: false }
+                );
+            }
+
+        } catch (error) {
+
+        }
+    }, [post]);
+
+
+    const readLatLongFromStorage = async () => {
+        try {
+          const locationData = await AsyncStorage.getItem('locationData');
+    
+          if (locationData !== null) {
+            const { latitude, longitude } = JSON.parse(locationData);
+            console.log('Latitude:', latitude, 'Longitude:', longitude);
+            return { latitude, longitude };
+          } else {
+            console.log('No location data found');
+            return null;
+          }
+        } catch (error) {
+          console.error('Failed to read location data from AsyncStorage:', error);
+          return null;
+        }
+      };
+   
+      
+      const Apitransitionsencrypt = useCallback(async (type,data1) => {
+        try {
+            const id = uuid.v4().toString().substring(0, 16);
+    
+            // Read Location
+            const loc = await readLatLongFromStorage();
+            if (!loc || !loc.latitude || !loc.longitude) {
+                throw new Error('Location data is unavailable.');
+            }
+    
+            // Fetch Network and Device Data
+            const mobileNetwork = await getNetworkCarrier();
+            const ip = await getMobileIp();
+            const model = await getMobileDeviceId();
+          
+    
+            // Perform Encryption
+            const encryption = await encrypt([
+                type,                            // Payment Type
+                model,                           // Device Model
+                loc.latitude,                    // Latitude
+                loc.longitude,                   // Longitude
+                model,                           // Device Model (again)
+                "city",                          // City (example, should be dynamic if needed)
+                "postcode",                      // Postal Code (example, should be dynamic if needed)
+                mobileNetwork,                   // Mobile Network Carrier
+                ip,                              // IP Address
+                loc.latitude + loc.longitude    // Combined Address (Latitude + Longitude)
+            ]);
+    
+            const [
+                typee, Modell, lat, long, Model2,
+                city, postcode, mobileNetwork2, ip2, address
+            ] = encryption.encryptedData;
+    
+            const key = encryption.keyEncode;
+            const vv = encryption.ivEncode;
+    
+            // Create the Request URL
+            const url = `${APP_URLS.sendgatewayReq}txtamt=${encodeURIComponent(amount)}&txnid=${encodeURIComponent(id)}&ddltypes=${encodeURIComponent(typee)}&Devicetoken=${encodeURIComponent(ip2)}&Latitude=${encodeURIComponent(lat)}&Longitude=${encodeURIComponent(long)}&ModelNo=${encodeURIComponent(Model2)}&City=${encodeURIComponent(city)}&PostalCode=${encodeURIComponent(postcode)}&InternetTYPE=${encodeURIComponent(mobileNetwork2)}&IP=${encodeURIComponent(ip2)}&Addresss=${encodeURIComponent(address)}&value1=${encodeURIComponent(key)}&value2=${encodeURIComponent(vv)}`;
+    
+            console.log('Request URL:', url);
+    
+            // API Call to Fetch Data
+            const data = await post({ url });
+    
+            console.log('API Response:', data);
+    
+            const resp = data['Status'];
+
+            const payUParam = await Object.assign({}, data, data1, { amount }); 
+            savePayUParam(payUParam);
+    
+            if (resp === "Success") {
+                console.log('Navigating with payUParam:', payUParam);
+                navigation.navigate('SeamlessScreen', { payUParam });
+            } else {
+                const errorMsg = data["message"] || "Unknown error occurred.";
+                Alert.alert(
+                    'Payment Failed',
+                    `Transaction failed. Reason: ${errorMsg}`,
+                    [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+                    { cancelable: false }
+                );
+            }
+        } catch (error) {
+            // Global error handling
+            console.error('Error in Apitransitionsencrypt:', error.message);
+            Alert.alert(
+                'Error',
+                `Something went wrong: ${error.message}`,
+                [{ text: 'OK', onPress: () => console.log('OK Pressed') }],
+                { cancelable: false }
+            );
+        }
+    }, [amount, payUParams, navigation]);
+    const savePayUParam = async (payUParam) => {
+        console.error('Error saving payUParam', payUParam);
+
+        try {
+          await AsyncStorage.setItem('payUParam', JSON.stringify(payUParam));
+        } catch (e) {
+          console.error('Error saving payUParam', e);
+        }
+      };
+    const gatwaypay = async (type) => {
+        try {
+            const result = await NativeModules.paygatway({
+                type: type,
+                pyamount: amount,
+                pysurl: txnsuccessUrl,
+                pyfurl: txnfailureUrl,
+                pykey: Merchantkey,
+                pysalt: marsalt,
+                pyname: mrchname,
+                pyemail: merchemail,
+                pymobile: merchmobile,
+                txnid: userId
+            });
+            console.log(result);
+
+            if (result != null) {
+                sendpgresponse(result);
+            }
+        } catch (error) {
+            console.error("Can't do native stuff", error);
+        }
+    };
+    const sendpgresponse = async (sendresp) => {
+        try {
+            const url = 'https://native.vastwebindia.com/PaymentGateway/api/data/Gatewayresponse';
+            const body = JSON.stringify({ Response: sendresp });
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer DzgtGegwhg-T0A4KXwyBBkY09RohXL6_BlDrJXoZ0skrp8bDr36t57JwlmTHDI8GOMslQleie5UFCPT2S_QF3Zp6_eIdtymPpAV2cQryZMq_BQ91JP3NkhrPYvYCjkukBZ_RhG61060TuK8sCJs_eJ_dzP_LIVNHVwK01My4Wfiao7d0OJxDDOzx1KFvzug2ePLxJ83dSEmESJp1tDoNcziHmK5JuOhxhlrbtLTQd6uYP0p97MNVokp3C_dkI1peuXRwY_VyOnttjkXkHp7m2Wt4PAhfkSHERyujf4M6I3Ta7xcYqr-zl34qQlBbz4XDsSrbeJxEarsCMJizgp-Fys0u3ycYFK8lpvzZa61yR5rA77yozE1-GJoHeehY7kgmAmGQ8WMSsMbZM8-OqUVq_io5Ym5IeBe62stRLlDjNcpa07YqjbU6l8-CsjKO4azoS4Sbu9r7ANFjJFkARAiO068L12CNOKrfmuSRp7lyuWhZyv6gVHrUDqGh2F8LZPufLtwTCQe9NiMV9KafQ6uqa0Fmv00iDioGo57mpN0lQaw`
+                },
+                body: body
+            });
+
+            console.log(response.status);
+
+            if (response.status === 200) {
+                const data = await response.json();
+                console.log(data);
+            } else {
+                throw new Error('Failed');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+    useEffect(() => {
+        const Model = getMobileDeviceId();
+        console.log(Model);
+    }, [])
+    const getPaymentMethodValues = (method, charges) => {
+        const paymentMethod = charges["WalletChargesenc"][method];
+        if (paymentMethod) {
+            const { cardcharge, netrecived, total } = paymentMethod;
+            return ` Charge: ${cardcharge}\nNet Received: ${netrecived}\nTotal: ${total}`;
+        } else {
+            return "Payment method not found!";
+        }
+    };
+    return (
+        <View style={styles.main}>
+            <AppBarSecond title={'Payment Options'} />
+            <View style={[styles.chargesContainer, { backgroundColor: color1 }]}>
+                <Text style={styles.amounttitle}>Add Amount</Text>
+                <Text style={styles.amounttext}>₹ {amount}</Text>
+
+                <View style={styles.chargeview}>
+                    <View style={styles.chargeinfo}>
+                        <Text style={styles.chargesTitle}>Charges Information  | </Text>
+                        <Text style={styles.chargesvalue}>{chgs.length === 0 ? chgs : '...'}</Text>
+
+                    </View>
+                    <View style={[styles.bordercontainer]} />
+
+                    <View style={styles.chargeinfo}>
+                        <Text style={[styles.chargesTitle,]}>
+                            UPI Charges:
+                        </Text>
+                        <Text style={[styles.chargesvalue,]}>
+                            {upich['Charge %']} %
+                        </Text>
+                    </View>
+                </View>
+            </View>
+
+            <View style={styles.container}>
+                <View style={styles.rowview}>
+                    <View style={styles.btnview}>
+
+                        <TouchableOpacity
+                            style={[styles.option, { borderColor: colors.green01D }]}
+                            onPress={() => handleOptionClick('UPI')}>
+                            <Upipaymentoptionssvg />
+
+                            <View style={[styles.selected,]}>
+                                <Text>✓</Text>
+                            </View>
+                        </TouchableOpacity>
+                        <Text style={[styles.optionText,]}>UPI</Text>
+                    </View>
+
+                    <View style={styles.btnview}>
+                        <TouchableOpacity
+                            style={styles.option}
+                            onPress={() => handleOptionClick('Self UPI')}>
+                            <Upipaymentoptionssvg />
+
+                        </TouchableOpacity>
+                        <Text style={styles.optionText}>Self UPI</Text>
+                    </View>
+                    <View style={styles.btnview}>
+                        <TouchableOpacity
+                            style={styles.option}
+                            onPress={() => handleOptionClick('QR Code')} >
+                            <QrcodAddmoneysvg/>
+
+                        </TouchableOpacity>
+                        <Text style={styles.optionText}>QR Code</Text>
+
+                    </View>
+
+                </View>
+
+                <View style={styles.rowview}>
+                    <View style={styles.btnview}>
+                        <TouchableOpacity
+                            style={styles.option}
+                            onPress={() => handleOptionClick('Creditcard')}
+                        >
+                            <CreditCardsvg/>
+                            
+                        </TouchableOpacity>
+                        <Text style={styles.optionText}>Credit Card</Text>
+
+                    </View>
+                    <View style={styles.btnview}>
+
+                        <TouchableOpacity
+                            style={styles.option}
+                            onPress={() => handleOptionClick('debitCardcharges')}
+                        >
+                            <DebitCardsvg />
+                        </TouchableOpacity>
+                        <Text style={styles.optionText}>Debit Card</Text>
+
+                    </View>
+                    <View style={styles.btnview}>
+
+                        <TouchableOpacity
+                            style={styles.option}
+                            onPress={() => handleOptionClick('Netbanking')}
+                        >
+                            <NetBanksvg />
+                        </TouchableOpacity>
+                        <Text style={styles.optionText}>Net Banking</Text>
+
+                    </View>
+
+
+
+                </View>
+
+                <View style={styles.rowview}>
+                    <View style={styles.btnview}>
+                        <TouchableOpacity
+                            style={styles.option}
+                            onPress={() => Apitransitionsencrypt('type')}
+                        >
+                            <Distributorsvg />
+                        </TouchableOpacity>
+                        <Text style={styles.optionText}>Request to Distributor</Text>
+
+                    </View>
+                    <View style={styles.btnview}>
+
+                        <TouchableOpacity
+                            style={styles.option}
+                            onPress={() => handleOptionClick('Request to Admin')}
+                        >
+                            <Adminsvg />
+                        </TouchableOpacity>
+                        <Text style={styles.optionText}>Request to Admin</Text>
+
+                    </View>
+                    <View style={styles.btnview}>
+
+                        <TouchableOpacity
+                            style={styles.option}
+                            onPress={() => handleOptionClick('Request to Admin')}
+                        >
+                            <Internationalcardsvg />
+
+                        </TouchableOpacity>
+                        <Text style={styles.optionText}>International Card</Text>
+                    </View>
+                </View>
+                <View style={styles.btnview}>
+
+                    <TouchableOpacity
+                        style={styles.option}
+                        onPress={() => handleOptionClick('Wallet')}
+                    >
+                        <WalletSvg color={colorConfig.secondaryColor} size={40} />
+
+                    </TouchableOpacity>
+                    <Text style={styles.optionText}>Wallet</Text>
+
+                </View>
+                <DynamicButton
+                    styleoveride={{ marginTop: 20 }}
+                    title={`Pay by ${buttontxt}`}
+                    onPress={() => {
+                        console.log(checkFun);
+                        handleOptionClick2(checkFun);
+                    }} />
+
+
+            </View>
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    main: {
+        flex: 1,
+    },
+    container: {
+        flex: 1,
+        paddingHorizontal: wScale(15),
+        paddingTop: hScale(10)
+    },
+
+    chargesContainer: {
+        marginBottom: hScale(10)
+    },
+    chargesTitle: {
+        fontSize: FontSize.massive,
+        color: colors.black,
+        textAlign: 'center',
+    },
+    chargesvalue: {
+        fontSize: FontSize.regular,
+        color: colors.black,
+        fontWeight: 'bold',
+        textAlign: 'center'
+    },
+    chargeview: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: hScale(5),
+        borderTopWidth: wScale(1),
+        borderStyle: 'dashed'
+    },
+    chargeinfo: {
+        alignItems: 'center',
+        flex: 1
+    },
+    chargeItem: {
+        padding: wScale(10),
+        borderRadius: 5,
+        backgroundColor: '#f0f0f0',
+    },
+
+    amounttext: {
+        fontSize: FontSize.heading,
+        color: colors.black,
+        fontWeight: 'bold',
+        textAlign: 'center'
+    },
+    amounttitle: {
+        fontSize: FontSize.medium,
+        color: colors.black,
+        fontWeight: 'bold',
+        textAlign: 'center'
+    },
+    bordercontainer: {
+        borderRightWidth: wScale(2),
+        borderRightColor: colors.black_01
+    },
+    rowview: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: hScale(10),
+        paddingHorizontal: wScale(30),
+    },
+    btnview: {
+        alignItems: 'center'
+    },
+    option: {
+        width: wScale(60),
+        height: wScale(60),
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: wScale(1),
+    },
+    optionText: {
+        fontSize: FontSize.xSmall,
+        textAlign: 'center',
+        color: colors.black75,
+        marginTop: hScale(3),
+        width: wScale(90),
+    },
+    selected: {
+        height: wScale(20),
+        width: wScale(20),
+        position: 'absolute',
+        right: wScale(-7),
+        top: hScale(-7),
+        borderRadius: 20,
+        alignItems: 'center',
+        backgroundColor: 'green'
+    },
+
+});
+
+export default AddMoneyOptions;
