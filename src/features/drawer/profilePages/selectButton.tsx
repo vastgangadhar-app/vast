@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { State } from 'react-native-gesture-handler';
 import { RootState } from '../../../reduxUtils/store';
 import { hScale, wScale } from '../../../utils/styles/dimensions';
+import CheckSvg from '../svgimgcomponents/CheckSvg';
 
 const SelectableButton = ({ setselectedopt }) => {
   const { colorConfig } = useSelector((State: RootState) => State.userInfo);
@@ -41,7 +42,8 @@ const SelectableButton = ({ setselectedopt }) => {
             selectedButton === 'button1' && styles.rightbutn2,
           ]}>
           {selectedButton === 'button1' && (
-            <Text style={styles.selectedButtonText}>✓</Text>
+            // <Text style={styles.selectedButtonText}>✓</Text>
+            <CheckSvg size={15}/>
           )}
         </View>
       </TouchableOpacity>
@@ -68,7 +70,9 @@ const SelectableButton = ({ setselectedopt }) => {
             selectedButton === 'button2' && styles.rightbutn2,
           ]}>
           {selectedButton === 'button2' && (
-            <Text style={styles.selectedButtonText}>✓</Text>
+            // <Text style={styles.selectedButtonText}>✓</Text>
+                        <CheckSvg size={15}/>
+
           )}
         </View>
       </TouchableOpacity>

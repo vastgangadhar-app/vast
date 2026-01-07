@@ -11,7 +11,7 @@ import { RootState } from '../../../reduxUtils/store';
 import { useNavigation } from '@react-navigation/native';
 
 const ServicepurchaseScreen = ({ route }) => {
-  const { colorConfig } = useSelector((status: RootState) => status.userInfo);
+  const { colorConfig, activeAepsLine } = useSelector((status: RootState) => status.userInfo);
   const Cross = `
     <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="512" height="512" x="0" y="0" viewBox="0 0 32 32" style="enable-background:new 0 0 512 512" xml:space="preserve" class="">
       <g>
@@ -35,7 +35,7 @@ const ServicepurchaseScreen = ({ route }) => {
 
   const getCharge = async () => {
     console.log(route);
-    const url = `${APP_URLS.getServiceCharge}Service=${route.params.typename}`;
+    const url = activeAepsLine ? `${APP_URLS.getServiceChargeNifi}Service=${route.params.typename}` : `${APP_URLS.getServiceCharge}Service=${route.params.typename}`;
     console.log(url);
     try {
       const res = await post({ url: url });
@@ -57,22 +57,22 @@ const ServicepurchaseScreen = ({ route }) => {
   const servicePurchase = async (type) => {
     try {
       const url = `${APP_URLS.getServicePurchase}${type}`;
-      const res = await post({ url: url }); 
+      const res = await post({ url: url });
       console.log(url);
       console.log(res);
-      
-      setIsLoading(false); 
-      setVisible2(false); 
+
+      setIsLoading(false);
+      setVisible2(false);
       setVisible1(true);
-  
+
       if (res.Status === "Success") {
         Alert.alert(
           "Success",
           res.Message,
           [
-            { 
-              text: "OK", 
-              onPress: () => navigation.navigate('Dashboard') 
+            {
+              text: "OK",
+              onPress: () => navigation.navigate('Dashboard')
             }
           ]
         );
@@ -93,7 +93,7 @@ const ServicepurchaseScreen = ({ route }) => {
       );
     }
   };
-  
+
 
   return (
     <View style={styles.main}>
@@ -112,7 +112,7 @@ const ServicepurchaseScreen = ({ route }) => {
                 setVisible1(false);
                 setVisible2(true);
                 setTypee('ALL');
-                getCharge(); 
+                getCharge();
               }} />
             </View>
           </View>

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,31 +11,36 @@ import {
 } from 'react-native';
 import { hScale, wScale } from '../../../utils/styles/dimensions';
 import DynamicButton from '../../drawer/button/DynamicButton';
-import { useLocationHook } from '../../../utils/hooks/useLocationHook';
 import { useSelector } from 'react-redux';
 import { useDeviceInfoHook } from '../../../utils/hooks/useDeviceInfoHook';
 import { AepsContext } from './context/AepsContext';
 import RNFS from 'react-native-fs';
 import useAxiosHook from '../../../utils/network/AxiosClient';
-import { captureFinger, getDeviceInfo } from 'react-native-rdservice-fingerprintscanner';
+import { captureFinger, getDeviceInfo, isDriverFound } from 'react-native-rdservice-fingerprintscanner';
 import { useNavigation } from '@react-navigation/native';
 import { APP_URLS } from '../../../utils/network/urls';
 import ShowLoader from '../../../components/ShowLoder';
 import CheckBlance from '../../../utils/svgUtils/CheckBlance';
 import { colors } from '../../../utils/styles/theme';
 import { useRdDeviceConnectionHook } from '../../../hooks/useRdDeviceConnectionHook';
+import { useLocationHook } from '../../../hooks/useLocationHook';
+import AppBarSecond from '../../drawer/headerAppbar/AppBarSecond';
+import SelectDevice from './DeviceSelect';
+import { RootState } from '../../../reduxUtils/store';
 
 const Aepsekycscan = () => {
-  const {isDeviceConnected} = useRdDeviceConnectionHook();
+  const { isDeviceConnected } = useRdDeviceConnectionHook();
+  const { activeAepsLine } = useSelector((state: RootState) => state.userInfo);
 
   const [isLoading, setIsLoading] = useState(false);
-  const { latitude, longitude } = useLocationHook();
   const { aadharNumber, setAadharNumber, mobileNumber, setFingerprintData, setMobileNumber, consumerName, setConsumerName, bankName, setBankName, fingerprintData, scanFingerprint } = useContext(AepsContext);
   const { get, post } = useAxiosHook();
   const navigation = useNavigation<any>();
   const [isReady, setIsReady] = useState(false);
 
   const [deviceName, setDeviceName] = useState('');
+    const [setttdeviceName, setdeviceName] = useState();
+
 
   // useEffect(() => {
   //   let intervalId;
@@ -50,7 +55,7 @@ const Aepsekycscan = () => {
   //       if (status ==='READY') {
   //         setIsReady(true);
   //       }
-       
+
   //       switch (rdServicePackage) {
   //         case "com.scl.rdservice":
   //           setDeviceName('Morpho L0');
@@ -123,7 +128,9 @@ const Aepsekycscan = () => {
 
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
-  const { userId } = useSelector((state: RootState) => state.userInfo);
+  const { userId, Loc_Data } = useSelector((state: RootState) => state.userInfo);
+  const { latitude, longitude } = Loc_Data;
+
   const start = () => {
     getDeviceInfo()
       .then((res) => {
@@ -176,40 +183,44 @@ const Aepsekycscan = () => {
     switch (rdServicePackage) {
       case 'com.mantra.mfs110.rdservice':
         pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" pTimeout="20000" posh="UNKNOWN" env="P"  /> <CustOpts><Param name="mantrakey" value="" /></CustOpts> </PidOptions>`;
-        break; 
-        case 'com.mantra.rdservice':
+        break;
+      case 'com.mantra.rdservice':
         pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" pTimeout="20000" posh="UNKNOWN" env="P"  /> <CustOpts><Param name="mantrakey" value="" /></CustOpts> </PidOptions>`;
         break;
       case 'com.acpl.registersdk_l1':
         pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" timeout="10000"  otp="" pTimeout="20000" posh="UNKNOWN" env="P" />  <Demo/> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>`;
-        break; 
-        case 'com.acpl.registersdk':
+        break;
+      case 'com.acpl.registersdk':
         pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" timeout="10000"  otp="" pTimeout="20000" posh="UNKNOWN" env="P" />  <Demo/> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>`;
         break;
       case 'com.idemia.l1rdservice':
         pidOptions = `<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" posh="UNKNOWN" /><Demo></Demo><CustOpts><Param name="" value="" /></CustOpts></PidOptions>`;
         break;
       case 'com.scl.rdservice':
-      //  pidOptions = '<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000"  posh="UNKNOWN" env="P" /> <Demo></Demo> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>';
-          pidOptions = `<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" posh="UNKNOWN" /><Demo></Demo><CustOpts><Param name="" value="" /></CustOpts></PidOptions>`;
-      break;
+        //  pidOptions = '<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000"  posh="UNKNOWN" env="P" /> <Demo></Demo> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>';
+        pidOptions = `<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" posh="UNKNOWN" /><Demo></Demo><CustOpts><Param name="" value="" /></CustOpts></PidOptions>`;
+        break;
       default:
         console.error('Unsupported rdServicePackage');
         return;
     }
     captureFinger(pidOptions)
       .then((res) => {
-  
+
         if (res.errorCode === 720) {
           setFingerprintData(720);
           console.log('setFingerprintData', res.errInfo, res.message);
+          alert(res.errInfo || res.message || 'Please check if the device is connected.');
+
         } else if (res.status === -1) {
           setFingerprintData(-1);
         } else if (res.errorCode === 0) {
           setFingerprintData(res.pidDataJson);
 
-          OnPressEnq(res.pidDataJson);
+          OnPressEnq(res.pidDataJson,res.pidDataXML);
           console.log('setFingerprintData', res);
+          //  alert(res||'Please check if the device is connected.');
+
           const responseString = JSON.stringify(res.pidDataJson, null, 2);
         }
       })
@@ -220,12 +231,24 @@ const Aepsekycscan = () => {
       });
   };
 
-  const OnPressEnq = async (fingerprintData) => {
-    setIsLoading(true);
 
+  const saveData = async (data) => {
+  try {
+    const jsonValue = (data);
+    await AsyncStorage.setItem('@captured_benq_data', jsonValue);
+    console.log('✅ Data saved in AsyncStorage');
+  } catch (e) {
+    console.error('❌ Error saving data', e);
+  }
+};
+  const OnPressEnq = async (fingerprintData,pidDataXx) => {
+    setIsLoading(true);
+    await saveData(fingerprintData.PidData);
     const pidData = fingerprintData.PidData;
+    console.log(pidData,"++++++++++++")
     const DevInfo = pidData.DeviceInfo;
     const Resp = pidData.Resp;
+    const pidDataX = pidDataXx;
     const cardnumberORUID = {
       adhaarNumber: aadharNumber,
       indicatorforUID: "0",
@@ -256,7 +279,7 @@ const Aepsekycscan = () => {
       rdsVer: DevInfo.rdsVer,
       sessionKey: pidData.Skey.content
     };
-    BEnQ(captureResponse, cardnumberORUID);
+    BEnQ(captureResponse, cardnumberORUID,pidDataX,pidData);
 
     try {
 
@@ -265,38 +288,83 @@ const Aepsekycscan = () => {
     }
 
   };
+  const openFace = () => {
+    console.log(userId, '=-=-=-=-=-=-=-=')
 
-
-  const readLatLongFromStorage = async () => {
-    try {
-      const locationData = await AsyncStorage.getItem('locationData');
-
-      if (locationData !== null) {
-        const { latitude, longitude } = JSON.parse(locationData);
-        console.log('Latitude:', latitude, 'Longitude:', longitude);
-        return { latitude, longitude };
-      } else {
-        console.log('No location data found');
+    openFaceAuth('')
+      .then(async (response) => {
+        console.log('Face Auth Response:', response);
+        if (response.errorCode === 892) {
+          return;
+        }
+        OnPressEnq(response);
+      })
+      .catch((error) => {
+        console.error('Error during face authentication:', error);
         return null;
+      });
+  };
+  const getSavedBenqData = async () => {
+  try {
+    const jsonValue = await AsyncStorage.getItem('@captured_benq_data');
+    const parsedValue = jsonValue != null ? JSON.parse(jsonValue) : null;
+    console.log('📦 Saved BENQ Data:', parsedValue);
+
+    return parsedValue;
+  } catch (e) {
+    console.error('❌ Error reading data', e);
+  }
+};
+  const handleSelection =async (selectedOption) => {
+    await getSavedBenqData();
+    if (deviceName === 'Device') {
+      return;
+    }
+
+
+    const captureMapping = {
+      'Mantra L0': 'com.mantra.rdservice',
+      'Mantra L1': 'com.mantra.mfs110.rdservice',
+      'Startek L0': 'com.acpl.registersdk',
+      'Startek L1': 'com.acpl.registersdk_l1',
+      'Morpho L0': 'com.scl.rdservice',
+      'Morpho L1': 'com.idemia.l1rdservice',
+      // 'Aadhaar Face RD': 'Aadhaar Face RD',
+    };
+
+    const selectedCapture = captureMapping[selectedOption];
+    if (selectedCapture) {
+
+      if (selectedOption === 'Aadhaar Face RD') {
+        //setIsFace(selectedOption === 'Aadhaar Face RD')
+        openFace();
+      } else {
+        isDriverFound(selectedCapture)
+          .then((res) => {
+            capture(selectedCapture);
+          })
+          .catch((error) => {
+            console.error('Error finding driver:', error);
+            alert('Error: Could not find the selected driver.');
+          });
       }
-    } catch (error) {
-      console.error('Failed to read location data from AsyncStorage:', error);
-      return null;
+    } else {
+      alert('Invalid option selected');
     }
   };
-  const BEnQ = async (captureResponse1, cardnumberORUID1) => {
-    setIsLoading(true);
 
-    const loc = await readLatLongFromStorage();
+  const BEnQ = useCallback(async (captureResponse1, cardnumberORUID1,pidDataX,piddata) => {
+    setIsLoading(true);
     try {
       const Model = await getMobileDeviceId();
       const address = 'vwi';
       const jdata = {
+        capxml:pidDataX,
         captureResponse: captureResponse1,
         cardnumberORUID: cardnumberORUID1,
         languageCode: 'en',
-        latitude: loc?.latitude,
-        longitude: loc?.longitude,
+        latitude: latitude,
+        longitude: longitude,
         mobileNumber: '',
         merchantTranId: userId,
         merchantTransactionId: userId,
@@ -319,39 +387,41 @@ const Aepsekycscan = () => {
       };
 
       console.log('headers', headers);
+      console.log('headers', jdata);
       const data = JSON.stringify(jdata);
       console.log('Request Data:', data);
-
+//await saveData(jdata);
       const response = await post({
-        url: APP_URLS.AepsKycFinScan,
+        url: activeAepsLine ? APP_URLS.AepsKycFinScanNifi : APP_URLS.AepsKycFinScan,
         data,
         config: {
           headers,
         },
       });
-      const { Message, Status, } = response;
+
+      const { Message, Status } = response;
+    
       if (response) {
-        setIsLoading(false)
+        setIsLoading(false);
         Alert.alert(
           'Message:',
           `\n${Status === true ? 'Success' : 'Failed'}\n${Message}`,
           [
-            { text: 'OK', onPress: () => navigation.navigate("AepsTabScreen") },
+            Status === true?{ text: 'OK', onPress: () => navigation?.navigate("AepsTabScreen") }:{ text: 'OK', onPress: () => navigation?.navigate("ReportScreen") },
           ]
         );
+
       } else {
         Alert.alert(`Message:`, `\n${Status == true ? 'Success' : 'Failed'}\n${Message}`);
-        setIsLoading(false)
-
+        setIsLoading(false);
       }
 
-      setFingerprintData(720)
-
+      setFingerprintData(720);
 
     } catch (error) {
       console.error('Error during balance enquiry:', error);
     }
-  };
+  }, [latitude, longitude, userId, formattedDate, navigation]); // d
 
   const colorScheme = useColorScheme();
   const getDynamicStyles = () => {
@@ -381,7 +451,7 @@ const Aepsekycscan = () => {
         },
         title: {
           ...styles.title,
-          color: '#000', 
+          color: '#000',
         },
         textContainer: {
           ...styles.textContainer,
@@ -397,8 +467,10 @@ const Aepsekycscan = () => {
   const dynamicStyles = getDynamicStyles();
 
   return (
-    <View style={dynamicStyles.container}>
-{/* 
+    <View style={styles.main}>
+      <AppBarSecond title={'E-kyc Scan'} />
+      <View style={dynamicStyles.container}>
+        {/* 
 {isReady === false ? (
             <ActivityIndicator size={'large'}/>
           ) : (
@@ -407,26 +479,34 @@ const Aepsekycscan = () => {
             </View>
           )}
           <Text style={styles.deviceConnectionText}>{`Device Connection- is ${deviceName} ${isReady?'Ready':"Not Ready"}`}</Text> */}
-  
-      <Text style={dynamicStyles.title}>E-KYC is Not Completed</Text>
-      <View style={dynamicStyles.textContainer}>
-        <Text style={dynamicStyles.text}>
-          1. Dear Customer, Your E - KYC is Not Completed. So Firstly Complete Your E - KYC.
-        </Text>
-        <Text style={dynamicStyles.text}>
-          2. For Complete Your E - KYC please Click to 'Ok' Button, after click you receive an otp on Your Register Mobile Number
-        </Text>
-        <Text style={dynamicStyles.text}>
-          3. Please firstly Connect Your Mobile with Finger Print Scanner Device (Morpho, Mantra, Startek).
-        </Text>
+
+        <Text style={dynamicStyles.title}>E-KYC is Not Completed</Text>
+        <View style={dynamicStyles.textContainer}>
+          <Text style={dynamicStyles.text}>
+            1. Dear Customer, Your E - KYC is Not Completed. So Firstly Complete Your E - KYC.
+          </Text>
+          <Text style={dynamicStyles.text}>
+            2. For Complete Your E - KYC please Click to 'Ok' Button, after click you receive an otp on Your Register Mobile Number
+          </Text>
+          <Text style={dynamicStyles.text}>
+            3. Please firstly Connect Your Mobile with Finger Print Scanner Device (Morpho, Mantra, Startek).
+          </Text>
+        </View>
+        {isLoading ? <ShowLoader /> : null}
+        <SelectDevice setDeviceName={setDeviceName}
+          device={'Device'}
+          isface2={true}
+
+          opPress={() => { setDeviceName(deviceName); }} />
+
+        <DynamicButton title='Scan'
+          onPress={async() => {
+            await getSavedBenqData()
+            handleSelection(deviceName);
+          }}
+          styleoveride={undefined}
+        />
       </View>
-      {isLoading ? <ShowLoader /> : null}
-      <DynamicButton title='Scan'
-        onPress={() => {
-          start();
-        }} 
-        styleoveride={undefined}
-      />
     </View>
   );
 };
@@ -442,8 +522,13 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    justifyContent: 'center',
+    // justifyContent: 'center',
     paddingHorizontal: hScale(20),
+    paddingTop: hScale(20),
+
+  },
+  main: {
+    flex: 1,
   },
   title: {
     fontSize: hScale(20),
@@ -457,7 +542,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'justify',
     marginBottom: hScale(10),
-    
+
   },
 });
 

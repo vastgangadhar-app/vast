@@ -4,7 +4,7 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator,
 import { translate } from '../../../utils/languageUtils/I18n';
 import { BottomSheet } from '@rneui/base';
 import { FlashList } from '@shopify/flash-list';
-import { SCREEN_HEIGHT, hScale, wScale } from '../../../utils/styles/dimensions';
+import { SCREEN_HEIGHT, SCREEN_WIDTH, hScale, wScale } from '../../../utils/styles/dimensions';
 import { colors } from '../../../utils/styles/theme';
 import DropdownSvg from '../../../utils/svgUtils/DropdownSvg';
 import { APP_URLS } from '../../../utils/network/urls';
@@ -18,16 +18,21 @@ import DynamicButton from '../../drawer/button/DynamicButton';
 import ClosseModalSvg2 from '../../drawer/svgimgcomponents/ClosseModal2';
 import { useNavigation } from '@react-navigation/native';
 import { useDeviceInfoHook } from '../../../utils/hooks/useDeviceInfoHook';
+import CloseSvg from '../../drawer/svgimgcomponents/CloseSvg';
+import { playSound } from '../../dashboard/components/Sounds';
+import ShowLoader from '../../../components/ShowLoder';
+//import { useLocationHook } from '../../../utils/hooks/useLocationHook';
+import { useLocationHook } from '../../../hooks/useLocationHook';
+import { onReceiveNotification2 } from '../../../utils/NotificationService';
 
-const AddNewBenificiaryScreen = ({ route }) => {
+const AddNewBenificiaryScreen = ({ no, Name2, Name, remid, onPress, onPress2 }) => {
   const { colorConfig } = useSelector((state: RootState) => state.userInfo);
-
+const {} = useLocationHook()
   const color1 = `${colorConfig.secondaryColor}20`;
 
-  const { no, Name } = route.params;
   const { userId } = useSelector((state: RootState) => state.userInfo);
 
-  const [name, setName] = useState('');
+  const [name, setName] = useState(Name2);
   const [senderNo, setsenderNo] = useState('');
 
   const [accountNumber, setAccountNumber] = useState('');
@@ -51,6 +56,17 @@ const AddNewBenificiaryScreen = ({ route }) => {
 
     item["bank_name"].toLowerCase().includes(searchQuery.toLowerCase())
   );
+const [isload,setIsload]= useState(false)
+
+
+  const handlepress = () => {
+    onPress()
+
+    console.log('efeeeeeeeeeee')
+  }
+  const handlepress2 = () => {
+    onPress2()
+  }
   const Radiant = (res) => {
 
     console.log(res);
@@ -59,7 +75,7 @@ const AddNewBenificiaryScreen = ({ route }) => {
     } else {
       Alert.alert('Successfully', res['ADDINFO'], [{
         text: 'OK', onPress: () => {
-          navigation. goBack();
+          navigation.goBack();
         }
       }]);
 
@@ -67,41 +83,71 @@ const AddNewBenificiaryScreen = ({ route }) => {
 
   }
   const vast = (res) => {
+
     console.log('vast', res)
     if (res['RESULT'] == '1') {
       setGoodMark2(false);
       Alert.alert('Failed', res['ADDINFO'], [{
         text: 'OK', onPress: () => {
-          navigation. goBack();
+          navigation.goBack();
         }
       }]);
     } else if (res['RESULT'] == '0') {
 
       setGoodMark2(true);
       console.log('ADDINFO', res['ADDINFO']['status'])
-      Alert.alert('Success', res['ADDINFO']['status'], [{ text: '', onPress: () => { setModalVisible(false); navigation. goBack(); } }]);
 
+      Alert.alert('Success', res['ADDINFO']['status'],
+        [{
+          text: '', onPress: () => {
+            setModalVisible(false);
+            handlepress2()
+
+            // navigation. goBack();
+
+          }
+        }]);
+  const mockNotification = {
+            notification: {
+              title: `${res['ADDINFO']['status'] ==='Transaction Successful' ?'Bank account is linked':''}`,
+              body:`${res['ADDINFO']['status']}- \nDetails\nName :${name}\nAcc No :${accountNumber} \nMo : ${senderNo}`,
+            },
+          };
+          
+          // Call the function
+          onReceiveNotification2(mockNotification);  
     } else {
       Alert.alert('Error', '', [{ text: 'OK', onPress: () => { } }]);
 
     }
-
+   // playSound('')
   }
+  const removeUnwantedWords = (text) => {
+    let cleanedText = text
+      .replace(/\bs\/o\b/gi, '')
+      .replace(/\bw\/o\b/gi, '');
+    console.log(cleanedText.trim())
+    return cleanedText.trim();
+  };
+
   useEffect(() => {
     setIsR(Name === 'RADIANT');
     console.log(Name === 'RADIANT');
 
-    console.log(route.params)
+
   }, [])
   const handleSaveAccount = async (bename) => {
+    setIsload(true)
+
+    const namee = await removeUnwantedWords(bename)
+
     console.log(Name);
-    const { remid } = route.params;
     if (accountNumber === reEnterAccountNumber) {
       setGoodMark2(true);
       setIsLoading(true);
       setValidate(false);
 
-      const baseUrl = `Money/api/Radiant/AddBeneficiary?sender_number=${no}&Name=${name}&Accountnumber=${accountNumber}&bankname=${bank}&Ifsccode=${ifscCode}`;
+      const baseUrl = `Money/api/Radiant/AddBeneficiary?sender_number=${no}&Name=${namee}&Accountnumber=${accountNumber}&bankname=${bank}&Ifsccode=${ifscCode}`;
       const url = `${APP_URLS.saveBank}Name=${bename}&AccountNo=${accountNumber}&IFSC=${ifscCode}&Mobile=''&SenderNo=${no}&remitterid=${remid}&ifscoriginal=${ifscCode}`;
 
       try {
@@ -120,6 +166,8 @@ const AddNewBenificiaryScreen = ({ route }) => {
       } catch (error) {
         console.error('Error saving account:', error);
       } finally {
+        setIsload(false)
+
         setIsLoading(false);
       }
     } else {
@@ -130,10 +178,9 @@ const AddNewBenificiaryScreen = ({ route }) => {
 
   const { get, post } = useAxiosHook();
   useEffect(() => {
-    // setsenderNo(route.params['no'])
+    setsenderNo(no)
     getBanks();
     getGenUniqueId();
-    console.log(route.params)
   }, [])
   const getBanks = async () => {
     try {
@@ -195,6 +242,8 @@ const AddNewBenificiaryScreen = ({ route }) => {
   const verifyAcc = async (mb, iff, cd, bno, mal, sk, pi, kk, bankName, kyc, uniqueid) => {
     console.log(mb, iff, cd, bno, mal, sk, pi, kk, bankName, kyc, uniqueid);
     console.log(sk, 'sk');
+    setIsload(true)
+
     try {
       const Model = await getMobileDeviceId();
       const url = `${APP_URLS.verifybankACC}mb=${mb}&iff=${iff}&cd=${Model}&bno=${bno}&mal=${mal}&sk=${sk}&pi=${Model}&kk=${kk}&bankName=${bankName}&kyc=''&uniqueid=${uniqueid}`
@@ -208,23 +257,36 @@ const AddNewBenificiaryScreen = ({ route }) => {
       console.log(addinfo);
       const data = addinfo.data;
       console.log(data);
-      const bename = addinfo["data"]["benename"];
-      const verify = addinfo["data"]["verification_status"];
-      const charged_amt = addinfo["data"]["charged_amt"];
-      const bankrefno = addinfo["data"]["bankrefno"];
-      const local = addinfo["Local"];
-      setName(bename);
-      console.log(local, verify, bename, charged_amt, bankrefno)
 
+      // {"status": "Balance Fatching Problem.", "statuscode": "LOW"}
       if (res.RESULT === '1') {
         setGoodMark(false);
-        Alert.alert('Message', res['ADDINFO'], [{
-          text: 'OK', onPress: () => { },
-        }]);
+        Alert.alert('Message',
+
+          res['ADDINFO'] || res['ADDINFO'].statuscode === 'LOW' ? res['ADDINFO'].status : 'try after sometime !!!',
+
+          [{
+            text: 'OK', onPress: () => { },
+          }]);
 
         setIsLoading(false);
       } else if (res.RESULT === '0') {
+        const bename = addinfo["data"]["benename"];
+        const verify = addinfo["data"]["verification_status"];
+        const charged_amt = addinfo["data"]["charged_amt"];
+        const bankrefno = addinfo["data"]["bankrefno"];
+        const local = addinfo["Local"];
+        setName(bename);
 
+          const mockNotification = {
+            notification: {
+              title: verify,
+              body: `A/C verified for money transfer status is ${verify}, name : ${bename} `,
+            },
+          };
+          
+          // Call the function
+          onReceiveNotification2(mockNotification);  
         setVerificationDetails({
           name: bename,
           status: verify,
@@ -249,20 +311,23 @@ const AddNewBenificiaryScreen = ({ route }) => {
           setGoodMark(false);
         }
 
-        if (local === 'Local') {
-          Alert.alert(
-            bename,
-            res['ADDINFO'],
-            [{ text: 'OK', onPress: () => { } }]
-          );
-        } else {
-          // Alert.alert(verify, `Name: ${bename}\nCharge Amount: ${charged_amt}`, [{ text: 'OK', onPress: () => {navigation.navigate('GetBenificiaryScreen',{Name:Name}) } }]);
-          // setGoodMark(true);
-        }
+        // if (local === 'Local') {
+        //   Alert.alert(
+        //     bename,
+        //     res['ADDINFO'],
+        //     [{ text: 'OK', onPress: () => { } }]
+        //   );
+        // } else {
+        //   // Alert.alert(verify, `Name: ${bename}\nCharge Amount: ${charged_amt}`, [{ text: 'OK', onPress: () => {navigation.navigate('GetBenificiaryScreen',{Name:Name}) } }]);
+        //   // setGoodMark(true);
+        // }
       } else {
+
         setIsLoading(false);
         Alert.alert('Failed', res['ADDINFO'], [{ text: 'OK', onPress: () => { } }]);
       }
+      setIsload(false)
+
     } catch (error) {
       console.error(error);
     }
@@ -359,15 +424,44 @@ const AddNewBenificiaryScreen = ({ route }) => {
     />
   }
   return (
-    <View style={styles.main}>
-      <AppBarSecond title={'Add Beneficiary'} />
+    <View style={[styles.main, { borderColor: colorConfig.secondaryColor }]}>
+
+      {isload && <ShowLoader/>}
+      <View
+        style={[
+          styles.texttitalView,
+          { backgroundColor: colorConfig.secondaryColor },
+        ]}>
+        <View
+          style={[
+            styles.cutout,
+            { borderTopColor: colorConfig.secondaryColor },
+          ]}
+        />
+        <Text style={styles.texttital}>           Add Benificiary</Text>
+        <Text style={{ color: "#fff" }}>                   {no}</Text>
+
+      </View>
+
+
+      <TouchableOpacity
+        onPress={() => {
+          handlepress()
+
+        }}
+        activeOpacity={0.7}
+        style={[
+          styles.closebuttoX, { backgroundColor: colorConfig.secondaryColor },
+        ]}>
+        <CloseSvg />
+      </TouchableOpacity>
       <ScrollView
       >
 
         <View style={styles.container}>
-          <FlotingInput label={'Mobile Number'} value={no}
+          {/* <FlotingInput label={'Mobile Number'} value={no}
             maxLength={10}
-            keyboardType='decimal-pad' onChangeTextCallback={text => setsenderNo(text)} editable={true} />
+            keyboardType='decimal-pad' onChangeTextCallback={text => setsenderNo(text)} editable={true} /> */}
           <FlotingInput label={'Name'} valu={name}
             onChangeTextCallback={text => setName(text)} />
 
@@ -515,6 +609,7 @@ const AddNewBenificiaryScreen = ({ route }) => {
               )}
               <View style={styles.buttonContainer}>
                 <Button title="Save" onPress={() => { handleSaveAccount(name); }} />
+                <Text>      </Text>
                 <Button title="Cancel" onPress={() => setModalVisible(false)} />
               </View>
             </View>
@@ -527,12 +622,29 @@ const AddNewBenificiaryScreen = ({ route }) => {
 };
 const styles = StyleSheet.create({
   main: {
-    flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
+    elevation: 5,
+    borderWidth: 1,
+    marginTop: hScale(20),
+    borderRadius: 5,
+    marginHorizontal: wScale(13)
+  },
+  closebuttoX: {
+    borderRadius: wScale(24),
+    alignItems: 'center',
+    height: wScale(42),
+    width: wScale(42),
+    justifyContent: 'center',
+    elevation: 5,
+    position: 'absolute',
+    right: wScale(-11),
+    top: hScale(-11),
   },
   container: {
+    top: hScale(8),
     paddingHorizontal: wScale(20),
     paddingVertical: wScale(15),
+    marginTop: hScale(20)
   },
   righticon2: {
     position: "absolute",
@@ -612,6 +724,39 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  texttital: {
+    fontSize: wScale(18),
+    fontWeight: 'bold',
+    color: '#fff',
+    width: 240,
+    paddingLeft: wScale(10)
+  },
+  texttitalView: {
+    width: wScale(200),
+    height: hScale(40),
+    borderTopLeftRadius: wScale(5),
+    position: 'absolute',
+    top: hScale(-1),
+    left: wScale(-1),
+    justifyContent: 'center',
+    paddingBottom: hScale(3),
+    borderBottomRightRadius: 0,
+  },
+  cutout: {
+    borderTopWidth: hScale(40), // Height of the triangle
+    borderRightWidth: wScale(33), // Width of the triangle
+    borderBottomWidth: wScale(0), // Set to 0 to hide the bottom edge
+    borderLeftWidth: wScale(3), // Width of the triangle
+    width: '100%',
+    height: hScale(40),
+    borderRightColor: 'transparent', // Hide the right edge
+    borderBottomColor: 'transparent', // Hide the bottom edge
+    borderLeftColor: 'transparent', // Hide the left edge
+    position: 'absolute',
+    right: wScale(-50),
+    zIndex: wScale(0),
+    top: wScale(0),
+  },
   closeButton: {
     position: 'absolute',
     right: 10,
@@ -636,12 +781,12 @@ const styles = StyleSheet.create({
   },
   textLabel: {
     fontSize: 16,
-    color: '#333', 
+    color: '#333',
     marginBottom: 8,
   },
   textValue: {
     fontSize: 16,
-    color: 'green', 
+    color: 'green',
     fontWeight: 'bold'
   },
 })

@@ -38,6 +38,8 @@ const QRCodePage = ({ route }) => {
         if (Txnid) {
             const interval = setInterval(() => {
                 paymentresp2(Txnid);
+
+                console.log('11111')
             }, 5000); 
             setIntervalId(interval);
 
@@ -50,7 +52,7 @@ const QRCodePage = ({ route }) => {
             setTimer((prevTimer) => {
                 if (prevTimer <= 1) {
                     clearInterval(countdown);
-                    setHideqr(false); 
+                    setHideqr(true); 
                     return 0;
                 }
                 return prevTimer - 1;
@@ -98,7 +100,7 @@ const QRCodePage = ({ route }) => {
             const data = await post({ url: `UPI/api/data/UPIRESPONSEPHONEPE` });
             const image = data.image; 
             const tx = await data.txnid;
-            await setTxnId(tx);
+            setTxnId(tx);
 
             console.log(`${APP_URLS.paytmqrgen}amount=${amnt}`);
             setCode(`data:image/png;base64,${image}`);
@@ -108,6 +110,8 @@ const QRCodePage = ({ route }) => {
     }, [post]);
 
     const paymentresp2 = useCallback(async (txnid) => {
+
+        console.log()
         try {
             const data = await post({url:`${APP_URLS.UPIRESPONSEPHONEPE}`}); 
 
@@ -146,17 +150,18 @@ const QRCodePage = ({ route }) => {
                         {hideqr ? (
                             <View style={styles.qrImageContainer}>
                                 <Image
-                                    source={{ uri: code }}
+                                    source={{ uri: code, }}
                                     style={styles.qrImage}
+                                    resizeMode='contain'
                                 />
-                                <Text style={styles.timerText}>{`Time remaining: ${timer} seconds`}</Text>
+                                {/* <Text style={styles.timerText}>{`Time remaining: ${timer} seconds`}</Text> */}
                             </View>
                         ) : (
                             <Text style={styles.qrText}>QR code has expired.</Text>
                         )}
                     </View>
-                    <DynamicButton title="Check Status" onPress={() => { paymentresp2(Txnid) }} styleoveride={styles.option} />
-                    <DynamicButton title="Stop Timer" onPress={handleButtonClick} styleoveride={styles.option} />
+                    {/* //<DynamicButton title="Check Status" onPress={() => { paymentresp2(Txnid) }} styleoveride={styles.option} /> */}
+                    {/* <DynamicButton title="Stop Timer" onPress={handleButtonClick} styleoveride={styles.option} /> */}
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -215,8 +220,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     qrImage: {
-        width: wScale(200),
-        height: hScale(200),
+        
+        width: wScale(360),
+        height: hScale(310),
         paddingLeft:hScale(100),
         paddingBottom:hScale(100),
         paddingTop:hScale(100),

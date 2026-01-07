@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "4520315273171",
+    "project_id": "bismillahrecharge1",
+    "storage_bucket": "smartpaymoney.firebasestorage.app1"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:452031527317:android:350c5b79ffe739f7121e9c1",
+        "android_client_info": {
+          "package_name": "com.himanshusrecharge"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAULd3yGwVnpRcGaawY8UcD7JfrappOnPE1"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

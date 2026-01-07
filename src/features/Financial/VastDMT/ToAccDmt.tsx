@@ -6,7 +6,6 @@ import useAxiosHook from '../../../utils/network/AxiosClient';
 import { APP_URLS } from '../../../utils/network/urls';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { hScale, wScale } from '../../../utils/styles/dimensions';
-import { useLocationHook } from '../../../utils/hooks/useLocationHook';
 import { useDeviceInfoHook } from '../../../utils/hooks/useDeviceInfoHook';
 import { encrypt } from '../../../utils/encryptionUtils';
 import { useSelector } from 'react-redux';
@@ -17,10 +16,12 @@ import DynamicButton from '../../drawer/button/DynamicButton';
 import { useNavigation } from '@react-navigation/native';
 import { AES } from 'crypto-js';
 import OTPModal from '../../../components/OTPModal';
+import { useLocationHook } from '../../../hooks/useLocationHook';
+import { onReceiveNotification2 } from '../../../utils/NotificationService';
 
 const toBankScreen = ({ route }) => {
-    
-    const { colorConfig } = useSelector((status: RootState) => status.userInfo)
+
+    const { colorConfig, Loc_Data } = useSelector((status: RootState) => status.userInfo)
     const navigation = useNavigation<any>();
 
     const [amount, setAmount] = useState('');
@@ -34,40 +35,41 @@ const toBankScreen = ({ route }) => {
     const [pancard, setpancard] = useState('');
     const { post, get } = useAxiosHook();
     const [onTap1, setOnTap1] = useState(false);
-    const [isR,setIsR]= useState('');
-    
-  const [otpModalVisible, setOtpModalVisible] = useState(false);
-  const [mobileOtp, setMobileOtp] = useState('');
-const {dmttype ,unqid} = route.params;
+    const [isR, setIsR] = useState('');
+
+    const [otpModalVisible, setOtpModalVisible] = useState(false);
+    const [mobileOtp, setMobileOtp] = useState('');
+    const { dmttype, unqid } = route.params;
+
     useEffect(() => {
-        console.log(route.params)
+        console.log("__________", route.params)
         setaadharvis(false);
         setPanvisi(false);
         console.log(userId);
-        
+
         CheckDmtstatus();
     }, []);
-    
-  const CheckDmtstatus = async () => {
-    try {
-      const url = `${APP_URLS.Dmtstatus}`;
-      const response = await get({ url: url });
-      console.log(url);
-      console.log(response,'!!!!!!!!!!!!!');
-      const msg = response.Message;
-      const Response = response.Response; 
-           const Name = response.Name;
-           setIsR(Name);
-           
-    } catch (error) {
-      console.log(error);
-    }
-  };
+
+    const CheckDmtstatus = async () => {
+        try {
+            const url = `${APP_URLS.Dmtstatus}`;
+            const response = await get({ url: url });
+            console.log(url);
+            console.log(response, '!!!!!!!!!!!!!');
+            const msg = response.Message;
+            const Response = response.Response;
+            const Name = response.Name;
+            setIsR(Name);
+
+        } catch (error) {
+            console.log(error);
+        }
+    };
     const checkID = useCallback(async (number: any) => {
         try {
             let res;
             let message;
-    
+
             if (aadharvis) {
                 res = await get({ url: `${APP_URLS.checkUpiSdrAdhar}AdharCardValidationCheck?aadharnumber=${number}` });
                 console.log(res);
@@ -77,7 +79,7 @@ const {dmttype ,unqid} = route.params;
                 console.log(res);
                 message = res['status'] ? 'Pan Verified ✅' : 'Pan not verified ❌';
             }
-    
+
             if (message) {
                 ToastAndroid.showWithGravity(
                     message,
@@ -94,201 +96,164 @@ const {dmttype ,unqid} = route.params;
             );
         }
     }, [aadharvis, panvisi, get]);
-    const { latitude, longitude } = useLocationHook();
+    const { latitude, longitude } = Loc_Data;
     const { userId } = useSelector((state: RootState) => state.userInfo);
     const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
         useDeviceInfoHook();
 
 
-     
-const Readiant = async () => {
-    const { BeneficiaryMobile, ACCno, ifsc, mode, bankname, accHolder, unqid, remid, custid } = await route.params;
-    console.log(BeneficiaryMobile);
-    
-    const mobileNetwork = await getNetworkCarrier();
-    const ip = await getMobileIp();
-    const Model = await getMobileDeviceId();
-    console.log("Model", Model);
-    
-    const enc = await encrypt([]);
-    const url = `Money/api/Radiant/Fundtransfer?sender_number=${BeneficiaryMobile}&Accountnumber=${ACCno}&bankname=${bankname}&benIFSC=${ifsc}&Name=${accHolder}&benid=${remid}&custid=${custid}&Amount=${amount}&typetransfer=${mode}&pin=${transpin}`;
 
-    try {
-        const Radiant = await post({ url });
-        console.log(url); 
-        console.log(Radiant);
+    const Readiant = async () => {
+        const { BeneficiaryMobile, ACCno, ifsc, mode, bankname, accHolder, unqid, remid, custid } = await route.params;
+        console.log(BeneficiaryMobile);
 
-        if (Radiant.RESULT === "1") {
-            Alert.alert("Error", Radiant.ADDINFO);
-        } else {
-            Alert.alert("Success", "Transaction completed successfully!");
+        const mobileNetwork = await getNetworkCarrier();
+        const ip = await getMobileIp();
+        const Model = await getMobileDeviceId();
+        console.log("Model", Model);
+
+        const enc = await encrypt([]);
+        const url = `Money/api/Radiant/Fundtransfer?sender_number=${BeneficiaryMobile}&Accountnumber=${ACCno}&bankname=${bankname}&benIFSC=${ifsc}&Name=${accHolder}&benid=${remid}&custid=${custid}&Amount=${amount}&typetransfer=${mode}&pin=${transpin}`;
+
+        try {
+            const Radiant = await post({ url });
+            console.log(url);
+            console.log(Radiant);
+
+            if (Radiant.RESULT === "1") {
+                Alert.alert("Error", Radiant.ADDINFO);
+            } else {
+                Alert.alert("Success", "Transaction completed successfully!");
+            }
+        } catch (error) {
+            Alert.alert("Error", "An unexpected error occurred. Please try again.");
+            console.error(error);
         }
-    } catch (error) {
-        Alert.alert("Error", "An unexpected error occurred. Please try again.");
-        console.error(error);
-    }
-};
-const getGenUniqueId = async () => {
-    try {
-      const url = `${APP_URLS.getGenIMPSUniqueId}`
-      console.log(url);
-      const res = await get({ url: url });
-    
-console.log(res)
-      if (res['Response'] == 'Failed') {
-        ToastAndroid.showWithGravity(
-          res['Message'],
-          ToastAndroid.SHORT,
-          ToastAndroid.BOTTOM,
-        )
-      } else {  
-        
-       ONpay(res['Message'])
-        // ToastAndroid.showWithGravity(
-        //   res['Response'],
-        //   ToastAndroid.SHORT,
-        //   ToastAndroid.BOTTOM,
-        // )
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
-  };
+    };
+    const getGenUniqueId = async () => {
+        try {
+            const url = `${APP_URLS.getGenIMPSUniqueId}`
+            console.log(url);
+            const res = await get({ url: url });
 
-  const readLatLongFromStorage = async () => {
-    try {
-      const locationData = await AsyncStorage.getItem('locationData');
-      
-      if (locationData !== null) {
-        const { latitude, longitude } = JSON.parse(locationData);
-        console.log('Latitude:', latitude, 'Longitude:', longitude);
-        return { latitude, longitude };
-      } else {
-        console.log('No location data found');
-        return null;
-      }
-    } catch (error) {
-      console.error('Failed to read location data from AsyncStorage:', error);
-      return null; 
-    }
-  }; 
-  const getOtp = async () => {
-    const { unqid, ACCno, accHolder, bankname, ifsc, kyc, mode, senderNo, id } = route.params;
-  
-    // Validate fields before making the API request
-    if (
-      amount === '' ||
-      reamount === '' ||
-      transpin.length < 4 ||
-      (!servicefee && amount !== reamount)
-    ) {
-      console.log('Please fill in all required fields');
-      setOnTap1(false);
-      return;
-    }
-  
-    try {
-      // Construct the URL for the API request
-      const url = `${APP_URLS.getImpsOtp}senderno=${senderNo}&uniqueid=${unqid}&amount=${amount}&accountno=${ACCno}`;
-      
-      console.log('Request URL:', url);
-      
-      // Make the POST request
-      const res = await post({ url });
-  
-      console.log('Response:', res);
-      
-      // Handle ADDINFO and parse it correctly by replacing single quotes with double quotes
-      const addInfoString = res.ADDINFO.replace(/'/g, '"'); // Replace single quotes with double quotes to make it valid JSON
-      const add = JSON.parse(addInfoString); // Now parse the string as JSON
-      
-      const status = add.status;
-  
-      // Handle the success and failure cases
-      if (status === 'Success') {
-        setOtpModalVisible(true);
-        setOnTap1(false);
-        ToastAndroid.show(add.Details, ToastAndroid.LONG);
-      } else {
-        setOnTap1(false);
-        ToastAndroid.show(add.Details || 'Error in sending OTP', ToastAndroid.LONG);
-      }
-  
-    } catch (error) {
-      console.error('Error in getOtp:', error);
-  
-      ToastAndroid.show('An error occurred. Please try again.', ToastAndroid.LONG);
-    }
-  };
-  
+            console.log(res)
+            if (res['Response'] == 'Failed') {
+                ToastAndroid.showWithGravity(
+                    res['Message'],
+                    ToastAndroid.SHORT,
+                    ToastAndroid.BOTTOM,
+                )
+            } else {
+
+                ONpay(res['Message'])
+                // ToastAndroid.showWithGravity(
+                //   res['Response'],
+                //   ToastAndroid.SHORT,
+                //   ToastAndroid.BOTTOM,
+                // )
+            }
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+
+
+    const getOtp = async () => {
+
+        console.warn(latitude, longitude)
+        const { unqid, ACCno, accHolder, bankname, ifsc, kyc, mode, senderNo, id } = route.params;
+
+        // Validate fields before making the API request
+        if (
+            amount === '' ||
+            reamount === '' ||
+            transpin.length >6 || transpin.length < 4  ||
+            (!servicefee && amount !== reamount)
+        ) {
+            console.log('Please fill in all required fields');
+            setOnTap1(false);
+            return;
+        }
+
+        try {
+            // Construct the URL for the API request
+            const url = `${APP_URLS.getImpsOtp}senderno=${senderNo}&uniqueid=${unqid}&amount=${amount}&accountno=${ACCno}`;
+
+            console.log('Request URL:', url);
+
+            // Make the POST request
+            const res = await post({ url });
+
+            console.log('Response:', res);
+
+            // Handle ADDINFO and parse it correctly by replacing single quotes with double quotes
+            const addInfoString = res.ADDINFO.replace(/'/g, '"'); // Replace single quotes with double quotes to make it valid JSON
+            const add = JSON.parse(addInfoString); // Now parse the string as JSON
+
+            const status = add.status;
+
+            // Handle the success and failure cases
+            if (status === 'Success') {
+                setOtpModalVisible(true);
+                setOnTap1(false);
+                ToastAndroid.show(add.Details, ToastAndroid.LONG);
+            } else {
+                setOnTap1(false);
+                ToastAndroid.show(add.Details || 'Error in sending OTP', ToastAndroid.LONG);
+            }
+
+        } catch (error) {
+            console.error('Error in getOtp:', error);
+
+            ToastAndroid.show('An error occurred. Please try again.', ToastAndroid.LONG);
+        }
+    };
+
 
     const ONpay = useCallback(async (uid) => {
         if (
             amount === '' ||
             reamount === '' ||
-            transpin.length < 4 ||
+             transpin.length >6 || transpin.length < 4  ||
             (amount !== reamount)
-          ) {
+        ) {
             console.log('Please fill in all required fields');
             setOnTap1(false);
             return;
-          }
-          const {unqid,ACCno,accHolder,bankname,ifsc,kyc,mode,senderNo,id} = route.params;
-const loc = await readLatLongFromStorage();
-          setOnTap1(true)
+        }
+        const { unqid, ACCno, accHolder, bankname, ifsc, kyc, mode, senderNo, id } = route.params;
+        setOnTap1(true)
         try {
-            
+
             const mobileNetwork = await getNetworkCarrier();
             const ipp = await getMobileIp();
             const Model = await getMobileDeviceId();
             console.log("Model", Model);
-    console.log(   {
-        userId: userId, // umm0
-        accHolder: accHolder, // name 1
-        senderNo:  senderNo, // snn 2    
-        ifsc: ifsc, // fggg 3
-        id:  id, // eee 4
-        transpin: transpin, // nnn 5
-        ACCno: ACCno, // nttt 6
-        mode:  mode, // peee 7
-        Model: Model, // nbb 8
-        bankname: bankname, // bnm 9 
-        ipp: ipp, // ip 10
-        Model: Model, // Devicetoken 11
-        latitude: loc?.latitude, // Latitude 12
-        longitude:  loc?.longitude, // Longitude 13
-        Model:  Model, // Model 14 
-        address:  'address', // Address 15 
-        Model:  Model, // City 16 
-        postcode: 'postcode', // PostalCode 17 
-        mobileNetwork: mobileNetwork, // InternetTYPE 18 
-        unqid: unqid,
-        uid:uid // uniqueid 19
-        })
+
             const encryption = await encrypt(
                 [
-                userId, // umm0
-                accHolder, // name 1
-                senderNo, // snn 2    
-                ifsc, // fggg 3
-                id, // eee 4
-                transpin, // nnn 5
-                ACCno, // nttt 6
-                mode, // peee 7
-                Model, // nbb 8
-                bankname, // bnm 9 
-                ipp, // ip 10
-                Model, // Devicetoken 11
-                loc?.latitude, // Latitude 12
-                loc?.longitude, // Longitude 13
-                Model, // Model 14 
-                'address', // Address 15 
-                Model, // City 16 
-                'postcode', // PostalCode 17 
-                mobileNetwork, // InternetTYPE 18 
-                unqid, // uniqueid 19
-            ]);
-    
+                    userId, // umm0
+                    accHolder, // name 1
+                    senderNo, // snn 2    
+                    ifsc, // fggg 3
+                    id, // eee 4
+                    transpin, // nnn 5
+                    ACCno, // nttt 6
+                    mode, // peee 7
+                    Model, // nbb 8
+                    bankname, // bnm 9 
+                    ipp, // ip 10
+                    Model, // Devicetoken 11
+                    latitude, // Latitude 12
+                    longitude, // Longitude 13
+                    Model, // Model 14 
+                    'address', // Address 15 
+                    Model, // City 16 
+                    'postcode', // PostalCode 17 
+                    mobileNetwork, // InternetTYPE 18 
+                    unqid, // uniqueid 19
+                ]);
+
             const umm = encodeURIComponent(encryption.encryptedData[0]);
             const name = encodeURIComponent(encryption.encryptedData[1]);
             const snn = encodeURIComponent(encryption.encryptedData[2]);
@@ -301,29 +266,29 @@ const loc = await readLatLongFromStorage();
             const nbb = encodeURIComponent(encryption.encryptedData[8]);
             const bnm = encodeURIComponent(encryption.encryptedData[9]);
             const ip = encodeURIComponent(encryption.encryptedData[10]);
-    
+
             const kyc = route.params['kyc'] === true ? 'Done' : aadhar; // kyc
             const pkyc = route.params['kyc'] === true ? 'Done' : pancard; // kyc
             const ottp = mobileOtp;
             const Devicetoken = encodeURIComponent(encryption.encryptedData[11]);
             const Latitude = encodeURIComponent(encryption.encryptedData[12]);
             const Longitude = encodeURIComponent(encryption.encryptedData[13]);
-    
+
             const ModelNo = encodeURIComponent(encryption.encryptedData[14]);
             const Address = encodeURIComponent(encryption.encryptedData[15]);
             const City = encodeURIComponent(encryption.encryptedData[16]);
             const postcode = encodeURIComponent(encryption.encryptedData[17]);
             const nettype = encodeURIComponent(encryption.encryptedData[18]);
             const uniqueid1 = encodeURIComponent(encryption.encryptedData[19]);
-    
+
             const value1 = encodeURIComponent(encryption.keyEncode);
             console.log('value1:', value1);
-    
+
             const value2 = encodeURIComponent(encryption.ivEncode);
             console.log('value2:', value2);
-    //const Radiant = await post({url:`Money/api/Radiant/Fundtransfer?sender_number?Accountnumber?bankname?benIFSC?Name?benid?custid?Amount?typetransfer?pin`})
+            //const Radiant = await post({url:`Money/api/Radiant/Fundtransfer?sender_number?Accountnumber?bankname?benIFSC?Name?benid?custid?Amount?typetransfer?pin`})
             const jsonString =
-             {
+            {
                 umm: umm,
                 name: name,
                 snn: snn,
@@ -352,45 +317,19 @@ const loc = await readLatLongFromStorage();
                 uniqueid: uid
             };
 
-            console.log( {
-                umm: userId,
-                name: accHolder,
-                snn: senderNo,
-                fggg: ifsc,
-                eee: id,
-                ttt: amount,
-                nnn: transpin,
-                nttt: ACCno,
-                peee: Model,
-                nbb: nbb,
-                bnm: bnm,
-                kyc: kyc,
-                ip: ip,
-                mac: pkyc,
-                ottp: ottp,
-                Devicetoken: Devicetoken,
-                Latitude: Latitude,
-                Longitude: Longitude,
-                ModelNo: ModelNo,
-                Address: Address,
-                City: City,
-                PostalCode: postcode,
-                InternetTYPE: nettype,
-                value1: value1,
-                value2: value2,
-                uniqueid: uid
-            })
-    console.log(JSON.stringify(jsonString))
+
+            console.log(JSON.stringify(jsonString))
             const data = {};
             for (const key in jsonString) {
                 if (jsonString.hasOwnProperty(key)) {
                     data[key] = decodeURIComponent(jsonString[key]);
                 }
             }
-            console.log(data);    
-                 console.log(dmttype === 'A2Z');   
-                 
-                 console.log(dmttype === 'A2Z'?  'Money2/api/Money/yyyy2': APP_URLS.dmtapi);
+            console.log("___________",data);
+            console.log(APP_URLS.dmtapi)
+            console.log(dmttype === 'A2Z');
+
+            console.log(dmttype === 'A2Z' ? 'Money2/api/Money/yyyy2' : APP_URLS.dmtapi);
 
             const response = await post({
                 url: APP_URLS.dmtapi,
@@ -398,25 +337,37 @@ const loc = await readLatLongFromStorage();
             });
 
             console.log('payment response', response);
-            if(response){
-   setOnTap1(false);
-   
-            Alert.alert(
-                'Payment Response',
-                `Account No: ${response.Accountno}\nBank Name: ${response.BankName}\nIFSC Code: ${response.Ifsccode}\nTime: ${response.Time}\nTotal Amount: ${response.TotalAmount}\n\nTransaction Details:\n${response.data.map(transaction => `Amount: ${transaction.Amount}\nStatus: ${transaction.Status}\nBank Ref ID: ${transaction.bankrefid}`).join('\n\n')}`,
-                [{ text: 'Go To Dashboard' , onPress: () => navigation.navigate('Dashboard') }]
-            );
-        }else{
-            Alert.alert('Error', 'Something went wrong. Please try again later.', [{ text: 'Go To Dashboard' ,    onPress: () => navigation.replace('dashboard') 
-            }]);
+            if (response) {
+                setOnTap1(false);
 
-    }
-            
-         
+                Alert.alert(
+                    'Payment Response',
+                    `Account No: ${response.Accountno}\nBank Name: ${response.BankName}\nIFSC Code: ${response.Ifsccode}\nTime: ${response.Time}\nTotal Amount: ${response.TotalAmount}\n\nTransaction Details:\n${response.data.map(transaction => `Amount: ${transaction.Amount}\nStatus: ${transaction.Status}\nBank Ref ID: ${transaction.bankrefid}`).join('\n\n')}`,
+                    [{ text: 'Go To Dashboard', onPress: () => navigation.navigate('Dashboard') }]
+                );
+
+                const mockNotification = {
+                    notification: {
+                        title: 'Payment Response',
+                        body: `Account No: ${response.Accountno}\nBank Name: ${response.BankName}\nIFSC Code: ${response.Ifsccode}\nTime: ${response.Time}\nTotal Amount: ${response.TotalAmount}\n\nTransaction Details:\n${response.data.map(transaction => `Amount: ${transaction.Amount}\nStatus: ${transaction.Status}\nBank Ref ID: ${transaction.bankrefid}`).join('\n\n')}`,
+
+                    },
+                };
+
+                // Call the function
+                onReceiveNotification2(mockNotification);
+            } else {
+                Alert.alert('Error', 'Something went wrong. Please try again later.', [{
+                    text: 'Go To Dashboard', onPress: () => navigation.replace('DashboardScreen')
+                }]);
+
+            }
+
+
         } catch (error) {
             console.error('Error in ONpay:', error);
         }
-    }, [userId, route.params, transpin, amount, aadhar, pancard, servicefee, post]);
+    }, [userId, route.params, transpin, amount, aadhar, pancard, servicefee, post, latitude, longitude]);
 
     return (
         <View style={styles.main}>
@@ -463,11 +414,11 @@ const loc = await readLatLongFromStorage();
 
                         <View style={styles.rightContainer}>
                             <Text style={[styles.label, { color: colorConfig.primaryColor }]}>
-                                {translate('Name')}
+                                {'Payoutkyc'}
                             </Text>
                             <Text style={[styles.Value, { color: colorConfig.secondaryColor }]}>
 
-                                {route.params['accHolder']}
+                                {route.params['Payoutkyc'] ? "true" : "false"}
 
                             </Text>
                         </View>
@@ -509,45 +460,45 @@ const loc = await readLatLongFromStorage();
                     <View >
 
 
-                    {            route.params['kyc'] === false? '':  
-                        <View>
-                        <Text style={styles.selecttitle}>Select ID Type</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: hScale(20) }}>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setaadharvis(false);
-                                    setPanvisi(false);
-                                    setId(3);
-                                }}
-                            >
-                                <Text style={[styles.button, { backgroundColor: !aadharvis && !panvisi ? colorConfig.primaryButtonColor : 'transparent', color: !aadharvis && !panvisi ? colorConfig.labelColor : '#000' }]}
-                                >None</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setaadharvis(true);
-                                    setPanvisi(false);
-                                    setId(1);
-                                  
-                                }}
-                            >
-                                <Text style={[styles.button, { backgroundColor: aadharvis ? colorConfig.primaryButtonColor : 'transparent', color: aadharvis ? colorConfig.labelColor : '#000' }]}
-                                >Aadhaar</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setaadharvis(false);
-                                    setPanvisi(true);
-                                    setId(2);
-                                   
-                                }}
-                            >
-                                <Text style={[styles.button, { backgroundColor: panvisi ? colorConfig.primaryButtonColor : 'transparent', color: panvisi ? colorConfig.labelColor : '#000' }]}
-                                >PAN Card</Text>
-                            </TouchableOpacity>
-                        </View>
-                        </View>
-}
+                        {route.params['kyc'] === false ? '' :
+                            <View>
+                                <Text style={styles.selecttitle}>Select ID Type</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: hScale(20) }}>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setaadharvis(false);
+                                            setPanvisi(false);
+                                            setId(3);
+                                        }}
+                                    >
+                                        <Text style={[styles.button, { backgroundColor: !aadharvis && !panvisi ? colorConfig.primaryButtonColor : 'transparent', color: !aadharvis && !panvisi ? colorConfig.labelColor : '#000' }]}
+                                        >None</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setaadharvis(true);
+                                            setPanvisi(false);
+                                            setId(1);
+
+                                        }}
+                                    >
+                                        <Text style={[styles.button, { backgroundColor: aadharvis ? colorConfig.primaryButtonColor : 'transparent', color: aadharvis ? colorConfig.labelColor : '#000' }]}
+                                        >Aadhaar</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setaadharvis(false);
+                                            setPanvisi(true);
+                                            setId(2);
+
+                                        }}
+                                    >
+                                        <Text style={[styles.button, { backgroundColor: panvisi ? colorConfig.primaryButtonColor : 'transparent', color: panvisi ? colorConfig.labelColor : '#000' }]}
+                                        >PAN Card</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        }
                         <FlotingInput
                             label={translate('Enter Amount')}
                             inputstyle={{ borderColor: amount === reamount ? 'black' : 'red' }}
@@ -574,12 +525,12 @@ const loc = await readLatLongFromStorage();
                         />
                         {aadharvis && <FlotingInput
                             label={translate('Enter Aadhar Number')}
-                        // value={aadhar}
+                            // value={aadhar}
                             onChangeTextCallback={(text) => {
-                               
+
                                 if (text.length === 12) {
                                     console.log(text);
- setaadhar(text)
+                                    setaadhar(text)
                                     checkID(text);
                                 }
                             }}
@@ -627,7 +578,7 @@ const loc = await readLatLongFromStorage();
                             editable={amount !== '' && reamount !== '' && amount === reamount}
                             onChangeTextCallback={(text) => {
                                 setTranspin(text);
-                            
+
                             }}
                         />
                         <TouchableOpacity
@@ -636,42 +587,50 @@ const loc = await readLatLongFromStorage();
                                 setOnTap1(true)
                                 console.log("ok");
                             }} style={{}}>
-        <DynamicButton
-                        
-            title={onTap1 ? <ActivityIndicator size={'large'} color={colorConfig.labelColor} /> :  "Get Otp"}
+                            <DynamicButton
+
+                                title={onTap1 ? <ActivityIndicator size={'large'} color={colorConfig.labelColor} /> : route.params['Payoutkyc']?"Get Otp":"Transfer"}
 
 
 
-                         //   title={translate('Pay')}
-                            onPress={() => {
-                             
-                                setOnTap1(true)
+                                //   title={translate('Pay')}
+                                onPress={() => {
 
-                    
-getOtp()
-                             
-                                
-                            }}
-                            styleoveride={undefined}
-                        />
+                                    if (route.params['Payoutkyc']) {
+                                                   setOnTap1(true)
 
-<OTPModal
-        setShowOtpModal={setOtpModalVisible}
-        disabled={mobileOtp.length !== 4}
-        showOtpModal={otpModalVisible}
-        setMobileOtp={setMobileOtp}
-        setEmailOtp={null}
-        inputCount={4}
-        verifyOtp={() => {    
-            ONpay(unqid); 
-   ;
-        }}
-      />
+
+                                        getOtp()
+                                    ONpay(unqid);
+
+                                    }
+                                    else {
+                                          ONpay(unqid);
+                                    }
+
+
+                                }}
+                                styleoveride={undefined}
+                            />
+
+                            <OTPModal
+                                setShowOtpModal={setOtpModalVisible}
+                                disabled={mobileOtp.length !== 4}
+                                showOtpModal={otpModalVisible}
+                                setMobileOtp={setMobileOtp}
+                                setEmailOtp={null}
+                                inputCount={4}
+                                verifyOtp={() => {
+                                    console.log("+++++++++++++++",)
+                                    ONpay(unqid);
+                                    ;
+                                }}
+                            />
 
 
 
                         </TouchableOpacity>
-                
+
                     </View>
                 </View>
             </ScrollView>
@@ -738,6 +697,7 @@ const styles = StyleSheet.create({
         fontSize: wScale(14),
         letterSpacing: 1,
     },
+
 
 });
 

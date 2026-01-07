@@ -36,7 +36,7 @@ import { SvgUri } from 'react-native-svg';
 const LoginInfoStep = () => {
 
 
-  const baseUrl = `https://native.vastwebindia.com//`
+ const baseUrl = `${APP_URLS.baseapiurl}`
 
   const { colorConfig } = useSelector((state: RootState) => state.userInfo)
   const dispatch = useDispatch();

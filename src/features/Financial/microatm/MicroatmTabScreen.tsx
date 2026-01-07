@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View, Text, useColorScheme, Alert, AsyncStorage } from 'react-native';
+import { StyleSheet, View, Text, useColorScheme, Alert, AsyncStorage, ToastAndroid } from 'react-native';
 import { TabBar, TabView } from 'react-native-tab-view';
 import { RootState } from '../../../reduxUtils/store';
 import { hScale, SCREEN_WIDTH, wScale } from '../../../utils/styles/dimensions';
@@ -9,7 +9,6 @@ import StatementSvg from '../../../utils/svgUtils/StatementSvg';
 import CheckBlance from '../../../utils/svgUtils/CheckBlance';
 import FlotingInput from '../../drawer/securityPages/FlotingInput';
 import { translate } from '../../../utils/languageUtils/I18n';
-import { useNavigation } from '@react-navigation/native';
 import useAxiosHook from '../../../utils/network/AxiosClient';
 import uuid from 'react-native-uuid';
 import { APP_URLS } from '../../../utils/network/urls';
@@ -22,7 +21,10 @@ import Upisvg from '../../drawer/svgimgcomponents/Upisvg';
 import PurchaseSvg from '../../drawer/svgimgcomponents/PurchaseSvg';
 import { decryptData, encrypt } from '../../../utils/encryptionUtils';
 import { useDeviceInfoHook } from '../../../utils/hooks/useDeviceInfoHook';
-// import { useNavigation } from '../../../utils/navigation/NavigationService';
+import { useNavigation } from '../../../utils/navigation/NavigationService';
+import { useLocationHook } from '../../../hooks/useLocationHook';
+import ShowLoader from '../../../components/ShowLoder';
+import { onReceiveNotification2 } from '../../../utils/NotificationService';
 
 
 const enum TRANSACTION_TYPE {
@@ -47,10 +49,10 @@ const MicroatmTabScreen = () => {
   const [buttonName, setButtonName] = useState('PURCHASE');
   const [amount, setAmount] = useState('');
   const [profileData, setProfileData] = useState<any>({});
-  const { userId } = useSelector((state: RootState) => state.userInfo);
-
+  const { userId, Loc_Data } = useSelector((state: RootState) => state.userInfo);
+  const [isLoading, setIsloading] = useState(false)
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
-  useDeviceInfoHook();
+    useDeviceInfoHook();
   const [routes] = useState([
     { key: 'PURCHASE', title: 'PURCHASE' },
     { key: 'MICROATM', title: 'MICROATM' },
@@ -59,47 +61,66 @@ const MicroatmTabScreen = () => {
   ]);
 
   useEffect(() => {
-    const getData = async () => {
-      try {
-        const result2 = await post({ url: 'MICROATM/api/data/MerchantCreateToSubmit' });
-        const res = await get({ url: APP_URLS.getProfile });
 
-        if (res.data) {
-          setProfileData(JSON.parse(decryptData(res.value1, res.value2, res.data)));
-        }
-        const status = result2.status;
-
-        if (status) {
-          const result = await post({ url: APP_URLS.getCredoCredentials });
-          console.log(result)
-          setIsNewLogin(result.IsNewLogin);
-          setLoginId(result.LoginId);
-          setPassword(result.Password);
-        } else if (status === 'StatusCheck') {
-          navigation.navigate("MAtmStatusCheck");
-        } else if (status === 'Device') {
-          navigation.navigate("RegisterVM30", { deviceSerial: result2.devicesr });
-        } else if (status === 'REGISTER') {
-          ActiveMicroATM();
-        } else if (["BOTHNOTDONE", "NOTOK", "ALLNOTDONE"].includes(status)) {
-          navigation.navigate('ServicepurchaseScreen', { typename: "VM30" });
-        } else {
-          alert(result2.msg);
-        }
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
-      }
-    };
 
     getData();
-  }, [post]);
+  }, []);
+  const getData = useCallback(async () => {
+    setIsloading(true);
 
+    try {
+      const result2 = await post({ url: 'MICROATM/api/data/MerchantCreateToSubmit' });
+      const res = await get({ url: APP_URLS.getProfile });
+
+      console.log(result2, "***************");
+
+      if (res.data) {
+        const decryptedProfile = decryptData(res.value1, res.value2, res.data);
+        setProfileData(JSON.parse(decryptedProfile));
+      }
+
+      const status = result2.status;
+
+      ToastAndroid.show(result2.msg, ToastAndroid.SHORT);
+
+      // Handle different status cases
+      if (status === true || status === 'Success') {
+        const result = await post({ url: APP_URLS.getCredoCredentials });
+        console.log(result)
+        setIsNewLogin(result.IsNewLogin);
+        setLoginId(result.LoginId);
+        setPassword(result.Password);
+      } else if (status === 'StatusCheck') {
+        navigation.replace("MAtmStatusCheck");
+        return;
+      } else if (status === 'Device') {
+        navigation.replace("RegisterVM30", { deviceSerial: result2.devicesr });
+        return;
+      } else if (status === 'REGISTER') {
+        ActiveMicroATM(); // Trigger activation function
+      } else if (["BOTHNOTDONE", "NOTOK", "ALLNOTDONE"].includes(status)) {
+        navigation.navigate('ServicepurchaseScreen', { typename: "VM30" });
+      } else {
+        alert(result2.msg);
+      }
+
+    } catch (error) {
+      console.error('Failed to fetch data:', error);
+    } finally {
+      setIsloading(false);
+    }
+  }, [
+
+    navigation,
+  ]);
   const ActiveMicroATM = async () => {
     try {
       const res = await post({ url: 'MICROATM/api/data/ActiveMicroATM' });
 
-      console.log(res.status == true, 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
-      if (res.status == true) {
+      console.log(res, 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
+
+      const status = res.status == true || res.status == 'Success';
+      if (status) {
         navigation.navigate("MAtmStatusCheck");
       } else {
 
@@ -109,48 +130,30 @@ const MicroatmTabScreen = () => {
     } catch (error) {
     }
   }
-  const readLatLongFromStorage = async () => {
-    try {
-      const locationData = await AsyncStorage.getItem('locationData');
-      
-      if (locationData !== null) {
-        const { latitude, longitude } = JSON.parse(locationData);
-        console.log('Latitude:', latitude, 'Longitude:', longitude);
-        return { latitude, longitude };
-      } else {
-        console.log('No location data found');
-        return null;
-      }
-    } catch (error) {
-      console.error('Failed to read location data from AsyncStorage:', error);
-      return null; 
-    }
-  };
-
-    const transaction =  useCallback(async () => {
-      console.log(buttonName);
-      const id =  uuid.v4().toString().substring(0, 16);
-      console.log('**CHECK_2', id)
-      setUniqueId(id);
-      const loc = await readLatLongFromStorage();
-      const mobileNetwork = await getNetworkCarrier();
-      const ipp = await getMobileIp();
-      const Model = await getMobileDeviceId();
+  const { latitude, longitude } = Loc_Data;
+  const transaction = useCallback(async () => {
+    console.log(latitude, longitude);
+    const id = uuid.v4().toString().substring(0, 16);
+    console.log('**CHECK_2', id)
+    setUniqueId(id);
+    const mobileNetwork = await getNetworkCarrier();
+    const ipp = await getMobileIp();
+    const Model = await getMobileDeviceId();
     console.log(buttonName === 'BALANCE_ENQUIRY')
-      if(buttonName === 'BALANCE_ENQUIRY'){
-        startCredoTransaction(id);
-     
-      }else if(buttonName === 'UPI'){
+    if (buttonName === 'BALANCE_ENQUIRY') {
+      startCredoTransaction(id);
+
+    } else if (buttonName === 'UPI') {
 
 
       // Encrypt karne se pehle values
       const encryption = await encrypt([
         id,
         ipp,
-       'UPI',
+        'UPI',
         Model, // Device
-        loc?.latitude,
-        loc?.longitude,
+        latitude,
+        longitude,
         Model, // Model
         'city',
         'postcode',
@@ -158,29 +161,29 @@ const MicroatmTabScreen = () => {
         'address',
         amount,
       ]);
-    
+
       const Transtionid = encodeURIComponent(encryption.encryptedData[0]);
       const IPaddressss = encodeURIComponent(encryption.encryptedData[1]);
       const Type = encodeURIComponent(encryption.encryptedData[2]);
       const Devicetoken = encodeURIComponent(encryption.encryptedData[3]);
-      const latitude = encodeURIComponent(encryption.encryptedData[4]);
-      const longitude = encodeURIComponent(encryption.encryptedData[5]);
+      const Latitude1 = encodeURIComponent(encryption.encryptedData[4]);
+      const longitude1 = encodeURIComponent(encryption.encryptedData[5]);
       const ModelNo = encodeURIComponent(encryption.encryptedData[6]);
       const City = encodeURIComponent(encryption.encryptedData[7]);
       const PostalCode = encodeURIComponent(encryption.encryptedData[8]);
       const InternetTYPE = encodeURIComponent(encryption.encryptedData[9]);
       const Addresss = encodeURIComponent(encryption.encryptedData[10]);
-     
+
       const value1 = encodeURIComponent(encryption.keyEncode);
       const value2 = encodeURIComponent(encryption.ivEncode);
       try {
         const res = await post({
-          url: `MICROATM/api/data/Apitransitions?Transtionid=${Transtionid}&Amount=${(parseFloat(amount).toFixed(1)).toString()}&IPaddressss=${IPaddressss}&Type=${Type}&Devicetoken=${Devicetoken}&Latitude=${latitude}&Longitude=${longitude}&ModelNo=${ModelNo}&City=${City}&PostalCode=${PostalCode}&InternetTYPE=${InternetTYPE}&Addresss=${Addresss}&value1=${value1}&value2=${value2}`
+          url: `MICROATM/api/data/Apitransitions?Transtionid=${Transtionid}&Amount=${(parseFloat(amount).toFixed(1)).toString()}&IPaddressss=${IPaddressss}&Type=${Type}&Devicetoken=${Devicetoken}&Latitude=${Latitude1}&Longitude=${longitude1}&ModelNo=${ModelNo}&City=${City}&PostalCode=${PostalCode}&InternetTYPE=${InternetTYPE}&Addresss=${Addresss}&value1=${value1}&value2=${value2}`
         });
         //if({"Message": "Request Process Done ", "Status": "Success"})
-        if(res.Status === 'Success'){
+        if (res.Status === 'Success') {
           startCredoTransaction(id);
-        }else{
+        } else {
           Alert.alert('Alert', res.Message, [{ text: "OK" }]);
         }
         // If you want to navigate based on response
@@ -193,16 +196,16 @@ const MicroatmTabScreen = () => {
         console.log(error, 'Error in transaction');
       }
 
-      }else{
+    } else {
 
-      // Encrypt karne se pehle values
       const encryption = await encrypt([
         id,
         ipp,
-        buttonName === 'PURCHASE'?'cash':'microatm',
+        buttonName === 'PURCHASE' ? 'cash' : 'microatm',
         Model, // Device
-        loc?.latitude,
-        loc?.longitude,
+        latitude,
+        longitude,
+
         Model, // Model
         'city',
         'postcode',
@@ -210,7 +213,7 @@ const MicroatmTabScreen = () => {
         'address',
         amount,
       ]);
-    
+
       const Transtionid = encodeURIComponent(encryption.encryptedData[0]);
       const IPaddressss = encodeURIComponent(encryption.encryptedData[1]);
       const Type = encodeURIComponent(encryption.encryptedData[2]);
@@ -222,7 +225,7 @@ const MicroatmTabScreen = () => {
       const PostalCode = encodeURIComponent(encryption.encryptedData[8]);
       const InternetTYPE = encodeURIComponent(encryption.encryptedData[9]);
       const Addresss = encodeURIComponent(encryption.encryptedData[10]);
-    
+
       const value1 = encodeURIComponent(encryption.keyEncode);
       const value2 = encodeURIComponent(encryption.ivEncode);
       try {
@@ -230,9 +233,9 @@ const MicroatmTabScreen = () => {
           url: `MICROATM/api/data/Apitransitions?Transtionid=${Transtionid}&Amount=${(parseFloat(amount).toFixed(1)).toString()}&IPaddressss=${IPaddressss}&Type=${Type}&Devicetoken=${Devicetoken}&Latitude=${latitude}&Longitude=${longitude}&ModelNo=${ModelNo}&City=${City}&PostalCode=${PostalCode}&InternetTYPE=${InternetTYPE}&Addresss=${Addresss}&value1=${value1}&value2=${value2}`
         });
         //if({"Message": "Request Process Done ", "Status": "Success"})
-        if(res.Status === 'Success'){
+        if (res.Status === 'Success') {
           startCredoTransaction(id);
-        }else{
+        } else {
           Alert.alert('Alert', res.Message, [{ text: "OK" }]);
         }
         // If you want to navigate based on response
@@ -245,8 +248,8 @@ const MicroatmTabScreen = () => {
         console.log(error, 'Error in transaction');
       }
     }
-    },[amount, buttonName, post, userId]);
-    
+  }, [amount, buttonName, post, userId, latitude, longitude]);
+
   const updateButtonName = useCallback((index) => {
     const selectedRoute = routes[index].key;
     setButtonName(selectedRoute);
@@ -318,7 +321,7 @@ const MicroatmTabScreen = () => {
 
     console.log(options);
     return options;
-  }, [isChangePassword, isNewLogin, password, uniqueId,setUniqueId, buttonName, amount]);
+  }, [isChangePassword, isNewLogin, password, uniqueId, setUniqueId, buttonName, amount]);
 
 
   const types = (type) => {
@@ -343,17 +346,31 @@ const MicroatmTabScreen = () => {
     console.log('**CHECK', JSON.stringify(getOptions(id)))
     try {
       const res = await startTransaction(JSON.stringify(getOptions(id)));
-     
-      Alert.alert(
-        "Transaction Result",
-        `${res.message} (Status: ${res.status})`, [
-        { text: "OK", onPress: () => console.log("OK Pressed") }
-      ],
-        { cancelable: false }
-      );
+
+
+      console.log(res)
+      // Alert.alert(
+      //   "Transaction Result",
+      //   `${res.message} (Status: ${res.status})`, [
+      //   { text: "OK", onPress: () => console.log("OK Pressed") }
+      // ],
+      //   { cancelable: false }
+      // );
+      if (res?.message === 'Login Failed!' || res?.message === "Request Change Password by User") {
+        const mockNotification = {
+          notification: {
+            title: buttonName,
+            body: `${res?.message}` || ''
+          },
+        };
+        onReceiveNotification2(mockNotification);
+
+      }
+
+
       if (res.message === "Request Change Password by User" && res.status === 'SUCCESS') {
         setIsChangePassword(true);
-        await startCredoTransaction(id+'1');
+        await startCredoTransaction(id + '1');
       }
     } catch (error) {
       console.error('Transaction failed:', error);
@@ -460,6 +477,8 @@ const MicroatmTabScreen = () => {
           />
         )}
       />
+
+      {isLoading && <ShowLoader />}
       <View style={styles.container}>
         <DynamicButton
           onPress={transaction}

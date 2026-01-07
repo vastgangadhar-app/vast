@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, NativeModules, Alert, ToastAndroid, AsyncStorage } from 'react-native';
 import { hScale, wScale } from '../../../utils/styles/dimensions';
 import { useDeviceInfoHook } from '../../../utils/hooks/useDeviceInfoHook';
 import { useSelector } from 'react-redux';
-import { useLocationHook } from '../../../utils/hooks/useLocationHook';
 import { RootState } from '../../../reduxUtils/store';
 // import { UsbSerialManager, Parity } from 'react-native-usb-serialport-for-android';
 import { APP_URLS } from '../../../utils/network/urls';
@@ -21,14 +20,16 @@ import { useNavigation } from '../../../utils/navigation/NavigationService';
 import DeviceConnected from './checkDeviceConnected';
 import SelectDevice from './DeviceSelect';
 import { useRdDeviceConnectionHook } from '../../../hooks/useRdDeviceConnectionHook';
+import { useLocationHook } from '../../../hooks/useLocationHook';
 
 const TwoFAVerifyAadhar = () => {
-  const {isDeviceConnected} = useRdDeviceConnectionHook();
+  const { isDeviceConnected } = useRdDeviceConnectionHook();
+  const { activeAepsLine } = useSelector((state: RootState) => state.userInfo);
 
   const [isLoading, setIsLoading] = useState(false);
   const [deviceName, setDeviceName] = useState('Device');
-  const { userId } = useSelector((state: RootState) => state.userInfo);
-  const { latitude, longitude } = useLocationHook();
+  const { userId, Loc_Data } = useSelector((state: RootState) => state.userInfo);
+  const { latitude, longitude } = Loc_Data;
   const [usbSerial, setUsbSerial] = useState(null);
   const { aadharNumber, setAadharNumber, mobileNumber, setMobileNumber, consumerName, setConsumerName, bankName,
     setBankName, setFingerprintData, scanFingerprint, fingerprintData } = useContext(AepsContext);
@@ -43,7 +44,8 @@ const TwoFAVerifyAadhar = () => {
       } else if (fingerprintData["PidData"].Resp.errCode === 0) {
         OnPressEnq(fingerprintData);
       }
-    }  }, []);
+    }
+  }, []);
   const now = new Date();
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const months = [
@@ -60,74 +62,29 @@ const TwoFAVerifyAadhar = () => {
   const navigation = useNavigation<any>();
 
   const formattedDate = `${dayOfWeek} ${dayOfMonth} ${month} ${hours}:${minutes}:${seconds}`;
-  const start = async () => {
-    const loc = await readLatLongFromStorage();
-    getDeviceInfo()
-      .then((res) => {
-        const deviceInfoString = JSON.stringify(res, null, 2);
-        const isReady = res.rdServiceInfoJson.RDService.status;
-        const rdServicePackage = res.rdServicePackage;
-        console.log(rdServicePackage,'>>>>>>>>>>>>>>>>>>>>>');
 
-        // Toast.show({
-        //   title: rdServicePackage
-        // });
-
-        //const pidOptions = getPidOptions(rdServicePackage);
-        // if (pidOptions) {
-        //   setPiDData(pidOptions);
-        // } else {
-        //   console.error('Unknown RD service package');
-        // }
-
-        if (isReady === 'READY') {
-          capture(rdServicePackage);
-          console.log('Device is ready:', isReady);
-        } else {
-          Alert.alert(
-            'Error',
-            'Error while scanning the finger. Please check if the device is connected properly'
-          );
-          setFingerprintData(720);
-        }
-
-        // const path = `${RNFS.DownloadDirectoryPath}/deviceInfo${rdServicePackage}.json`;
-
-        // RNFS.writeFile(path, deviceInfoString, 'utf8')
-        //   .then(() => {
-        //     console.log('JSON saved to Download directory');
-        //   })
-        //   .catch((error) => {
-        //     console.error('Error writing file:', error);
-        //   });
-      })
-      .catch((error) => {
-       
-        console.error('Error while fetching device info:', error);
-      });
-  };
   const capture = async (rdServicePackage) => {
     let pidOptions = '';
     switch (rdServicePackage) {
       case 'com.mantra.mfs110.rdservice':
         pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000"  pTimeout="20000" posh="UNKNOWN" env="P"  /> <CustOpts><Param name="mantrakey" value="" /></CustOpts> </PidOptions>`;
-        break; 
-        case 'com.mantra.rdservice':
+        break;
+      case 'com.mantra.rdservice':
         pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000"  pTimeout="20000" posh="UNKNOWN" env="P"  /> <CustOpts><Param name="mantrakey" value="" /></CustOpts> </PidOptions>`;
         break;
       case 'com.acpl.registersdk_l1':
         pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0"  timeout="10000"  otp="" pTimeout="20000" posh="UNKNOWN" env="P" />  <Demo/> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>`;
-        break; 
-        case 'com.acpl.registersdk':
+        break;
+      case 'com.acpl.registersdk':
         pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0"  timeout="10000"  otp="" pTimeout="20000" posh="UNKNOWN" env="P" />  <Demo/> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>`;
         break;
       case 'com.idemia.l1rdservice':
         pidOptions = `<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000"  posh="UNKNOWN" /><Demo></Demo><CustOpts><Param name="" value="" /></CustOpts></PidOptions>`;
         break;
       case 'com.scl.rdservice':
-      //  pidOptions = '<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000"  posh="UNKNOWN" env="P" /> <Demo></Demo> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>';
-          pidOptions = `<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000"  posh="UNKNOWN" /><Demo></Demo><CustOpts><Param name="" value="" /></CustOpts></PidOptions>`;
-      break;
+        //  pidOptions = '<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000"  posh="UNKNOWN" env="P" /> <Demo></Demo> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>';
+        pidOptions = `<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000"  posh="UNKNOWN" /><Demo></Demo><CustOpts><Param name="" value="" /></CustOpts></PidOptions>`;
+        break;
       default:
         console.error('Unsupported rdServicePackage');
         return;
@@ -140,7 +97,7 @@ const TwoFAVerifyAadhar = () => {
         } else if (res.status === -1) {
           setFingerprintData(-1);
         } else if (res.errorCode === 0) {
-         // setFingerprintData(res.pidDataJson);
+          // setFingerprintData(res.pidDataJson);
 
           OnPressEnq(res.pidDataJson);
         }
@@ -158,84 +115,60 @@ const TwoFAVerifyAadhar = () => {
 
 
     const cardnumberORUID = {
-        adhaarNumber: aadharNumber,
-        indicatorforUID: "0",
-        nationalBankIdentificationNumber: bankid
+      adhaarNumber: aadharNumber,
+      indicatorforUID: "0",
+      nationalBankIdentificationNumber: bankid
     };
 
     const captureResponse = {
-        Devicesrno: DevInfo.additional_info.Param[0].value,
-        PidDatatype: "X",
-        Piddata: pidData.Data.content,
-        ci: pidData.Skey.ci,
-        dc: DevInfo.dc,
-        dpID: DevInfo.dpId,
-        errCode: Resp.errCode,
-        errInfo: Resp.errInfo,
-        fCount: Resp.fCount,
-        fType: Resp.fType,
-        hmac: pidData.Hmac,
-        iCount: Resp.fCount,
-        iType: "0",
-        mc: DevInfo.mc,
-        mi: DevInfo.mi,
-        nmPoints: Resp.nmPoints,
-        pCount: "0",
-        pType: "0",
-        qScore: Resp.qScore,
-        rdsID: DevInfo.rdsId,
-        rdsVer: DevInfo.rdsVer,
-        sessionKey: pidData.Skey.content
+      Devicesrno: DevInfo.additional_info.Param[0].value,
+      PidDatatype: "X",
+      Piddata: pidData.Data.content,
+      ci: pidData.Skey.ci,
+      dc: DevInfo.dc,
+      dpID: DevInfo.dpId,
+      errCode: Resp.errCode,
+      errInfo: Resp.errInfo,
+      fCount: Resp.fCount,
+      fType: Resp.fType,
+      hmac: pidData.Hmac,
+      iCount: Resp.fCount,
+      iType: "0",
+      mc: DevInfo.mc,
+      mi: DevInfo.mi,
+      nmPoints: Resp.nmPoints,
+      pCount: "0",
+      pType: "0",
+      qScore: Resp.qScore,
+      rdsID: DevInfo.rdsId,
+      rdsVer: DevInfo.rdsVer,
+      sessionKey: pidData.Skey.content
     };
     try {
-  
-  BEnQ(captureResponse, cardnumberORUID);
+
+      BEnQ(captureResponse, cardnumberORUID);
 
     } catch (error) {
-        Alert.alert('Error', 'An error occurred while processing your request. Please try again.');
+      Alert.alert('Error', 'An error occurred while processing your request. Please try again.');
     } finally {
-        setIsLoading(true);
-    }
-};
-
-  const readLatLongFromStorage = async () => {
-    try {
-      const locationData = await AsyncStorage.getItem('locationData');
-      
-      if (locationData !== null) {
-        const { latitude, longitude } = JSON.parse(locationData);
-        console.log('Latitude:', latitude, 'Longitude:', longitude);
-        return { latitude, longitude };
-      } else {
-        console.log('No location data found');
-        return null;
-      }
-    } catch (error) {
-      console.error('Failed to read location data from AsyncStorage:', error);
-      return null; 
+      setIsLoading(true);
     }
   };
-  const BEnQ = async (captureResponse1, cardnumberORUID1) => {
+
+
+  const BEnQ = useCallback(async (captureResponse1, cardnumberORUID1) => {
+    setIsLoading(true); // Start loading when the request is triggered
     try {
-      const loc = await readLatLongFromStorage();
-  
-      if (!loc) {
-        console.error(`Location or transaction is missing.`);
-        setIsLoading(false);
-        return;
-      }
-  
-      setIsLoading(true);
-      
-      const Model = await getMobileDeviceId();
-      const address = 'vwi'; // Assuming static string
+      const Model = await getMobileDeviceId(); // Assuming this function gets the device ID
+      const address = 'vwi'; // Static address string
+
       const jdata = {
-        captureResponse: captureResponse1 ?? "", // Fallback to empty string if null
-        cardnumberORUID: cardnumberORUID1 ?? "", // Fallback to empty string if null
+        captureResponse: captureResponse1 ?? "",
+        cardnumberORUID: cardnumberORUID1 ?? "",
         languageCode: 'en',
-        latitude: loc?.latitude ?? 0, // Default to 0 if latitude is null or undefined
-        longitude: loc?.longitude ?? 0, // Default to 0 if longitude is null or undefined
-        mobileNumber: '', // Assuming it's an empty string
+        latitude: latitude ?? 0,
+        longitude: longitude ?? 0,
+        mobileNumber: '',
         merchantTranId: userId ?? "", // Fallback if userId is undefined
         merchantTransactionId: userId ?? "", // Same as above
         paymentType: 'B',
@@ -249,49 +182,55 @@ const TwoFAVerifyAadhar = () => {
         transactionAmount: '', // Assuming empty string for now
         ServideType: 'AP', // Assuming 'type' is always available
       };
-  
+
+      // Check if Model (IMEI) exists
       if (!Model) {
         console.error("Device Model (IMEI) is missing.");
         setIsLoading(false);
         return;
       }
-  
+
+      // Prepare the headers for the request
       const headers = {
         'trnTimestamp': formattedDate ?? "", // Ensure timestamp is not null
         'deviceIMEI': Model ?? "", // Ensure IMEI is available
         "Content-type": "application/json",
         "Accept": "application/json",
       };
-  
+
       console.log('headers', headers);
       const data = JSON.stringify(jdata);
       console.log('Request Data:', data);
-  
+
+      // Make the API call
       const response = await post({
-        url: APP_URLS?.twofa ?? "",
+        url: activeAepsLine ? APP_URLS?.twofaNifi ?? "" : APP_URLS?.twofa ?? "",
         data: data,
         config: {
           headers,
         },
       });
-  
+
+      // Check if the response is valid
       if (!response) {
         console.error("Invalid response from API.");
         setIsLoading(false);
         return;
       }
-  
+
+      // Set fingerprint data
       setFingerprintData(720);
       setIsLoading(false);
-  
+
+      // Check if the transaction was successful
       const isSuccess = response?.Status === true || response?.Status === 'true';
-  
+
       if (isSuccess) {
         Alert.alert(
           'Message:',
           `\nSuccess\n${response?.Message ?? "No message provided"}`,
           [
-            { text: 'OK', onPress: () => navigation?.navigate("AepsTabScreen") }, 
+            { text: 'OK', onPress: () => navigation?.navigate("AepsTabScreen") },
           ]
         );
       } else {
@@ -299,20 +238,26 @@ const TwoFAVerifyAadhar = () => {
       }
     } catch (error) {
       console.error('Error during balance enquiry:', error);
-      setIsLoading(false);
+      setIsLoading(false); // Stop loading in case of error
     }
-  };
-  
+  }, [
+    latitude,
+    longitude,
+    userId,
+    formattedDate,
+    navigation
+  ]);
+
 
   const address = 'vwi'
   // const readSavedData = async () => {
   //   try {
   //     const pathBody = `${RNFS.DocumentDirectoryPath}/requestBody.json`;
   //     const pathHeaders = `${RNFS.DocumentDirectoryPath}/requestHeaders.json`;
-  
+
   //     const savedBody = await RNFS.readFile(pathBody, 'utf8');
   //     const savedHeaders = await RNFS.readFile(pathHeaders, 'utf8');
-  
+
   //     console.log('Saved Body:', JSON.parse(savedBody));
   //     console.log('Saved Headers:', JSON.parse(savedHeaders));
   //   } catch (error) {
@@ -325,36 +270,36 @@ const TwoFAVerifyAadhar = () => {
 
       return;
     }
-  console.log(selectedOption)
+    console.log(selectedOption)
     const captureMapping = {
-      'mantra L0': 'com.mantra.rdservice',
-      'mantra L1': 'com.mantra.mfs110.rdservice',
-      'startek L0': 'com.acpl.registersdk',
-      'startek L1': 'com.acpl.registersdk_l1',
-      'morpho L0': 'com.scl.rdservice',
-      'morpho L1': 'com.idemia.l1rdservice',
+      'Mantra L0': 'com.mantra.rdservice',
+      'Mantra L1': 'com.mantra.mfs110.rdservice',
+      'Startek L0': 'com.acpl.registersdk',
+      'Startek L1': 'com.acpl.registersdk_l1',
+      'Morpho L0': 'com.scl.rdservice',
+      'Morpho L1': 'com.idemia.l1rdservice',
     };
-    
-  console.log(captureMapping[selectedOption])
+
+    console.log(captureMapping[selectedOption])
     if (captureMapping[selectedOption]) {
       isDriverFound(captureMapping[selectedOption])
         .then((res) => {
-          console.log(res); 
-  if(isDeviceConnected){
-                    console.log(isDeviceConnected,'#####');
-         capture(captureMapping[selectedOption]);
-                  }else{
-                    ToastAndroid.showWithGravityAndOffset(
-                      res.message + '  But Device Not Connected',
-                      ToastAndroid.LONG,
-                      ToastAndroid.TOP,
-                      0,
-                      1000
-                    );
-                  }
+          console.log(res);
+          if (isDeviceConnected) {
+            console.log(isDeviceConnected, '#####');
+            capture(captureMapping[selectedOption]);
+          } else {
+            ToastAndroid.showWithGravityAndOffset(
+              res.message + '  But Device Not Connected',
+              ToastAndroid.LONG,
+              ToastAndroid.TOP,
+              0,
+              1000
+            );
+          }
 
-        //  alert(`Capture Mapping: ${captureMapping[selectedOption]}\nResponse: ${JSON.stringify(res)}`);
-      
+          //  alert(`Capture Mapping: ${captureMapping[selectedOption]}\nResponse: ${JSON.stringify(res)}`);
+
         })
         .catch((error) => {
           console.error('Error finding driver:', error);
@@ -370,7 +315,7 @@ const TwoFAVerifyAadhar = () => {
       <AppBarSecond title={'Two-Factor Authentication'} />
 
       <View style={styles.container}>
-      <SelectDevice setDeviceName={setDeviceName} device={'Device'} opPress={()=>handleSelection(deviceName)}/>
+        <SelectDevice setDeviceName={setDeviceName} device={'Device'} opPress={() => handleSelection(deviceName)} />
 
         <View style={styles.card}>
           <Text style={styles.title}>Aadhar Pay</Text>
@@ -383,14 +328,14 @@ const TwoFAVerifyAadhar = () => {
         <DynamicButton
           title={'scan'}
           onPress={() => {
-           // BEnQ('','')
-          
-           handleSelection(deviceName);
+            // BEnQ('','')
+
+            handleSelection(deviceName);
           }}
           styleoveride={undefined}
         />
 
-        {isLoading && <ShowLoader/>}
+        {isLoading && <ShowLoader />}
       </View>
     </View>
   );
@@ -410,7 +355,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: wScale(10),
     elevation: 2,
-    marginBottom:hScale(20)
+    marginBottom: hScale(20)
   },
   title: {
     fontSize: wScale(20),

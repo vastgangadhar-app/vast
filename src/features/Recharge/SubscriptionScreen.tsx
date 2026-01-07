@@ -20,7 +20,6 @@ import { translate } from '../../utils/languageUtils/I18n';
 import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
-import { useLocationHook } from '../../utils/hooks/useLocationHook';
 import { encrypt } from '../../utils/encryptionUtils';
 import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
 import ShowLoader from '../../components/ShowLoder';
@@ -32,6 +31,7 @@ import OperatorBottomSheet from '../../components/OperatorBottomSheet';
 import Rechargeconfirm from '../../components/Rechargeconfirm';
 import { useNavigation } from '@react-navigation/native';
 import RecentText from '../../components/RecentText';
+import { useLocationHook } from '../../hooks/useLocationHook';
 
 const SubscriptionScreen = () => {
   const { get, post } = useAxiosHook();
@@ -99,6 +99,7 @@ const SubscriptionScreen = () => {
 
 
   const selectOperator = selectedOperator => {
+    console.log(latitude, longitude)
     console.log('Selected Operator:', selectedOperator);
     setselectedOpt(selectedOperator);
     setIsOperatorList(false);
@@ -107,7 +108,7 @@ const SubscriptionScreen = () => {
 
   useEffect(() => {
     recenttransactions();
-
+console.log(latitude, longitude)
   }, []);
   const recenttransactions = async () => {
     try {
@@ -134,7 +135,7 @@ const SubscriptionScreen = () => {
   const formattedDate = `${year}-${month}-${day}`;
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
-  const { userId } = useSelector((state: RootState) => state.userInfo);
+  const { userId ,Loc_Data} = useSelector((state: RootState) => state.userInfo);
   const { latitude, longitude } = useLocationHook();
   const readLatLongFromStorage = async () => {
     try {
@@ -155,7 +156,7 @@ const SubscriptionScreen = () => {
   };
   const onRechargePress = useCallback(async () => {
 
-    const loc = await readLatLongFromStorage()
+    
     setShowLoader(true);
 
     const mobileNetwork = await getNetworkCarrier();
@@ -165,8 +166,8 @@ const SubscriptionScreen = () => {
       consumerNo,
       optcode,
       amount,
-      loc?.latitude,
-      loc?.longitude,
+      Loc_Data['latitude'],Loc_Data['longitude'],
+
       'city',
       'address',
       'postcode',
@@ -205,7 +206,12 @@ const SubscriptionScreen = () => {
       });
       console.log(res);
       console.log(status);
+      if(res.status ==='False'){
+        alert(res.message);
+        setShowLoader(false);
 
+        return
+      }
       status = res.Response;
       Message = res.Message;
       await recenttransactions();
@@ -222,15 +228,15 @@ const SubscriptionScreen = () => {
     setShowLoader(false);
 
     navigation.navigate('Rechargedetails', {
-      mobileNumber: consumerNo,
-      Amount: amount,
-      operator: selectedOpt,
-      status,
-      reqId,
-      reqTime,
-      Message
+      mobileNumber: consumerNo ?? '',        
+      Amount: amount ?? 0,
+      operator: selectedOpt ?? 'N/A',        // Default to 
+      status: status ?? 'Unknown',          // 
+      reqId: reqId ?? '',                   
+      reqTime: reqTime ?? new Date().toISOString(), 
+      Message: Message ?? 'No message available' // 
     });
-
+    
   }, [
     amount,
     getMobileIp,
@@ -499,10 +505,10 @@ const SubscriptionScreen = () => {
         )}
 
         <View>
-          <FlotingInput label={paramname} value={consumerNo} keyboardType="numeric"
+          <FlotingInput label={paramname} value={consumerNo} 
             
             onChangeTextCallback={text => {
-              setconsumerNo(text); setconsumerNo(text.replace(/\D/g, ""));
+              setconsumerNo(text); 
               if (text.length >= 5) {
                 setIsinfo(true)
               } else {
@@ -532,7 +538,9 @@ const SubscriptionScreen = () => {
           </View>
         </View>
 
-        <FlotingInput label={'Enter Amount'} value={amount} onChangeTextCallback={text => setAmount(text)}
+        <FlotingInput label={'Enter Amount'}
+             maxLength={5}
+              value={amount} onChangeTextCallback={text => setAmount(text)}
           keyboardType="numeric" />
 
 

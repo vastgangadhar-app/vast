@@ -12,8 +12,8 @@ import NoDatafound from '../drawer/svgimgcomponents/Nodatafound';
 import DynamicButton from '../drawer/button/DynamicButton';
 import { RootState } from '../../reduxUtils/store';
 
-const walletunloadreport = () => {
-    const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+const Walletunloadreport = () => {
+    const { colorConfig ,IsDealer} = useSelector((state: RootState) => state.userInfo);
     const color1 = `${colorConfig.secondaryColor}20`;
     const [transactions, setTransactions] = useState([]);
     const [present, setPresent] = useState(10);
@@ -133,11 +133,13 @@ const walletunloadreport = () => {
         <View style={styles.main}>
             <AppBarSecond title={'Wallet Unload History'} />
             <DateRangePicker
+                    isshowRetailer={IsDealer}
+
                 onDateSelected={(from, to) => setSelectedDate({ from, to })}
                 SearchPress={(from, to, status) => recentTransactions(from, to, status)}
                 status={selectedStatus}
                 setStatus={setSelectedStatus}
-                isStShow={false}
+                isStShow={true}
             />
             <View style={styles.container}>
                 {loading ? (
@@ -207,4 +209,4 @@ const styles = StyleSheet.create({
         borderColor: colors.black75,
     }
 });
-export default walletunloadreport;
+export default Walletunloadreport;

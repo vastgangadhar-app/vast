@@ -81,7 +81,11 @@ project.ext.react = [
     enableHermes: true, 
     hermesCommand: '../../node_modules/react-native/sdks/hermesc/%OS-BIN%/hermesc'
 ]
+// project.ext.vectoricons = [
+//     iconFontNames: [ 'MaterialIcons.ttf', 'EvilIcons.ttf' ] // Specify font files
+// ]
 
+apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
 apply from: "../../node_modules/react-native/react.gradle"
 
 /**
@@ -144,11 +148,11 @@ android {
     }
     defaultConfig {
         manifestPlaceholders = [appTheme: "@style/AppTheme"]
-        applicationId "com.smartpaymoney"
+        applicationId "com.himanshusrecharge"
         minSdkVersion 24
         targetSdkVersion 33
-        versionCode 1
-        versionName "1.0"
+        versionCode 5
+        versionName "5.0"
         multiDexEnabled true
         buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
         missingDimensionStrategy 'react-native-camera', 'mlkit'
@@ -327,6 +331,7 @@ dependencies {
 //    implementation(files("libs/ksoap2-android-assembly-3.6.4-jar-with-dependencies.jar"))
 //    implementation(files("libs/morefun_mpos_sdk_v2.1.20210628.jar"))
    // implementation (project(":acemicroatm"))
+    implementation 'com.facebook.soloader:soloader:0.10.4'
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     implementation ("com.squareup.retrofit2:adapter-rxjava2:2.3.0")
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
@@ -409,7 +414,7 @@ task copyDownloadableDepsToLibs(type: Copy) {
     from configurations.implementation
     into 'libs'
 }
-
+apply plugin: 'com.google.gms.google-services' 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
 
 def isNewArchitectureEnabled() {

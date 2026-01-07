@@ -20,7 +20,6 @@ import { translate } from '../../utils/languageUtils/I18n';
 import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
-import { useLocationHook } from '../../utils/hooks/useLocationHook';
 import { encrypt } from '../../utils/encryptionUtils';
 import FlotingInput from '../drawer/securityPages/FlotingInput';
 import DynamicButton from '../drawer/button/DynamicButton';
@@ -32,6 +31,7 @@ import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
 import ShowLoader from '../../components/ShowLoder';
 import OnelineDropdownSvg from '../drawer/svgimgcomponents/simpledropdown';
 import RecentText from '../../components/RecentText';
+import { useLocationHook } from '../../hooks/useLocationHook';
 
 const HospitalScreen = () => {
   const { get, post } = useAxiosHook();
@@ -214,7 +214,7 @@ const HospitalScreen = () => {
   };
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
-  const { userId } = useSelector((state: RootState) => state.userInfo);
+  const { userId ,Loc_Data} = useSelector((state: RootState) => state.userInfo);
   const { latitude, longitude } = useLocationHook();
   const readLatLongFromStorage = async () => {
     try {
@@ -235,7 +235,7 @@ const HospitalScreen = () => {
   };
   const onRechargePress = useCallback(async () => {
     setShowLoader(true);
-const loc = await readLatLongFromStorage()
+
     const mobileNetwork = await getNetworkCarrier();
     const ip = await getMobileIp();
     const encryption = await encrypt([
@@ -243,8 +243,8 @@ const loc = await readLatLongFromStorage()
       consumerNo,
       optcode,
       amount,
-      loc?.latitude,
-      loc?.longitude,
+          Loc_Data['latitude'],Loc_Data['longitude'],
+
       'city',
       'address',
       'postcode',
@@ -301,6 +301,13 @@ const loc = await readLatLongFromStorage()
       const res = await post({
         url: url,
       });
+
+      if(res.status ==='False'){
+        alert(res.message);
+        setShowLoader(false);
+
+        return
+      }
       console.log(res);
       console.log(status);
 
@@ -320,14 +327,15 @@ const loc = await readLatLongFromStorage()
     setShowLoader(false);
 
     navigation.navigate('Rechargedetails', {
-      mobileNumber: consumerNo,
-      Amount: amount,
-      operator: selectedOpt,
-      status,
-      reqId,
-      reqTime,
-      Message
+      mobileNumber: consumerNo ?? '',  // Default to empty string if null or undefined
+      Amount: amount ?? 0,             // Default to 0 if null or undefined
+      operator: selectedOpt ?? 'N/A',  // Default to 'N/A' if null or undefined
+      status: status ?? 'Unknown',    // Default to 'Unknown' if null or undefined
+      reqId: reqId ?? '',             // Default to empty string if null or undefined
+      reqTime: reqTime ?? new Date().toISOString(),  // Default to current time if null or undefined
+      Message: Message ?? 'No message available'  // Default to 'No message available' if null or undefined
     });
+    
 
   }, [
     amount,
@@ -475,7 +483,7 @@ const loc = await readLatLongFromStorage()
           </View>
         )}
         <View>
-          <FlotingInput label={paramname} value={consumerNo} keyboardType="numeric"
+          <FlotingInput label={paramname} value={consumerNo} 
             
             onChangeTextCallback={text => {
               setconsumerNo(text); setconsumerNo(text.replace(/\D/g, ""));
@@ -507,7 +515,9 @@ const loc = await readLatLongFromStorage()
             )}
           </View>
         </View>
-        <FlotingInput label={'Enter Amount'} value={amount} onChangeTextCallback={text => setAmount(text)}
+        <FlotingInput label={'Enter Amount'}
+             maxLength={5}
+              value={amount} onChangeTextCallback={text => setAmount(text)}
           keyboardType="numeric" />
 
         <DynamicButton title={'Next'} onPress={() => {

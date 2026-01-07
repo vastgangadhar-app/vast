@@ -35,7 +35,6 @@ import LoanScreen from '../../features/Recharge/LoanScreen';
 import InsuranceScreen from '../../features/Recharge/InsuranceScreen';
 import CreditCardScreen from '../../features/Recharge/CreditCardScreen';
 import WaterBillScreen from '../../features/Recharge/WaterBillScreen';
-import PrepaidGasScreen from '../../features/Recharge/PrepaidGasScreen';
 import LandlineScreen from '../../features/Recharge/LandlineScreen';
 import EducationFeeScreen from '../../features/Recharge/EducationFeeScreen';
 import BroadbandScreen from '../../features/Recharge/BroadbandScreen';
@@ -92,7 +91,6 @@ import FlightBookReport from '../../features/History/flighBookReport';
 import BusBookReport from '../../features/History/BusBookReport';
 import PaymentGReport from '../../features/History/PGReport';
 import posreport from '../../features/History/posreport';
-import walletunloadreport from '../../features/History/walletunloadreport';
 import FinocmsReport from '../../features/History/FinocmsReport';
 import DayEarningReport from '../../features/Acount/DayEarning';
 import DayLedgerReport from '../../features/Acount/DayLedger';
@@ -135,6 +133,59 @@ import SeamlessScreen from '../../features/AddMoneyOps/payu/SeamlessScreen';
 import APIScreen from '../../features/AddMoneyOps/payu/APIScreen';
 import PaymentMethods from '../../features/AddMoneyOps/payu/seamless/PaymentMethods';
 import PayuPayment from '../../features/AddMoneyOps/payu/seamless/PayuPayment';
+import RecentTx from '../../features/dashboard/RecentTx';
+import EditProfile from '../../features/drawer/EditProfile';
+import CableTvScreen from '../../features/Recharge/CabelTvScreen';
+import UPISeamless from '../../features/AddMoneyOps/payu/seamless/UPISeamless';
+import UPI from '../../features/AddMoneyOps/payu/seamless/UPI';
+import PrepaidGasScreen from '../../features/Recharge/pipegas';
+import LoginReport from '../../features/drawer/securityPages/LoginReport';
+import Walletunloadreport from '../../features/History/walletunloadreport';
+import Complaint from '../../features/drawer/Complaints';
+import Natifications from '../../features/drawer/Natifications';
+import PDFGenerator from '../../components/Pdf_Print';
+import RegisterVM30 from '../../features/Financial/microatm/RegisterVM30';
+import MAtmStatusCheck from '../../features/Financial/microatm/mAtmStatusCheck';
+import Mpin from '../../features/drawer/securityPages/Mpin';
+import Totalpayreport from '../../features/RadiantApp/CmsReport/Totalpayreport';
+import DownloadDocRadiant from '../../features/RadiantApp/Radiantregister/DownloadDocRadiant';
+import Availabilitybusiness from '../../features/RadiantApp/RadiantNewClient/Availabilitybusiness';
+import Requirementscms from '../../features/RadiantApp/RadiantNewClient/Requirementcms';
+import AboutCms from '../../features/RadiantApp/RadiantNewClient/AboutCms';
+import Radiantregister from '../../features/RadiantApp/RadiantNewClient/Radiantregister';
+import UploadDocRadiant from '../../features/RadiantApp/Radiantregister/UploadDocRadiant';
+import AddressRadiant from '../../features/RadiantApp/Radiantregister/AddressRadiant ';
+import ReferencesRadiant from '../../features/RadiantApp/Radiantregister/ReferencesRadiant';
+import Qualification from '../../features/RadiantApp/Radiantregister/Qualification';
+import DrawingLaises from '../../features/RadiantApp/Radiantregister/DrawingLaises';
+import BasicInfo from '../../features/RadiantApp/Radiantregister/BasicInfo';
+import Checklistcms from '../../features/RadiantApp/RadiantNewClient/Checklistcns';
+import CashPicUpReport from '../../features/RadiantApp/CmsReport/CashPicUpReport';
+import WalletTransferReport from '../../features/History/Radientwallettransferreport';
+import InprocessReportCms from '../../features/RadiantApp/RadiantTrxn/InprocessReportCms';
+import CmsACList from '../../features/RadiantApp/RadiantTrxn/CmsACList';
+import CmsCoustomerInfo from '../../features/RadiantApp/RadiantTrxn/CmsCoustomerInfo';
+import CmsCodeVerification from '../../features/RadiantApp/RadiantTrxn/CmsCodeVerification';
+import CmsFinalOtpVerification from '../../features/RadiantApp/RadiantTrxn/CmsFinalOtpVerification';
+import CmsCodeStatus from '../../features/RadiantApp/RadiantTrxn/CmsCodeStatus';
+import PickupSummaryScreen from '../../features/RadiantApp/RadiantTrxn/PickupSummaryScreen';
+import RadiantLedger from '../../features/RadiantApp/CmsReport/RadiantLedger';
+import CashDepositReport from '../../features/RadiantApp/CmsReport/CashDepositReport';
+import CheckPendingForm from '../../features/RadiantApp/RadiantNewClient/CheckPendingForm';
+import CmsNewPin from '../../features/RadiantApp/RadiantTrxn/CmsNewPin';
+import CmsPayoutStructure from '../../features/RadiantApp/RadiantNewClient/CmsPayoutStructure';
+import QRScanScreen from '../../features/Financial/ScanQr/QRScanScreen';
+import UpiPayResult from '../../features/Financial/ScanQr/UpiPayResult';
+import ShowUPIData from '../../features/Financial/ScanQr/ShowUPIData';
+import AddMoneyPayResponse from '../../components/AddMoneyPayResponse';
+import CmsPrePay from '../../features/RadiantApp/RadiantTrxn/CmsPrePay';
+import CmsPrePayFinalVfy from '../../features/RadiantApp/RadiantTrxn/CmsPrePayFinalVfy';
+import RadiantPrepayReport from '../../features/History/CmsReport/RadiantPrepayReport';
+import WalletScreen from '../../features/dashboard/WalletScreen';
+import ImgPendingcms from '../../features/RadiantApp/RadiantNewClient/ImgPendingcms';
+import PickupSalaryCalendar from '../../features/RadiantApp/CmsSalarySheet/PickupSalaryCalendar';
+import CrePayout from '../../features/RadiantApp/CmsSalarySheet/CrePayout';
+import CmsShowPayoutStructure from '../../features/RadiantApp/RadiantNewClient/CmsShowPayoutStructure';
 
 const Stack = createNativeStackNavigator();
 
@@ -156,6 +207,11 @@ export const AppNavigator = () => {
         component={DrawerNavigation}
         options={{ headerShown: false }}
       />
+      {/* <Stack.Screen
+        name="LoginScreen" 
+        component={LoginScreen}
+        options={{ headerShown: false }}
+      /> */}
       <Stack.Screen
         name="Changepassword"
         component={Changepassword}
@@ -171,6 +227,11 @@ export const AppNavigator = () => {
       <Stack.Screen
         name="AreYousuareUserDelete"
         component={AreYousuareUserDelete}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CableTvScreen"
+        component={CableTvScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -537,8 +598,8 @@ export const AppNavigator = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="walletunloadreport"
-        component={walletunloadreport}
+        name="Walletunloadreport"
+        component={Walletunloadreport}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -549,6 +610,12 @@ export const AppNavigator = () => {
       <Stack.Screen
         name="FinocmsReport"
         component={FinocmsReport}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="Complaint"
+        component={Complaint}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -696,7 +763,7 @@ export const AppNavigator = () => {
         name="DmtAddNewBenificiaryScreen"
         component={DmtAddNewBenificiaryScreen}
         options={{ headerShown: false }}
-      /> 
+      />
       <Stack.Screen
         name="AadhrPanVerify"
         component={AadhrPanVerify}
@@ -706,28 +773,33 @@ export const AppNavigator = () => {
         name="AadharCardUpload"
         component={AadharCardUpload}
         options={{ headerShown: false }}
-      /> 
-       <Stack.Screen
+      />
+      <Stack.Screen
         name="DmtTransferScreen"
         component={DmtTransferScreen}
         options={{ headerShown: false }}
       />
-       <Stack.Screen
+      <Stack.Screen
         name="DmtTabScreen"
         component={DmtTabScreen}
         options={{ headerShown: false }}
       />
-       <Stack.Screen
+      <Stack.Screen
         name="SeamlessScreen"
         component={SeamlessScreen}
         options={{ headerShown: false }}
-      /> 
+      />
       <Stack.Screen
         name="APIScreen"
         component={APIScreen}
         options={{ headerShown: false }}
       />
-         <Stack.Screen
+      <Stack.Screen
+        name="RecentTx"
+        component={RecentTx}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="PaymentMethods"
         component={PaymentMethods}
         options={{ headerShown: false }}
@@ -737,7 +809,255 @@ export const AppNavigator = () => {
         component={PayuPayment}
         options={{ headerShown: false }}
       />
-      
+      <Stack.Screen
+        name="EditProfile"
+        component={EditProfile}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="UPI"
+        component={UPI}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="LoginReport"
+        component={LoginReport}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Natifications"
+        component={Natifications}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="PDFGenerator"
+        component={PDFGenerator}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="MAtmStatusCheck"
+        component={MAtmStatusCheck}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="RegisterVM30"
+        component={RegisterVM30}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Mpin"
+        component={Mpin}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="BasicInfo"
+        component={BasicInfo}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="DrawingLaises"
+        component={DrawingLaises}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="Qualification"
+        component={Qualification}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="ReferencesRadiant"
+        component={ReferencesRadiant}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="UploadDocRadiant"
+        component={UploadDocRadiant}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="AddressRadiant"
+        component={AddressRadiant}
+        options={{ headerShown: false }}
+      />
+
+
+      <Stack.Screen
+        name="Radiantregister"
+        component={Radiantregister}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="AboutCms"
+        component={AboutCms}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Requirementscms"
+        component={Requirementscms}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="Checklistcms"
+        component={Checklistcms}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Availabilitybusiness"
+        component={Availabilitybusiness}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DownloadDocRadiant"
+        component={DownloadDocRadiant}
+        options={{ headerShown: false }}
+      />
+
+
+      <Stack.Screen
+        name="Totalpayreport"
+        component={Totalpayreport}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CashPicUpReport"
+        component={CashPicUpReport}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="WalletTransferReport"
+        component={WalletTransferReport}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="InprocessReportCms"
+        component={InprocessReportCms}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CmsACList"
+        component={CmsACList}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CmsCoustomerInfo"
+        component={CmsCoustomerInfo}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CmsCodeVerification"
+        component={CmsCodeVerification}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CmsFinalOtpVerification"
+        component={CmsFinalOtpVerification}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CmsCodeStatus"
+        component={CmsCodeStatus}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="PickupSummaryScreen"
+        component={PickupSummaryScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="RadiantLedger"
+        component={RadiantLedger}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="CashDepositReport"
+        component={CashDepositReport}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="CheckPendingForm"
+        component={CheckPendingForm}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CmsNewPin"
+        component={CmsNewPin}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CmsPayoutStructure"
+        component={CmsPayoutStructure}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ShowUPIData"
+        component={ShowUPIData}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="UpiPayResult"
+        component={UpiPayResult}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="QRScanScreen"
+        component={QRScanScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AddMoneyPayResponse"
+        component={AddMoneyPayResponse}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="CmsPrePay"
+        component={CmsPrePay}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CmsPrePayFinalVfy"
+        component={CmsPrePayFinalVfy}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="RadiantPrepayReport"
+        component={RadiantPrepayReport}
+        options={{ headerShown: false }}
+      />
+   <Stack.Screen
+        name="ImgPendingcms"
+        component={ImgPendingcms}
+        options={{ headerShown: false }}
+      />
+   <Stack.Screen
+        name="PickupSalaryCalendar"
+        component={PickupSalaryCalendar}
+        options={{ headerShown: false }}
+      />
+    <Stack.Screen
+        name="CrePayout"
+        component={CrePayout}
+        options={{ headerShown: false }}
+      />
+   
+ <Stack.Screen
+        name="CmsShowPayoutStructure"
+        component={CmsShowPayoutStructure}
+        options={{ headerShown: false }}
+      />
+   
 
     </Stack.Navigator>
   );

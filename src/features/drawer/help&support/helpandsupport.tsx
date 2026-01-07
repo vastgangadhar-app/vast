@@ -81,6 +81,8 @@ getData();
   };
   const faqspress = () => {
     navigation.navigate('FAQs');
+  };  const Complaint = () => {
+    navigation.navigate('Complaint');
   };
 
   return (
@@ -247,7 +249,7 @@ getData();
                       </Text>
                     </View>
                     <View>
-                      <TouchableOpacity
+                      <TouchableOpacity  onPress={()=>{Complaint()}}
                         activeOpacity={0.7}
                         style={[
                           styles.imgborder,

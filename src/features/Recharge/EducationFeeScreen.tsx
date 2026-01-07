@@ -21,7 +21,6 @@ import { setTSpan } from 'react-native-svg/lib/typescript/lib/extract/extractTex
 import { useSelector } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
 import { encrypt } from '../../utils/encryptionUtils';
-import { useLocationHook } from '../../utils/hooks/useLocationHook';
 import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
 import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
 import ShowLoader from '../../components/ShowLoder';
@@ -35,6 +34,7 @@ import { useNavigation } from '@react-navigation/native';
 import ElectricityOperatorBottomSheet from '../../components/ElectricityOperatorBottomSheet';
 import ClosseModalSvg2 from '../drawer/svgimgcomponents/ClosseModal2';
 import RecentText from '../../components/RecentText';
+import { useLocationHook } from '../../hooks/useLocationHook';
 
 const EducationFeeScreen = () => {
   const { colorConfig } = useSelector((state: RootState) => state.userInfo);
@@ -303,7 +303,7 @@ const EducationFeeScreen = () => {
   };
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
-  const { userId } = useSelector((state: RootState) => state.userInfo);
+  const { userId ,Loc_Data} = useSelector((state: RootState) => state.userInfo);
   const { latitude, longitude } = useLocationHook();
 
   const readLatLongFromStorage = async () => {
@@ -324,7 +324,7 @@ const EducationFeeScreen = () => {
     }
   };
   const onRechargePress = useCallback(async () => {
-    const loc = await readLatLongFromStorage();
+    ;
     setShowLoader(true);
 
     const mobileNetwork = await getNetworkCarrier();
@@ -334,8 +334,8 @@ const EducationFeeScreen = () => {
       consumerNo,
       optcode,
       amount,
-      loc?.latitude,
-      loc?.longitude,
+      Loc_Data['latitude'],Loc_Data['longitude'],
+
       'city',
       'address',
       'postcode',
@@ -371,7 +371,12 @@ const EducationFeeScreen = () => {
       });
       console.log(res);
       console.log(status);
+      if(res.status ==='False'){
+        alert(res.message);
+        setShowLoader(false);
 
+        return
+      }
       status = res.Response;
       Message = res.Message;
       await recenttransactions();
@@ -387,16 +392,16 @@ const EducationFeeScreen = () => {
     setAmount('');
     setIsinfo(false)
     setShowLoader(false);
-
     navigation.navigate('Rechargedetails', {
-      mobileNumber: consumerNo,
-      Amount: amount,
-      operator: selectedOpt,
-      status,
-      reqId,
-      reqTime,
-      Message
+      mobileNumber: consumerNo ?? '',    // Default to an empty string if null or undefined
+      Amount: amount ?? 0,               // Default to 0 if null or undefined
+      operator: selectedOpt ?? 'N/A',    // Default to 'N/A' if null or undefined
+      status: status ?? 'Unknown',      // Default to 'Unknown' if null or undefined
+      reqId: reqId ?? '',               // Default to an empty string if null or undefined
+      reqTime: reqTime ?? new Date().toISOString(),  // Default to current time if null or undefined
+      Message: Message ?? 'No message available'   // Default to 'No message available' if null or undefined
     });
+    
 
   }, [
     amount,
@@ -550,7 +555,7 @@ const EducationFeeScreen = () => {
           </View>
         )}
         <View>
-          <FlotingInput label={paramname} value={consumerNo} keyboardType="numeric"
+          <FlotingInput label={paramname} value={consumerNo} 
             
             onChangeTextCallback={text => {
               setconsumerNo(text); setconsumerNo(text.replace(/\D/g, ""));
@@ -577,7 +582,9 @@ const EducationFeeScreen = () => {
             )}
           </View>
         </View>
-        <FlotingInput label={'Enter Amount'} value={amount} onChangeTextCallback={text => setAmount(text)}
+        <FlotingInput label={'Enter Amount'}
+             maxLength={5}
+              value={amount} onChangeTextCallback={text => setAmount(text)}
           keyboardType="numeric" />
         <DynamicButton title={'Next'} onPress={() => {
           validateFields();

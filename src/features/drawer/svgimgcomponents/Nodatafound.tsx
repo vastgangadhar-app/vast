@@ -15,19 +15,22 @@ const NoDatafound = ({ size = wScale(200) }) => {
         </View>
     );
 
+
+    
+
 }
 const styles = StyleSheet.create({
     nodata: {
         width: '100%',
         textAlign: 'center',
         color: '#000',
-        fontWeight:'bold',
+        fontWeight: 'bold',
         fontSize: FontSize.heading,
 
     },
     nodataview: {
         alignItems: 'center',
-        paddingBottom: hScale(20)
+        paddingBottom: hScale(20),
     },
 })
 export default NoDatafound;

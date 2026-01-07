@@ -1,4 +1,4 @@
-package com.smartpaymoney;
+package com.himanshusrecharge;
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.BaseActivityEventListener;
 import com.facebook.react.bridge.Promise;

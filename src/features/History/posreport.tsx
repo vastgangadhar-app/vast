@@ -13,7 +13,7 @@ import DynamicButton from '../drawer/button/DynamicButton';
 import { RootState } from '../../reduxUtils/store';
 
 const posreport = () => {
-    const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+    const { colorConfig ,IsDealer} = useSelector((state: RootState) => state.userInfo);
     const color1 = `${colorConfig.secondaryColor}20`;
     const [transactions, setTransactions] = useState([]);
     const [present, setPresent] = useState(10);
@@ -119,7 +119,8 @@ const posreport = () => {
                 SearchPress={(from, to, status) => recentTransactions(from, to, status)}
                 status={selectedStatus}
                 setStatus={setSelectedStatus}
-                isStShow={false}
+                isStShow={true}
+                isshowRetailer={IsDealer}
 
             />
             <View style={styles.container}>

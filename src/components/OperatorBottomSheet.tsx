@@ -31,7 +31,7 @@ const OperatorBottomSheet = ({
   setOperator,
   selectOperatorImage,
   path,
-  handleItemPress, 
+  handleItemPress,
 }) => {
 
   const { colorConfig } = useSelector((state: RootState) => state.userInfo);
@@ -45,40 +45,44 @@ const OperatorBottomSheet = ({
       ? item["Operatorname"].toLowerCase().includes(searchQuery.toLowerCase())
       : item["State Name"].toLowerCase().includes(searchQuery.toLowerCase())
   );
+  useEffect(() => {
+    if (!isModalVisible) {
+      setSearchQuery('');
+    }
+  }, [isModalVisible]);
+
 
   const showBottomSheetList = () => {
     return (
-      <FlashList 
+      <FlashList keyboardShouldPersistTaps={'always'}
         data={filteredData}
         renderItem={({ item }: { item: any }) => {
           return (
             <View>
               <TouchableOpacity
                 style={[styles.operatorview]}
-                onPress={async () => {                 
+                onPress={async () => {
+                  Keyboard.dismiss();
                   if (!showState) {
                     selectOperator(item["Operatorname"]);
                     setOperatorcode(item["OPtCode"]);
                     selectOperatorImage(item["path"]);
                     setModalVisible(false);
-                    setSearchQuery('');
                   } else {
                     if (selectbool) {
                       setSelectbool(false);
                       setOperator?.(item["Operatorname"]);
                       setOperatorcode(item["OPtCode"]);
                       selectOperatorImage(item["path"]);
-                      setSearchQuery('');
                       handleItemPress(item);
                     } else {
                       setSelectbool(true);
                       setCircle(item["State Name"]);
                       setState(item["State Name"]);
                       setModalVisible(false);
-                      setSearchQuery('');
                     }
                   }
-                  handleItemPress(item); 
+                  handleItemPress(item);
                 }}
               >
                 <Text style={[styles.operatornametext]} numberOfLines={1} ellipsizeMode="tail">
@@ -141,7 +145,6 @@ const OperatorBottomSheet = ({
   );
 };
 
-// Styles for the component
 const styles = StyleSheet.create({
   bottomsheetview: {
     backgroundColor: "#fff",

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Text } from "react-native";
 import AppBarSecond from "../headerAppbar/AppBarSecond";
 import DynamicButton from "../button/DynamicButton";
@@ -8,9 +8,18 @@ import { RootState } from "../../../reduxUtils/store";
 import { Dialog, ALERT_TYPE } from "react-native-alert-notification";
 import VoiceNotificationimg from "../svgimgcomponents/Darkmodesvg";
 import DynamicSecurityPages from "../securityPages/DynamicComponet";
-
+import { useDispatch } from "react-redux";
+import {
+    setAuthToken,
+    setColorConfig,
+    setRefreshToken,
+    setUserId,
+    setNeedUpdate,
+    setVersionData,
+    setIsRington
+  } from '../../../reduxUtils/store/userInfoSlice';
 const VoiceNotification = () => {
-    const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+    const { colorConfig ,IsRington} = useSelector((state: RootState) => state.userInfo);
     const color1 = `${colorConfig.primaryColor}10`;
     const closse=`
     
@@ -20,29 +29,39 @@ const VoiceNotification = () => {
 const help = `
 <svg id="Icons" height="512" viewBox="0 0 74 74" width="512" xmlns="http://www.w3.org/2000/svg"><path d="m54.369 16.01a.993.993 0 0 1 -.611-.21 29.76 29.76 0 0 0 -8.66-4.663 1 1 0 0 1 .644-1.894 31.759 31.759 0 0 1 9.24 4.976 1 1 0 0 1 -.613 1.791z"/><path d="m65.449 32.51a1 1 0 0 1 -.967-.749 26.138 26.138 0 0 0 -.924-2.831 1 1 0 1 1 1.865-.72 28.032 28.032 0 0 1 1 3.048 1 1 0 0 1 -.969 1.252z"/><path d="m62.379 56.38a1 1 0 0 1 -.864-1.5 30.178 30.178 0 0 0 4.045-15.12c0-.173 0-.336-.009-.509a1 1 0 0 1 2-.1c.011.207.011.4.011.611a32.184 32.184 0 0 1 -4.315 16.121 1 1 0 0 1 -.868.497z"/><path d="m61.241 23.32a1 1 0 0 1 -.83-.441c-.531-.787-1.1-1.545-1.682-2.252a1 1 0 0 1 1.542-1.274c.625.757 1.231 1.567 1.8 2.407a1 1 0 0 1 -.269 1.388.988.988 0 0 1 -.561.172z"/><path d="m35.321 72a32.36 32.36 0 0 1 -27.921-16.116 1 1 0 0 1 1.731-1 30.353 30.353 0 0 0 26.19 15.116 30.049 30.049 0 0 0 21.379-8.856 1 1 0 0 1 1.414 1.414 32.033 32.033 0 0 1 -22.793 9.442z"/><path d="m5 48.3a1 1 0 0 1 -.97-.76 32.268 32.268 0 0 1 31.291-40.018 1 1 0 0 1 0 2 30.265 30.265 0 0 0 -29.352 37.539 1 1 0 0 1 -.969 1.239z"/><path d="m29.8 15.044a1 1 0 0 1 -.707-1.707l4.815-4.815-4.816-4.815a1 1 0 0 1 1.414-1.414l5.522 5.522a1 1 0 0 1 0 1.414l-5.522 5.522a.993.993 0 0 1 -.706.293z"/><path d="m6.247 63.925a.974.974 0 0 1 -.26-.035 1 1 0 0 1 -.707-1.224l2.02-7.544a1 1 0 0 1 1.224-.707l7.543 2.021a1 1 0 0 1 -.517 1.932l-6.575-1.763-1.763 6.578a1 1 0 0 1 -.965.742z"/><path d="m62.374 56.38a1 1 0 0 1 -.966-.741l-2.02-7.539a1 1 0 1 1 1.931-.518l1.762 6.578 6.578-1.762a1 1 0 1 1 .518 1.931l-7.544 2.021a.99.99 0 0 1 -.259.03z"/><path d="m37.465 58.667h-3.972a1.536 1.536 0 0 1 -1.524-1.3l-.338-2.133a16.221 16.221 0 0 1 -4.775-1.977l-1.756 1.265a1.539 1.539 0 0 1 -2-.159l-2.8-2.8a1.535 1.535 0 0 1 -.158-2l1.265-1.753a16.2 16.2 0 0 1 -1.977-4.774l-2.13-.336a1.537 1.537 0 0 1 -1.3-1.527v-3.973a1.536 1.536 0 0 1 1.3-1.525l2.13-.338a16.234 16.234 0 0 1 1.978-4.775l-1.266-1.753a1.538 1.538 0 0 1 .159-2l2.8-2.8a1.536 1.536 0 0 1 2-.161l1.754 1.267a16.221 16.221 0 0 1 4.775-1.977l.338-2.132a1.536 1.536 0 0 1 1.524-1.3h3.972a1.536 1.536 0 0 1 1.524 1.3l.339 2.133a16.243 16.243 0 0 1 4.773 1.98l1.752-1.266a1.538 1.538 0 0 1 2 .161l2.8 2.8a1.539 1.539 0 0 1 .162 1.993l-1.269 1.756a16.234 16.234 0 0 1 1.978 4.775l2.132.338a1.536 1.536 0 0 1 1.3 1.525v3.971a1.537 1.537 0 0 1 -1.3 1.525l-2.133.339a16.2 16.2 0 0 1 -1.977 4.774l1.267 1.754a1.537 1.537 0 0 1 -.16 2l-2.8 2.8a1.537 1.537 0 0 1 -2 .16l-1.752-1.268a16.243 16.243 0 0 1 -4.775 1.977l-.339 2.132a1.536 1.536 0 0 1 -1.521 1.302zm-3.582-2h3.192l.386-2.424a1 1 0 0 1 .8-.825 14.269 14.269 0 0 0 5.316-2.2 1 1 0 0 1 1.146.019l1.991 1.439 2.253-2.254-1.439-1.992a1 1 0 0 1 -.018-1.145 14.253 14.253 0 0 0 2.2-5.316 1 1 0 0 1 .825-.8l2.424-.384v-3.194l-2.424-.384a1 1 0 0 1 -.825-.8 14.253 14.253 0 0 0 -2.2-5.316 1 1 0 0 1 .018-1.145l1.44-1.992-2.256-2.254-1.991 1.44a1 1 0 0 1 -1.146.019 14.269 14.269 0 0 0 -5.316-2.2 1 1 0 0 1 -.8-.825l-.386-2.424h-3.19l-.383 2.422a1 1 0 0 1 -.8.825 14.286 14.286 0 0 0 -5.316 2.2 1 1 0 0 1 -1.146-.018l-1.991-1.439-2.254 2.253 1.439 1.992a1 1 0 0 1 .018 1.145 14.253 14.253 0 0 0 -2.2 5.316 1 1 0 0 1 -.825.8l-2.425.385v3.193l2.424.384a1 1 0 0 1 .825.8 14.253 14.253 0 0 0 2.2 5.316 1 1 0 0 1 -.018 1.145l-1.439 1.993 2.253 2.252 1.992-1.438a1 1 0 0 1 1.146-.018 14.286 14.286 0 0 0 5.316 2.2 1 1 0 0 1 .8.825z"/><path d="m35.479 49.709a10.522 10.522 0 1 1 10.521-10.521 10.534 10.534 0 0 1 -10.521 10.521zm0-19.043a8.522 8.522 0 1 0 8.521 8.522 8.531 8.531 0 0 0 -8.521-8.522z"/></svg>
 `
+const dispatch = useDispatch()
+
+const [ isOn,setisOne] = useState(false)
     const BtnPress = () => {
+
+        dispatch(setIsRington(isOn));
+
+        isOn
         Dialog.show({
             type: ALERT_TYPE.SUCCESS,
             title: 'SUCCESS',
-            textBody: 'Delete Your Account Successfully',
+            textBody: 'Update Successfully',
             button: 'OK',
             onPressButton: () => {
                 Dialog.hide();},
         });
     };
 
-    const [text,setText]=useState('Off')
+    const [text,setText]=useState(IsRington ?'Device is ON':'Device is OFF')
     const [clickCount,setClickCount]=useState(0)
     const [textcolor,setTextcolor] = useState ('#000')
 
     const handlePress=()=>{
         const texts =[
-            {text:'Divece is ON',color:'red'},
-            {text:'DIvece is OFF',color:'green'}
+            {text:'Device is ON',color:'green'},
+            {text:'Device is OFF',color:'red'}
         ]
         setClickCount(  (clickCount + 1)% texts.length)
         setText(texts[clickCount].text)
         setTextcolor(texts[clickCount].color)
+        setisOne(texts[clickCount].color !=='red')
+
+        console.log(texts[clickCount].color !=='red')
     }
     return (
         <View style={styles.main}>

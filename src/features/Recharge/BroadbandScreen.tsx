@@ -20,7 +20,6 @@ import { translate } from '../../utils/languageUtils/I18n';
 import { RootState } from '../../reduxUtils/store';
 import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
 import { useSelector } from 'react-redux';
-import { useLocationHook } from '../../utils/hooks/useLocationHook';
 import { encrypt } from '../../utils/encryptionUtils';
 import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
 import RecentHistory from '../../components/RecentHistoryBottomSheet';
@@ -34,6 +33,7 @@ import OnelineDropdownSvg from '../drawer/svgimgcomponents/simpledropdown';
 import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
 import { State } from 'react-native-gesture-handler';
 import RecentText from '../../components/RecentText';
+import { useLocationHook } from '../../hooks/useLocationHook';
 
 const BroadbandScreen = () => {
   const { get, post } = useAxiosHook();
@@ -230,29 +230,12 @@ const BroadbandScreen = () => {
   }
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
-  const { userId } = useSelector((state: RootState) => state.userInfo);
+  const { userId  ,Loc_Data} = useSelector((state: RootState) => state.userInfo);
   const { latitude, longitude } = useLocationHook();
 
-  const readLatLongFromStorage = async () => {
-    try {
-      const locationData = await AsyncStorage.getItem('locationData');
-      
-      if (locationData !== null) {
-        const { latitude, longitude } = JSON.parse(locationData);
-        console.log('Latitude:', latitude, 'Longitude:', longitude);
-        return { latitude, longitude };
-      } else {
-        console.log('No location data found');
-        return null;
-      }
-    } catch (error) {
-      console.error('Failed to read location data from AsyncStorage:', error);
-      return null; 
-    }
-  };
+
   const onRechargePress = useCallback(async () => {
 
-    const loc = await readLatLongFromStorage();
     setShowLoader(true);
 
     const mobileNetwork = await getNetworkCarrier();
@@ -262,8 +245,7 @@ const BroadbandScreen = () => {
       consumerNo,
       optcode,
       amount,
-      loc?.latitude,
-      loc?.longitude,
+      Loc_Data['latitude'],Loc_Data['longitude'],
       'city',
       'address',
       'postcode',
@@ -301,7 +283,12 @@ const BroadbandScreen = () => {
       });
       console.log(res);
       console.log(status);
+      if(res.status ==='False'){
+        alert(res.message);
+        setShowLoader(false);
 
+        return
+      }
       status = res.Response;
       Message = res.Message;
       await recenttransactions();
@@ -318,14 +305,15 @@ const BroadbandScreen = () => {
     setShowLoader(false);
 
     navigation.navigate('Rechargedetails', {
-      mobileNumber: consumerNo,
-      Amount: amount,
-      operator: selectedOpt,
-      status,
-      reqId,
-      reqTime,
-      Message
+      mobileNumber: consumerNo ?? '',
+      Amount: amount ?? 0,
+      operator: selectedOpt ?? 'Unknown',
+      status: status ?? 'Unknown',
+      reqId: reqId ?? '',
+      reqTime: reqTime ?? new Date().toISOString(),
+      Message: Message ?? 'No message available'
     });
+    
 
   }, [
     amount,
@@ -376,9 +364,9 @@ const BroadbandScreen = () => {
   }
 
   const validateFields = () => {
-    if (!CustomerID) {
+    if (!consumerNo) {
       ToastAndroid.showWithGravity(
-        `Please Enter ${paramname}'`,
+        `Please Enter ${paramname}`,
         ToastAndroid.SHORT,
         ToastAndroid.BOTTOM,
       );
@@ -418,7 +406,9 @@ const BroadbandScreen = () => {
 
         {accntvisivility && (
           <View>
-            <FlotingInput label={accnumhint} onChangeTextCallback={(text) => setAgencyCode(text)}
+            <FlotingInput 
+        autoCapitalize='characters'
+label={accnumhint} onChangeTextCallback={(text) => setAgencyCode(text)}
               value={agencyCode}              
 
             />
@@ -434,8 +424,10 @@ const BroadbandScreen = () => {
 
           <View >
 
-            <FlotingInput label={accnumhint2} onChangeTextCallback={(text) => setAccnumhint2(text)}
-              value={accnumhint2}   
+            <FlotingInput 
+        autoCapitalize='characters'
+label={consumerNo} onChangeTextCallback={(text) => setconsumerNo(text)}
+              value={consumerNo}   
               
               
 
@@ -453,10 +445,12 @@ const BroadbandScreen = () => {
         )}
         <View
         >
-          <FlotingInput label={paramname} value={consumerNo} keyboardType="numeric"
+          <FlotingInput 
+        autoCapitalize='characters'
+label={paramname} value={consumerNo} 
             
             onChangeTextCallback={text => {
-              setconsumerNo(text); setconsumerNo(text.replace(/\D/g, ""));
+              setconsumerNo(text); 
               if (text.length >= 5) {
                 setIsinfo(true)
               } else {
@@ -485,7 +479,11 @@ const BroadbandScreen = () => {
             )}
           </View>
         </View>
-             <FlotingInput label={'Enter Amount'} value={amount} onChangeTextCallback={text => setAmount(text)}
+             <FlotingInput label={'Enter Amount'}
+             maxLength={5}
+             
+             
+             value={amount} onChangeTextCallback={text => setAmount(text)}
           keyboardType="numeric" 
         />
 

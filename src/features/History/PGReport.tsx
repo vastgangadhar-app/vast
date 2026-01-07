@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, FlatList, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ToastAndroid } from 'react-native';
+import { View, FlatList, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ToastAndroid, Alert, TextInput } from 'react-native';
 import useAxiosHook from '../../utils/network/AxiosClient';
 import { APP_URLS } from '../../utils/network/urls';
 import { useSelector } from 'react-redux';
-import { hScale, wScale } from '../../utils/styles/dimensions';
+import { hScale, wpScale, wScale } from '../../utils/styles/dimensions';
 import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
 import { RootState } from '../../reduxUtils/store';
 import { FontSize } from '../../utils/styles/theme';
@@ -14,9 +14,10 @@ import Share from "react-native-share";
 import DateRangePicker from '../../components/DateRange';
 import DynamicButton from '../drawer/button/DynamicButton';
 import NoDatafound from '../drawer/svgimgcomponents/Nodatafound';
+import { FlashList } from '@shopify/flash-list';
 
 const PaymentGReport = () => {
-    const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+    const { colorConfig, IsDealer } = useSelector((state: RootState) => state.userInfo);
     const color1 = `${colorConfig.secondaryColor}20`
 
     const [transactions, setTransactions] = useState([]);
@@ -26,26 +27,52 @@ const PaymentGReport = () => {
     const { post } = useAxiosHook();
     const { userId } = useSelector((state) => state.userInfo);
     const currentDate = new Date();
+
     const [selectedDate, setSelectedDate] = useState({
         from: new Date().toISOString().split('T')[0],
         to: new Date().toISOString().split('T')[0],
     });
     const [selectedStatus, setSelectedStatus] = useState('ALL');
-
+    const [id, setID] = useState('ALL')
     const capRef = useRef();
+    const [pin, setPin] = useState('');
+    const [textInputVisible, setTextInputVisible] = useState(false);
+const [act,setAction]= useState('')
+    const handleChangeStatus = async (status, index,item, pin ,act) => {
 
-    const recentTransactions = async (from, to, status) => {
+const res = await post({url:`${APP_URLS.UPI_Manual_Pending_To_Success}hideupiidres=${item.idno}&hideupiidrestypes=${act}&txtBankRRN=${act=='APPROVED'?item.BankRRN:''}&txtcode=${pin}`})
+console.log(res,'**********')
+
+if(res){
+    ToastAndroid.show(res.Message,ToastAndroid.LONG)
+}else{
+    ToastAndroid.show(res.Message || 'try again ',ToastAndroid.LONG)
+
+}
+
+        setLoading(true);
+        setTimeout(() => {
+            setLoading(false);
+            setTextInputVisible(false); 
+        }, 2000);
+    };
+    const recentTransactions = async (from, to, status, id) => {
         try {
             const formattedFrom = new Date(from).toISOString().split('T')[0];
             const formattedTo = new Date(to).toISOString().split('T')[0];
             setLoading(true);
+    
             const url = `${APP_URLS.PaymentGateway}ddlstatus=${status}&pagesize=500&txt_frm_date=${formattedFrom}&txt_to_date=${formattedTo}`;
-            const response = await post({ url });
-            console.log(response.RESULT[0])
-            console.log(url)
-            if (response.Status === "Success") {
+            const url2 = `${APP_URLS.Get_UPI_DealerTransfer_History}txt_frm_date=${formattedFrom}&txt_to_date=${formattedTo}&Retailerid=${id}&ddlstatus=${status}`;  // Fixed the '&' here
+    
+            const requestUrl = IsDealer ? url2 : url;  
+            console.log(requestUrl);  
+            const response = await post({ url: requestUrl });
+    
+            console.log(response, '**********************'); 
+            if (response) {
                 const transactionsData = response.RESULT || [];
-                setTransactions(transactionsData);
+                setTransactions(IsDealer ? response.Upitxn_Details : transactionsData);
             } else {
                 setTransactions([]);
             }
@@ -56,8 +83,9 @@ const PaymentGReport = () => {
             setLoading(false);
         }
     };
+    
     useEffect(() => {
-        recentTransactions(selectedDate.from, selectedDate.to, selectedStatus);
+        recentTransactions(selectedDate.from, selectedDate.to, selectedStatus, id);
     }, [selectedDate, selectedStatus]);
 
     const handleLoadMore = () => {
@@ -88,7 +116,7 @@ const PaymentGReport = () => {
                     quality: 0.7,
                 });
                 await Share.open({
-                    message: "Hi, I am sharing the transaction details using Smart Pay Money App.",
+                    message: `Hi, I am sharing the transaction details using ${APP_URLS.AppName} App.`,
                     url: uri,
                 });
             } catch (e) {
@@ -157,7 +185,7 @@ const PaymentGReport = () => {
                                 <TouchableOpacity style={styles.shearbtn} onPress={onShare}>
                                     <ShareSvg size={wScale(20)} color='#000' />
                                     <Text style={[styles.sheartext, { backgroundColor: colorConfig.secondaryColor }]}>
-                                        Shear
+                                        share
                                     </Text>
                                 </TouchableOpacity>
                             </View>
@@ -193,37 +221,199 @@ const PaymentGReport = () => {
 
         );
     };
+    const renderItem = ({ item, index }) => {
+        return (
+            <View style={[styles.card, { backgroundColor: color1 }]}>
+                <View style={styles.row}>
+                    <View style={styles.leftColumn}>
+                        <Text style={styles.label}>Name</Text>
+                        <Text style={styles.boldText}>{item.RetailerName || '.....'}</Text>
+                    </View>
+                    <View style={styles.rightColumn}>
+                        <Text style={styles.label}>Date</Text>
+                        <Text style={styles.boldText}>{item.txndate || '0 0 0'}</Text>
+                    </View>
+                </View>
+
+                <View style={styles.row}>
+                    <View style={styles.leftColumn}>
+                        <Text style={styles.label}>Remain Pre</Text>
+                        <Text style={styles.boldText}>₹ {item.remainpre}</Text>
+                    </View>
+                    <View style={styles.centerColumn}>
+                        <Text style={styles.label}>Charge</Text>
+                        <Text style={styles.boldText}>₹ {item.charge}</Text>
+                    </View>
+                    <View style={styles.rightColumn}>
+                        <Text style={styles.label}>Pay</Text>
+                        <Text style={styles.boldText}>₹ {item.finalpay}</Text>
+                    </View>
+                </View>
+
+                <View style={styles.row}>
+                    <View style={styles.leftColumn}>
+                        <Text style={styles.label}>Remain Post</Text>
+                        <Text style={styles.boldText}>₹ {item.remainpost}</Text>
+                    </View>
+                    <View style={styles.centerColumn}>
+                        <Text style={styles.label}>Bank RRN</Text>
+                        <Text style={styles.boldText}>{item.BankRRN}</Text>
+                    </View>
+                    <View style={styles.rightColumn}>
+                        <Text style={styles.label}>Amount</Text>
+                        <Text style={styles.boldText}>₹ {item.amt}</Text>
+                    </View>
+                </View>
+
+                {item.status === 'Pending' && (
+                    <View style={styles.actionContainer}>
+                        <TouchableOpacity
+                            style={[styles.button, ]}
+                            onPress={() => { 
+                                setAction('APPROVED');
+                                
+                                setTextInputVisible(true); setClickedIndex(index)}}
+                        >
+                            <Text style={styles.buttonText}>
+                                {loading ? 'Loading...' : 'Mark as SUCCESS'}
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.button, { backgroundColor: '#a6242d' }]}
+                            onPress={() => {
+                                setAction('REJECTED');
+                                setClickedIndex(index);setTextInputVisible(true);} }
+                        >
+                            <Text style={styles.buttonText}>
+                                {loading ? 'Loading...' : 'Mark as FAILED'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+
+{clickedIndex === index && textInputVisible && ( 
+    <View style={styles.inputContainer}>
+        <TextInput
+            style={[styles.textInput, { borderColor: colorConfig.primaryButtonColor }]}
+            placeholder="Enter Transaction PIN"
+            value={pin}
+            onChangeText={setPin}
+            keyboardType="numeric"
+            maxLength={4}
+        />
+        <TouchableOpacity
+            style={[styles.buttonsubmit, { backgroundColor: colorConfig.primaryButtonColor }]}
+            onPress={() => {
+
+                handleChangeStatus(item.status === 'Pending' ? 'SUCCESS' : 'FAILED', index,item, pin ,act);
+            }}
+        >
+            <Text style={styles.sibmittext}>
+                {loading ? 'Submitting...' : 'Submit'}
+            </Text>
+        </TouchableOpacity>
+    </View>
+)}
+
+            </View>
+        );
+    };
+    const [clickedIndex, setClickedIndex] = useState(null);
+    const delHistory = [
+        {
+            idno: "123456",
+            RetailerName: "Retailer A",
+            status: "SUCCESS",
+            txndate: "2025-01-28",
+            remainpre: 5000,
+            charge: 50,
+            finalpay: 4950,
+            remainpost: 3000,
+            BankRRN: "987654321",
+            amt: 5000
+        },
+        {
+            idno: "789101",
+            RetailerName: "Retailer B",
+            status: "Pending",
+            txndate: "2025-01-27",
+            remainpre: 3000,
+            charge: 30,
+            finalpay: 2970,
+            remainpost: 1000,
+            BankRRN: "112233445",
+            amt: 3000
+        },
+        {
+            idno: "112233",
+            RetailerName: "Retailer C",
+            status: "Refund",
+            txndate: "2025-01-26",
+            remainpre: 1000,
+            charge: 10,
+            finalpay: 990,
+            remainpost: 500,
+            BankRRN: "667788990",
+            amt: 1000
+        }
+    ];
+
 
     return (
         <View style={styles.main}>
-            <AppBarSecond title="Payment Gateway History" />
+            <AppBarSecond title=  {IsDealer ?'Add Money Report':"Payment Gateway History"} />
             <DateRangePicker
+                isshowRetailer={IsDealer}
+                isStShow={true}
                 onDateSelected={(from, to) => {
                     setSelectedDate({ from, to });
                 }}
                 SearchPress={(from, to, status) => {
-                    recentTransactions(from, to, status);
+                    recentTransactions(from, to, status, id);
                 }}
                 status={selectedStatus}
                 setStatus={setSelectedStatus}
+                retailerID={(id) => {
+                    console.log(id);
+
+                    setID(id)
+                    recentTransactions(selectedDate.from, selectedDate.to, selectedStatus, id);
+
+                }
+
+                }
             />
             <View style={styles.container}>
+
+
+
                 {loading ? (
                     <ActivityIndicator size="large" color="#4CAF50" />
-                ) : transactions.length === 0 ? (
+                ) : transactions.length === 0   ? (
                     <NoDatafound />
                 ) : (
-                    <FlatList
-                        data={transactions.slice(0, present)}
-                        renderItem={({ item }) => <TransactionDetails item={item} />}
-                        keyExtractor={(item, index) => index.toString()}
-                        ListFooterComponent={
-                            transactions.length > present ? (
-
-                                <DynamicButton title={'Loar More'} onPress={handleLoadMore} />
-                            ) : null
-                        }
-                    />
+                    <>
+                        {IsDealer ? (
+                            <FlashList
+                                data={transactions}
+                                renderItem={renderItem}
+                                keyExtractor={(item) => item.idno.toString()}
+                                estimatedItemSize={100}
+                            />
+                        ) : (
+                            <FlatList
+                                data={transactions.slice(0, present)}
+                                renderItem={({ item }) => <TransactionDetails item={item} />}
+                                keyExtractor={(item, index) => index.toString()}
+                                ListFooterComponent={
+                                    transactions.length > present ? (
+                                        <DynamicButton title="Load More" onPress={handleLoadMore} />
+                                    ) : null
+                                }
+                            />
+                        )}
+                    </>
                 )}
             </View>
         </View>
@@ -326,6 +516,80 @@ const styles = StyleSheet.create({
         fontSize: hScale(18),
         color: '#D32F2F',
     },
+
+    //////////////////////////////////
+
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginVertical: 5,
+    },
+    leftColumn: {
+        flex: 1,
+    },
+    centerColumn: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    rightColumn: {
+        flex: 1,
+        alignItems: 'flex-end',
+    },
+    label: {
+        fontSize: 10,
+        color: '#555',
+    },
+    boldText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    actionContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 10,
+    },
+    button: {
+        padding: 8,
+        alignItems: 'center',
+        borderRadius: 5,
+        backgroundColor:'#489635'
+
+    },
+
+    buttonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        marginTop: 10,
+        alignItems: 'center',
+    },
+    textInput: {
+        width: '100%',
+        height: hScale(40),
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 5,
+        paddingLeft: 10
+    },
+    buttonsubmit: {
+        height: hScale(40),
+        alignItems: 'center',
+        position: 'absolute',
+        right: 0,
+        textAlign: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: wScale(15),
+        borderRadius: 5,
+
+    },
+    sibmittext: {
+        color: 'white',
+        fontWeight: 'bold',
+        textAlignVertical: 'center',
+    },
+
 });
 
 export default PaymentGReport;

@@ -18,7 +18,7 @@ const EditIcon = `
 `;
 
 const QuickAccessScreen = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig ,fcmToken } = useSelector((state: RootState) => state.userInfo);
   const [rechargeSectionData, setRechargeSectionData] = useState<sectionData[]>(
     [],
   );
@@ -43,6 +43,8 @@ const QuickAccessScreen = () => {
   };
 
   const getItem = async () => {
+
+    console.log(fcmToken)
     try {
       const storedItems = await AsyncStorage.getItem('quickAccessItems');
       if (storedItems) {

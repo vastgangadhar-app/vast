@@ -275,7 +275,7 @@ const PostoMain = () => {
     return (
         <View style={styles.main}>
             <View>
-                <AppBarSecond title={'wallat'} titlestyle={styles.titlestyle} />
+                <AppBarSecond title={'wallet'} titlestyle={styles.titlestyle} />
                 <View style={styles.PossOrWall}>
 
                     <View style={styles.poscontainer}>

@@ -1,61 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "E:\\NativeProject(24 sept 2024)\\smartpaymoney2\\android\\app\\build\\intermediates\\incremental\\mergeDebugResources\\merged.dir\\values-or\\values-or.xml",
+            "outputFile": "E:\\react_native Project\\aasha_reactNative\\android\\app\\build\\intermediates\\incremental\\mergeDebugResources\\merged.dir\\values-or\\values-or.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\user\\.gradle\\caches\\transforms-3\\223133207ca7608e62ec04b5ba7b3d45\\transformed\\jetified-play-services-basement-18.4.0\\res\\values-or\\values.xml",
-                    "from": {
-                        "startLines": "4",
-                        "startColumns": "0",
-                        "startOffsets": "195",
-                        "endColumns": "135",
-                        "endOffsets": "330"
-                    },
-                    "to": {
-                        "startLines": "52",
-                        "startColumns": "4",
-                        "startOffsets": "5166",
-                        "endColumns": "139",
-                        "endOffsets": "5301"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\user\\.gradle\\caches\\transforms-3\\466f03a979687ad89b268c274b660032\\transformed\\biometric-1.1.0\\res\\values-or\\values-or.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "55,175,263,381,508,637,773,904,1051,1153,1291,1435",
-                        "endColumns": "119,87,117,126,128,135,130,146,101,137,143,137",
-                        "endOffsets": "170,258,376,503,632,768,899,1046,1148,1286,1430,1568"
-                    },
-                    "to": {
-                        "startLines": "62,63,66,67,68,69,70,71,72,73,74,75",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "6411,6531,6773,6891,7018,7147,7283,7414,7561,7663,7801,7945",
-                        "endColumns": "119,87,117,126,128,135,130,146,101,137,143,137",
-                        "endOffsets": "6526,6614,6886,7013,7142,7278,7409,7556,7658,7796,7940,8078"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\user\\.gradle\\caches\\transforms-3\\608c5449133da7b785f10a05a7579320\\transformed\\core-1.10.1\\res\\values-or\\values-or.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,6,7,8,9",
-                        "startColumns": "4,4,4,4,4,4,4,4",
-                        "startOffsets": "55,158,260,363,468,569,671,790",
-                        "endColumns": "102,101,102,104,100,101,118,100",
-                        "endOffsets": "153,255,358,463,564,666,785,886"
-                    },
-                    "to": {
-                        "startLines": "34,35,36,37,38,39,40,125",
-                        "startColumns": "4,4,4,4,4,4,4,4",
-                        "startOffsets": "3118,3221,3323,3426,3531,3632,3734,11880",
-                        "endColumns": "102,101,102,104,100,101,118,100",
-                        "endOffsets": "3216,3318,3421,3526,3627,3729,3848,11976"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\user\\.gradle\\caches\\transforms-3\\2c122af7e8ba98cc3e22590c343fb814\\transformed\\jetified-play-services-base-18.5.0\\res\\values-or\\values.xml",
+                    "source": "C:\\Users\\ANDROID  SUPPORT\\.gradle\\caches\\transforms-3\\4b0bc3f645213565a53b2c20b133dda4\\transformed\\jetified-play-services-base-18.5.0\\res\\values-or\\values.xml",
                     "from": {
                         "startLines": "4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20",
                         "startColumns": "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
@@ -72,7 +21,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\user\\.gradle\\caches\\transforms-3\\a14823c08d35534a2b415520c5030531\\transformed\\appcompat-1.6.1\\res\\values-or\\values-or.xml",
+                    "source": "C:\\Users\\ANDROID  SUPPORT\\.gradle\\caches\\transforms-3\\4111e64e6cbe48edba6a3611fbf2754f\\transformed\\appcompat-1.6.1\\res\\values-or\\values-or.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
@@ -89,7 +38,24 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\user\\.gradle\\caches\\transforms-3\\0dc2a1e69c6101def9ec97e370065a9c\\transformed\\material-1.6.1\\res\\values-or\\values-or.xml",
+                    "source": "C:\\Users\\ANDROID  SUPPORT\\.gradle\\caches\\transforms-3\\e07e06049cfe5b626528b40ccb06a54c\\transformed\\jetified-play-services-basement-18.5.0\\res\\values-or\\values.xml",
+                    "from": {
+                        "startLines": "4",
+                        "startColumns": "0",
+                        "startOffsets": "195",
+                        "endColumns": "135",
+                        "endOffsets": "330"
+                    },
+                    "to": {
+                        "startLines": "52",
+                        "startColumns": "4",
+                        "startOffsets": "5166",
+                        "endColumns": "139",
+                        "endOffsets": "5301"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\ANDROID  SUPPORT\\.gradle\\caches\\transforms-3\\ab37309072cf508e1012e9a3887c001b\\transformed\\material-1.6.1\\res\\values-or\\values-or.xml",
                     "from": {
                         "startLines": "2,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
@@ -105,6 +71,40 @@
                         "endLines": "5,33,41,42,43,64,65,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123",
                         "endColumns": "12,76,93,104,78,64,88,64,58,85,63,62,72,63,53,111,57,61,53,71,121,86,85,109,76,80,90,66,65,69,76,86,70,76,68,68,90,71,88,88,73,71,85,49,65,79,83,61,63,62,99,96,91,98,83",
                         "endOffsets": "272,3113,3942,4047,4126,6679,6768,8143,8202,8288,8352,8415,8488,8552,8606,8718,8776,8838,8892,8964,9086,9173,9259,9369,9446,9527,9618,9685,9751,9821,9898,9985,10056,10133,10202,10271,10362,10434,10523,10612,10686,10758,10844,10894,10960,11040,11124,11186,11250,11313,11413,11510,11602,11701,11785"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\ANDROID  SUPPORT\\.gradle\\caches\\transforms-3\\4fe7936db32c63efe1f31d601f8af1cc\\transformed\\core-1.10.1\\res\\values-or\\values-or.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,158,260,363,468,569,671,790",
+                        "endColumns": "102,101,102,104,100,101,118,100",
+                        "endOffsets": "153,255,358,463,564,666,785,886"
+                    },
+                    "to": {
+                        "startLines": "34,35,36,37,38,39,40,125",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "3118,3221,3323,3426,3531,3632,3734,11880",
+                        "endColumns": "102,101,102,104,100,101,118,100",
+                        "endOffsets": "3216,3318,3421,3526,3627,3729,3848,11976"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\ANDROID  SUPPORT\\.gradle\\caches\\transforms-3\\5545c7aedcdd3eb8855f3e71310771ae\\transformed\\biometric-1.1.0\\res\\values-or\\values-or.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,175,263,381,508,637,773,904,1051,1153,1291,1435",
+                        "endColumns": "119,87,117,126,128,135,130,146,101,137,143,137",
+                        "endOffsets": "170,258,376,503,632,768,899,1046,1148,1286,1430,1568"
+                    },
+                    "to": {
+                        "startLines": "62,63,66,67,68,69,70,71,72,73,74,75",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "6411,6531,6773,6891,7018,7147,7283,7414,7561,7663,7801,7945",
+                        "endColumns": "119,87,117,126,128,135,130,146,101,137,143,137",
+                        "endOffsets": "6526,6614,6886,7013,7142,7278,7409,7556,7658,7796,7940,8078"
                     }
                 }
             ]

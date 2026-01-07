@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../reduxUtils/store';
 
 const MoneyCom = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig,IsDealer } = useSelector((state: RootState) => state.userInfo);
   const color1 = `${colorConfig.secondaryColor}20`
   const [list, setList] = useState([]);
   const { get } = useAxiosHook();
@@ -15,8 +15,9 @@ const MoneyCom = () => {
   useEffect(() => {
     const fetchCommissionData = async (operator) => {
       try {
+      const url2 = `${APP_URLS.dealeropcomn}ddltype=${operator}`
         const url = `${APP_URLS.opComm}ddltype=${operator}`;
-        const response = await get({ url });
+        const response = await get({ url:IsDealer?url2:url });
         setList(response);
       } catch (error) {
         console.error(error);

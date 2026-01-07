@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Alert, Text, ToastAndroid } from 'react-native';
+import { View, StyleSheet, Alert, Text, ToastAndroid, Image } from 'react-native';
 import { APP_URLS } from '../../../utils/network/urls';
 import useAxiosHook from '../../../utils/network/AxiosClient';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
@@ -22,6 +22,9 @@ import DmtSvg from '../../drawer/svgimgcomponents/DmtSvg';
 import PayOutSvg from '../../drawer/svgimgcomponents/PayOutSvg';
 import { ActivityIndicator } from 'react-native-paper';
 import PaysprintDmt from './PaySprintDmt';
+import ShowLoader from '../../../components/ShowLoder';
+import ScanSvg from '../../drawer/svgimgcomponents/ScanSvg';
+import QRScanScreen from '../ScanQr/QRScanScreen';
 
 const DmtTabScreen = () => {
   const { colorConfig } = useSelector((state: RootState) => state.userInfo);
@@ -32,15 +35,15 @@ const DmtTabScreen = () => {
   const [bankName, setBankName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [consumerName, setConsumerName] = useState('');
-const [isLoading,setIsLoading]= useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const { get, post } = useAxiosHook();
   const [index, setIndex] = useState(0);
   const [routes, setRoutes] = useState([]);
   const [dmttext, setDmtText] = useState([]);
 
-const [DMT1,setDmt1]= useState(false);
-const [DMT2,setDmt2]= useState(false);
-const [DMT3,setDmt3]= useState(false);
+  const [DMT1, setDmt1] = useState(false);
+  const [DMT2, setDmt2] = useState(false);
+  const [DMT3, setDmt3] = useState(false);
   // const [routes] = useState([
   //   DMT1 && { key: 'DMT1', title: 'DMT 1' } ,
   //   DMT2 && { key: 'DMT2', title: 'DMT 2' },
@@ -53,9 +56,11 @@ const [DMT3,setDmt3]= useState(false);
   // ]);
   const renderScene = SceneMap({
     'DMT1': DmtGetBeneficiaryScreen,
+   
     'DMT2': RadiantGetBenifiaryScreen,
-    'DMT3': GetBenifiaryScreen, 
+    'DMT3': GetBenifiaryScreen,
     'DMT4': PaysprintDmt,
+    'Scan': QRScanScreen,
   });
 
 
@@ -66,28 +71,36 @@ const [DMT3,setDmt3]= useState(false);
         const response2 = await get({ url: `Retailer/api/data/DMTStatusCheck1` });
         const response3 = await get({ url: `Retailer/api/data/PAYOUTStatusCheck` });
         const response4 = await post({ url: `MoneyDMT/api/PPI/info` });
-  
+        console.log({
+
+          response,
+          response2,
+          response3,
+          response4
+        })
         const DMT1Status = response?.Response === 'Success';
         const DMT2Status = response2?.Response === 'Success';
         const DMT3Status = response3?.Response === 'Success';
         const DMT4Status = response4?.RESULT === true;
-  
-        if (DMT1Status || DMT2Status || DMT3Status ) {
+
+        if (DMT1Status || DMT2Status || DMT3Status) {
           console.log(true);
-  
+
           setDmt1(DMT1Status);
           setDmt2(DMT2Status);
           setDmt3(DMT3Status);
-  
+
           console.log(response, response2, response3, response4);
-  
+
           const updatedRoutes = [
             DMT1Status && { key: 'DMT1', title: 'DMT 1' },
             DMT2Status && { key: 'DMT2', title: 'DMT 2' },
             DMT3Status && { key: 'DMT3', title: 'Self PayOut' },
-            DMT4Status && { key: 'DMT4', title: 'PPI' },
+            DMT4Status && { key: 'DMT4', title: 'PPI(fast)' },
+            { key: 'Scan', title: 'Scan & Pay' },
+
           ].filter(Boolean);
-  
+
           const updatedText = [
             DMT1Status && { key: 'DMT1', title: '1' },
             DMT2Status && { key: 'DMT2', title: '2' },
@@ -95,36 +108,40 @@ const [DMT3,setDmt3]= useState(false);
             DMT4Status && { key: 'DMT4', title: 'PPI' },
 
           ].filter(Boolean);
-  
+
           setRoutes(updatedRoutes);
           setDmtText(updatedText);
           setIsLoading(false);
         } else {
           ToastAndroid.showWithGravity(response?.Message || 'Something went wrong', ToastAndroid.LONG, ToastAndroid.CENTER);
         }
+        setIsload(false)
       } catch (error) {
         console.error(error);
         ToastAndroid.showWithGravity('An error occurred', ToastAndroid.LONG, ToastAndroid.CENTER);
       }
     }
-  
+
     Api();
   }, []);
-  
-  
-  
+
+
+
 
   const getSvgimg = (key: string) => {
     switch (key) {
       case 'DMT1':
         return <DmtSvg color={colorConfig.primaryColor} />
+
+      case 'Scan':
+        return <ScanSvg color={colorConfig.secondaryColor} color2={colorConfig.primaryColor} />
       case 'DMT2':
         return <DmtSvg color={colorConfig.secondaryColor} />
       case 'DMT3':
-        return <PayOutSvg color={colorConfig.primaryColor}color2={colorConfig.secondaryColor} />
-      
-        case 'DMT4':
-        return <PayOutSvg color={colorConfig.primaryColor}color2={colorConfig.secondaryColor} />
+        return <PayOutSvg color={colorConfig.primaryColor} color2={colorConfig.secondaryColor} />
+
+      case 'DMT4':
+        return <PayOutSvg color={colorConfig.primaryColor} color2={colorConfig.secondaryColor} />
       default:
         return null;
     }
@@ -247,23 +264,23 @@ const [DMT3,setDmt3]= useState(false);
     switch (rdServicePackage) {
       case 'com.mantra.mfs110.rdservice':
         pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" pTimeout="20000" posh="UNKNOWN" env="P"  /> <CustOpts><Param name="mantrakey" value="" /></CustOpts> </PidOptions>`;
-        break; 
-        case 'com.mantra.rdservice':
+        break;
+      case 'com.mantra.rdservice':
         pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" pTimeout="20000" posh="UNKNOWN" env="P"  /> <CustOpts><Param name="mantrakey" value="" /></CustOpts> </PidOptions>`;
         break;
       case 'com.acpl.registersdk_l1':
         pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" timeout="10000"  otp="" pTimeout="20000" posh="UNKNOWN" env="P" />  <Demo/> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>`;
-        break; 
-        case 'com.acpl.registersdk':
+        break;
+      case 'com.acpl.registersdk':
         pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" timeout="10000"  otp="" pTimeout="20000" posh="UNKNOWN" env="P" />  <Demo/> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>`;
         break;
       case 'com.idemia.l1rdservice':
         pidOptions = `<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" posh="UNKNOWN" /><Demo></Demo><CustOpts><Param name="" value="" /></CustOpts></PidOptions>`;
         break;
       case 'com.scl.rdservice':
-      //  pidOptions = '<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000"  posh="UNKNOWN" env="P" /> <Demo></Demo> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>';
-          pidOptions = `<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" posh="UNKNOWN" /><Demo></Demo><CustOpts><Param name="" value="" /></CustOpts></PidOptions>`;
-      break;
+        //  pidOptions = '<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000"  posh="UNKNOWN" env="P" /> <Demo></Demo> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>';
+        pidOptions = `<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" posh="UNKNOWN" /><Demo></Demo><CustOpts><Param name="" value="" /></CustOpts></PidOptions>`;
+        break;
       default:
         console.error('Unsupported rdServicePackage');
         return;
@@ -393,7 +410,7 @@ const [DMT3,setDmt3]= useState(false);
         Alert.alert('Please check if the device is connected.');
       });
   };
-
+  const [isload, setIsload] = useState(true)
   return (
 
     <DmtContext.Provider value={{
@@ -413,11 +430,12 @@ const [DMT3,setDmt3]= useState(false);
 
       <View style={styles.container}>
         <AppBarSecond
-          title="DMT"
+          title="Money Transfer"
           actionButton={undefined}
           onActionPress={undefined}
           onPressBack={undefined}
         />
+        {isload && <ShowLoader />}
         <TabView
           lazy
           navigationState={{ index, routes }}
@@ -466,12 +484,12 @@ const styles = StyleSheet.create({
     color: colors.black,
     width: "100%",
     textAlign: 'center',
-    marginTop:hScale(-5)
+    marginTop: hScale(-5)
   },
   labelstyle2: {
     fontSize: wScale(15),
     fontWeight: 'bold',
-    color: '#fff',
+    color: 'red',
     width: "100%",
     textAlign: 'center',
     position: 'absolute',
@@ -481,7 +499,7 @@ const styles = StyleSheet.create({
   labelview: {
     alignItems: 'center',
     flex: 1,
-    marginTop:hScale(-14)
+    marginTop: hScale(-4)
   }
 });
 

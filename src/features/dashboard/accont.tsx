@@ -23,24 +23,29 @@ import DisputeSvg from '../drawer/svgimgcomponents/DisputeSvg';
 import OtherLinksSvg from '../drawer/svgimgcomponents/OtherLinksSvg';
 import DayBookSvg from '../drawer/svgimgcomponents/DayBookSvg';
 import RToRiportSvg from '../drawer/svgimgcomponents/RToRiportSvg';
+import Paymentsvg from '../drawer/svgimgcomponents/Paymentsvg';
 
 const AccReportScreen = () => {
 
   const navigation = useNavigation<any>();
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig, IsDealer  ,fcmToken
+
+  } = useSelector((state: RootState) => state.userInfo);
   const getSvgComponent = (item) => {
     switch (item) {
       case 'Day Earning':
         return <DayEarnsvg />;
-      case 'Day Ledger':
+      case IsDealer ? 'Ledger' : 'Day Ledger':
         return <DayLedgerSvg />;
-      case 'Day Book':
+      case IsDealer ? 'Day & Month Book' : 'Day Book':
         return <DayBookSvg />;
       case 'Added Money':
-        return <AddedMoneySvg />;
+        return !IsDealer ? <AddedMoneySvg /> : null;
       case 'R TO R':
-        return <RToRSvg />;
-      case 'R TO R Report':
+        return !IsDealer ? <RToRSvg /> : null;
+      case IsDealer ? 'Credit Report' : '':
+        return <Paymentsvg color='#000' />;
+      case IsDealer ? 'Fund Transfer History' : 'R TO R Report':
         return <RToRiportSvg />;
       case 'Fund Receive Report':
         return <FundReceivedSvg />;
@@ -51,9 +56,9 @@ const AccReportScreen = () => {
       case 'Purchase order Report':
         return <PurchaseOrderSvg />;
       case 'Dispute Report':
-        return <DisputeSvg />;
+        return !IsDealer ? <DisputeSvg /> : null;
       case 'Other Links':
-        return <OtherLinksSvg />;
+        return !IsDealer ? <OtherLinksSvg /> : null;
       default:
         return null;
     }
@@ -65,10 +70,10 @@ const AccReportScreen = () => {
       case 'Day Earning':
         navigation.navigate('DayEarningReport');
         break;
-      case 'Day Ledger':
+      case IsDealer ? 'Ledger' : 'Day Ledger':
         navigation.navigate('DayLedgerReport');
         break;
-      case 'Day Book':
+      case IsDealer ? 'Day & Month Book' : 'Day Book':
         navigation.navigate('DayBookReport');
         break;
       case 'Added Money':
@@ -77,8 +82,11 @@ const AccReportScreen = () => {
       case 'R TO R':
         navigation.navigate('RtorScreen');
         break;
-      case 'R TO R Report':
+      case IsDealer ? 'Fund Transfer History' : 'R TO R Report':
         navigation.navigate('RToRReport');
+        break;
+      case IsDealer ? 'Credit Report' : '':
+        navigation.navigate('CreditReport');
         break;
       case 'Fund Receive Report':
         navigation.navigate('FundReceivedReport');
@@ -107,18 +115,20 @@ const AccReportScreen = () => {
 
   const gridItems = [
     'Day Earning',
-    'Day Ledger',
-    'Day Book',
-    'Added Money',
-    'R TO R',
-    'R TO R Report',
+    IsDealer ? 'Ledger' : 'Day Ledger',
+    IsDealer ? 'Day & Month Book' : 'Day Book',
+    ...(!IsDealer ? ['Added Money', 'R TO R',] : []),
+    ...(IsDealer ? ['Credit Report'] : []),
+    IsDealer ? 'Fund Transfer History' : 'R TO R Report',
+    ...(!IsDealer ? ['Dispute Report'] : []),
+
     'Fund Receive Report',
     'Operator Commission',
     'Manage A/C',
     'Purchase order Report',
-    'Dispute Report',
-    'Other Links',
+    ...(!IsDealer ? ['Other Links'] : []),
   ];
+console.log(fcmToken);
   const renderItem = ({ item }) => (
     <View style={styles.item}>
       <TouchableOpacity style={styles.imgview} onPress={() => handleItemClick(item)}>
@@ -142,7 +152,7 @@ const AccReportScreen = () => {
           renderItem={renderItem}
           keyExtractor={(item, index) => index.toString()}
           numColumns={3}
-          estimatedItemSize={120} // Estimate size of each item for better performance
+          estimatedItemSize={120}
 
         />
       </View>

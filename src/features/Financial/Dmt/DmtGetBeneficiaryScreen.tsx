@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, TextInput, Button, ActivityIndicator, StyleSheet, ToastAndroid, TouchableOpacity, Alert, ScrollView, Keyboard,
   AsyncStorage
@@ -22,11 +22,15 @@ import ShowLoader from '../../../components/ShowLoder';
 import SelectDevice from '../Aeps/DeviceSelect';
 import { colors } from '../../../utils/styles/theme';
 import { useRdDeviceConnectionHook } from '../../../hooks/useRdDeviceConnectionHook';
+import { BottomSheet } from '@rneui/themed';
+import DmtAddNewBenificiaryScreen from './DmtAddNewBeneficiarycreen';
+import { useLocationHook } from '../../../hooks/useLocationHook';
+import { onReceiveNotification2 } from '../../../utils/NotificationService';
 
 const GetBenifiaryScreenDmt = ({ route }) => {
-    const {isDeviceConnected} = useRdDeviceConnectionHook();
-  
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  //const {isDeviceConnected} = useRdDeviceConnectionHook();
+
+  const { colorConfig, Loc_Data } = useSelector((state: RootState) => state.userInfo);
   const EditIcon = ` 
 
  <?xml version="1.0" encoding="UTF-8"?>
@@ -66,7 +70,9 @@ const GetBenifiaryScreenDmt = ({ route }) => {
   const [isTXNP, setTXNP] = useState(false);
   const [showloader, setIsShowloader] = useState(false);
   const [isTXNP1, setTXNP1] = useState('');
-
+  const [addinfo, setAddInfo] = useState([]);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible2, setIsVisible2] = useState(false);
   useEffect(() => {
     getGenUniqueId();
     console.log(Name);
@@ -131,20 +137,38 @@ const GetBenifiaryScreenDmt = ({ route }) => {
   }
 
   const verifyEkycOtp = async () => {
-    console.log(customerDet);
-    const res = await post({ url: `MoneyDMT/api/Money/KYCEnterOTP?sender_number=${sendernum}&stateresp=${customerDet?.stateResp}&kyc_id=${customerDet?.ekyc_id}&Otp=${mobileOtp}` });
-    console.log(`MoneyDMT/api/Money/KYCEnterOTP?sender_number=${sendernum}&stateresp=${customerDet?.stateResp}&kyc_id=${customerDet?.ekyc_id}&Otp=${mobileOtp}`)
 
+
+    console.log(customerDet);
+    const stateResp = customerDet.stateResp === undefined ? customerDet?.stateresp : customerDet?.stateResp;
+    const ekyc_id = customerDet?.ekyc_id === undefined ? customerDet?.kyc_id : customerDet?.ekyc_id;
+
+
+    const res = await post({ url: `MoneyDMT/api/Money/KYCEnterOTP?sender_number=${sendernum}&stateresp=${stateResp}&kyc_id=${ekyc_id}&Otp=${mobileOtp}` });
+    console.log(`MoneyDMT/api/Money/KYCEnterOTP?sender_number=${sendernum}&stateresp=${stateResp}&kyc_id=${ekyc_id}&Otp=${mobileOtp}`)
+    console.log(`MoneyDMT/api/Money/KYCEnterOTP?sender_number=${sendernum}&stateresp=${stateResp}&kyc_id=${ekyc_id}&Otp=${mobileOtp}`)
     console.log(res);
     if (res?.RESULT === '0') {
-      
+
       if (res.ADDINFO.status) {
         ToastAndroid.showWithGravity(
-          res.ADDINFO.message ||  'Successfully verified',
+          res.ADDINFO.message || 'Successfully verified',
           ToastAndroid.SHORT,
           ToastAndroid.BOTTOM,
         );
-       navigation.navigate("DmtAddNewBenificiaryScreen", { no: sendernum, remid: remid, Name: dmttype });
+
+
+        const mockNotification = {
+          notification: {
+            title: '',
+            body: res.ADDINFO.message || 'Successfully verified',
+
+          },
+        };
+
+        // Call the function
+        onReceiveNotification2(mockNotification);
+        navigation.navigate("DmtAddNewBenificiaryScreen", { no: sendernum, remid: remid, Name: dmttype });
       }
       else {
         ToastAndroid.showWithGravity(
@@ -171,9 +195,10 @@ const GetBenifiaryScreenDmt = ({ route }) => {
       );
 
     }
+    setIsload(false);
 
   }
-
+  const { latitude, longitude } = Loc_Data;
   const start = () => {
     getDeviceInfo()
       .then(async (res) => {
@@ -262,267 +287,121 @@ const GetBenifiaryScreenDmt = ({ route }) => {
         return;
     }
 
-    openFingerPrintScanner(rdServicePackage, pidOptions)
-      .then(async (res) => {
- 
-        console.log(res,'AEPS***')
-        if (res.message === 'Device Driver not found') {
-          ToastAndroid.showWithGravity(
-            res.message,
-            ToastAndroid.SHORT,
-            ToastAndroid.BOTTOM,
-          );
-          return;
-        }
+    // Add necessary dependencies
+    handleFingerprintScanner(rdServicePackage, pidOptions)
+  };
+  const handleFingerprintScanner = useCallback(async (rdServicePackage, pidOptions) => {
+    try {
+      const res = await openFingerPrintScanner(rdServicePackage, pidOptions);
+      console.log(res, 'AEPS***');
 
-        const deviceInfoString = JSON.stringify(res, null, 2);
+      if (res.message === 'Device Driver not found') {
+        ToastAndroid.showWithGravity(
+          res.message,
+          ToastAndroid.SHORT,
+          ToastAndroid.BOTTOM,
+        );
+        return;
+      }
 
-        const loc = await readLatLongFromStorage();
+      const deviceInfoString = JSON.stringify(res, null, 2);
 
-        // await post({ url: 'AEPS/api/Aeps/ErrorMessage', data: { Message: JSON.stringify(res) } });
+      if (res.errorCode === 0) {
+        setIsShowloader(true);
 
-        // const path = RNFS.DownloadDirectoryPath + `/deviceInfo-capture-today--Finger.json`;
+        const data = {
+          sender_number: sendernum, // Ensure sendernum is defined
+          latitude: latitude, // Ensure latitude is defined
+          longitude: longitude, // Ensure longitude is defined
+          aadharcard: aadharNumber, // Ensure aadharNumber is defined
+          pid: res.pidDataXML,
+        };
 
-        // Write the response to a file
-        // RNFS.writeFile(path, deviceInfoString, 'utf8')
-        //   .then(() => {
-        //     console.log('JSON saved to Download directory');
-        //   })
-        //   .catch((error) => {
-        //     console.error('Error writing file:', error);
-        //     // Alert.alert('Error', 'Failed to save file');
-        //   });
+        try {
+          const response = await post({ url: 'MoneyDMT/api/Money/EKYC_Register', data });
+          setIsShowloader(false);
 
-        if (res.errorCode === 0) {
-          setIsShowloader(true);
+          if (response) {
+            const add = response.ADDINFO;
 
-          const data = {
-            "sender_number": sendernum,
-            "latitude": loc?.latitude,
-            "longitude": loc?.longitude,
-            "aadharcard": aadharNumber,
-            "pid": res.pidDataXML
-          };
-          /// saveJsonData('EKYC_Register', data);
+            if (add) {
+              if (response.RESULT === '0') {
+                if (add.message === 'Kyc completed and OTP has been sent to remitter mobile number.') {
+                  setShowOtpView(true);
+                  setCustomer(add);
+                  const mockNotification = {
+                    notification: {
+                      title: '',
+                      body: add.message,
+                    },
+                  };
 
-          try {
-            const response = await post({ url: 'MoneyDMT/api/Money/EKYC_Register', data: data });
-            setIsShowloader(false);
-
-            if (response) {
-              const add = response.ADDINFO;
-
-              if (add) {
-
-                if (response.RESULT === '0') {
-
-
-                  if (!add.kyc_id && add.message == 'Kyc completed and OTP has been send to remitter mobile number.') {
-                  
-                  
-                    setShowOtpView(true);
-                    setCustomer(add)
-
-                  }else{ Alert.alert(
-                    '',
-                    `Message: ${add.message}\n`,
-                    [{ text: 'OK' }]
-                  );}
-                 
-
-
+                  // Call the function
+                  onReceiveNotification2(mockNotification);
 
                 } else {
-
-
-                
+                  checksendernumber(sendernum); // Ensure checksendernumber is defined
+                  Alert.alert('', `Message: ${add.message}\n`, [{ text: 'OK' }]);
                 }
-              } else {
-                console.error('ADDINFO is missing in the response');
-                Alert.alert('Error', 'Failed to fetch KYC details. Please try again later.');
               }
+
+
             } else {
-              console.error('No response received from the server');
-              Alert.alert('Error', 'No response received from the server');
+              console.error('ADDINFO is missing in the response');
+              Alert.alert('Error', 'Failed to fetch KYC details. Please try again later.');
             }
-          } catch (error) {
-            console.error('Error while sending request:', error);
-            Alert.alert('Error', 'An error occurred while processing your request. Please try again later.');
+          } else {
+            console.error('No response received from the server');
+            Alert.alert('Error', 'No response received from the server');
           }
+        } catch (error) {
+          console.error('Error while sending request:', error);
+          Alert.alert('Error', 'An error occurred while processing your request. Please try again later.');
         }
-
-      })
-      .catch(async (error) => {
-        // await post({ url: 'AEPS/api/Aeps/ErrorMessage', data: { Message: JSON.stringify({
-        //   message: error?.message,
-        //   line: error?.line,
-        //   column: error?.column
-        // }) } });
-        setFingerprintData('');
-        Alert.alert('Please check if the device is connected.');
-      });
-  };
-  // const capture = (rdServicePackage) => {
-  //   let pidOptions = '';
-
-  //   switch (rdServicePackage) {
-  //     case 'com.mantra.mfs110.rdservice':
-  //       pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000" wadh="18f4CEiXeXcfGXvgWA/blxD+w2pw7hfQPY45JMytkPw=" pTimeout="20000" posh="UNKNOWN" env="P"  /> <CustOpts><Param name="mantrakey" value="" /></CustOpts> </PidOptions>`;
-  //       break;
-  //     case 'com.mantra.rdservice':
-  //       pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000" wadh="18f4CEiXeXcfGXvgWA/blxD+w2pw7hfQPY45JMytkPw=" pTimeout="20000" posh="UNKNOWN" env="P"  /> <CustOpts><Param name="mantrakey" value="" /></CustOpts> </PidOptions>`;
-  //       break;
-  //     case 'com.acpl.registersdk_l1':
-  //       pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" wadh="18f4CEiXeXcfGXvgWA/blxD+w2pw7hfQPY45JMytkPw=" timeout="10000"  otp="" pTimeout="20000" posh="UNKNOWN" env="P" />  <Demo/> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>`;
-  //       break;
-  //     case 'com.acpl.registersdk':
-  //       pidOptions = `<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" wadh="18f4CEiXeXcfGXvgWA/blxD+w2pw7hfQPY45JMytkPw=" timeout="10000"  otp="" pTimeout="20000" posh="UNKNOWN" env="P" />  <Demo/> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>`;
-  //       break;
-  //     case 'com.idemia.l1rdservice':
-  //       pidOptions = `<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000" wadh="18f4CEiXeXcfGXvgWA/blxD+w2pw7hfQPY45JMytkPw=" posh="UNKNOWN" /><Demo></Demo><CustOpts><Param name="" value="" /></CustOpts></PidOptions>`;
-  //       break;
-  //     case 'com.scl.rdservice':
-  //       //  pidOptions = '<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000"  posh="UNKNOWN" env="P" /> <Demo></Demo> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>';
-  //       pidOptions = `<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000" wadh="18f4CEiXeXcfGXvgWA/blxD+w2pw7hfQPY45JMytkPw=" posh="UNKNOWN" /><Demo></Demo><CustOpts><Param name="" value="" /></CustOpts></PidOptions>`;
-  //       break;
-  //     default:
-  //       console.error('Unsupported rdServicePackage');
-  //       return;
-  //   }
-
-  //   openFingerPrintScanner(rdServicePackage, pidOptions)
-  //     .then(async (res) => {
-  //       if (res.message === 'Device Driver not found') {
-  //         ToastAndroid.showWithGravity(
-  //           res.message,
-  //           ToastAndroid.SHORT,
-  //           ToastAndroid.BOTTOM,
-  //         );
-  //         return;
-  //       }
-
-  //       const deviceInfoString = JSON.stringify(res, null, 2);
-
-  //       const loc = await readLatLongFromStorage();
-
-  //       // await post({ url: 'AEPS/api/Aeps/ErrorMessage', data: { Message: JSON.stringify(res) } });
-
-  //       // const path = RNFS.DownloadDirectoryPath + `/deviceInfo-capture-today--Finger.json`;
-
-  //       // Write the response to a file
-  //       // RNFS.writeFile(path, deviceInfoString, 'utf8')
-  //       //   .then(() => {
-  //       //     console.log('JSON saved to Download directory');
-  //       //   })
-  //       //   .catch((error) => {
-  //       //     console.error('Error writing file:', error);
-  //       //     // Alert.alert('Error', 'Failed to save file');
-  //       //   });
-
-  //       if (res.errorCode === 0) {
-  //         setIsShowloader(true);
-
-  //         const data = {
-  //           "sender_number": sendernum,
-  //           "latitude": loc?.latitude,
-  //           "longitude": loc?.longitude,
-  //           "aadharcard": aadharNumber,
-  //           "pid": res.pidDataXML
-  //         };
-  //         /// saveJsonData('EKYC_Register', data);
-
-  //         try {
-  //           const response = await post({ url: 'MoneyDMT/api/Money/EKYC_Register', data: data });
-  //           setIsShowloader(false);
-
-  //           if (response) {
-  //             const add = response.ADDINFO;
-
-  //             if (add) {
-
-  //               if (response.RESULT === '0') {
-
-
-  //                 if (!add.kyc_id && add.message == 'Kyc completed and OTP has been send to remitter mobile number.') {
-                  
-                  
-  //                   setShowOtpView(true);
-  //                   setCustomer(add)
-
-  //                 }else{ Alert.alert(
-  //                   '',
-  //                   `Message: ${add.message}\n`,
-  //                   [{ text: 'OK' }]
-  //                 );}
-                 
-
-
-
-  //               } else {
-
-
-                
-  //               }
-  //             } else {
-  //               console.error('ADDINFO is missing in the response');
-  //               Alert.alert('Error', 'Failed to fetch KYC details. Please try again later.');
-  //             }
-  //           } else {
-  //             console.error('No response received from the server');
-  //             Alert.alert('Error', 'No response received from the server');
-  //           }
-  //         } catch (error) {
-  //           console.error('Error while sending request:', error);
-  //           Alert.alert('Error', 'An error occurred while processing your request. Please try again later.');
-  //         }
-  //       }
-
-  //     })
-  //     .catch(async (error) => {
-  //       // await post({ url: 'AEPS/api/Aeps/ErrorMessage', data: { Message: JSON.stringify({
-  //       //   message: error?.message,
-  //       //   line: error?.line,
-  //       //   column: error?.column
-  //       // }) } });
-  //       setFingerprintData('');
-  //       Alert.alert('Please check if the device is connected.');
-  //     });
-  // };
+      }
+    } catch (error) {
+      console.error('Fingerprint scanner error:', error);
+      setFingerprintData('');
+      Alert.alert('Please check if the device is connected.');
+    }
+  }, [sendernum, latitude, longitude, aadharNumber]);
   const [deviceName, setDeviceName] = useState('');
 
 
   const handleSelection = (selectedOption) => {
 
     if (deviceName === 'Device') {
-        ToastAndroid.showWithGravity('Please Select Your Device', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
-        return;
+      ToastAndroid.showWithGravity('Please Select Your Device', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
+      return;
     }
     const captureMapping = {
-        'mantra L0': 'com.mantra.rdservice',
-        'mantra L1': 'com.mantra.mfs110.rdservice',
-        'startek L0': 'com.acpl.registersdk',
-        'startek L1': 'com.acpl.registersdk_l1',
-        'morpho L0': 'com.scl.rdservice',
-        'morpho L1': 'com.idemia.l1rdservice',
+      'Mantra L0': 'com.mantra.rdservice',
+      'Mantra L1': 'com.mantra.mfs110.rdservice',
+      'Startek L0': 'com.acpl.registersdk',
+      'Startek L1': 'com.acpl.registersdk_l1',
+      'Morpho L0': 'com.scl.rdservice',
+      'Morpho L1': 'com.idemia.l1rdservice',
+      'Aadhaar Face RD': 'Aadhaar Face RD',
     };
 
     console.log(captureMapping[selectedOption])
     if (captureMapping[selectedOption]) {
-        isDriverFound(captureMapping[selectedOption])
-            .then((res) => {             capture(captureMapping[selectedOption]);
+      isDriverFound(captureMapping[selectedOption])
+        .then((res) => {
+          capture(captureMapping[selectedOption]);
 
 
-                //  alert(`Capture Mapping: ${captureMapping[selectedOption]}\nResponse: ${JSON.stringify(res)}`);
+          //  alert(`Capture Mapping: ${captureMapping[selectedOption]}\nResponse: ${JSON.stringify(res)}`);
 
-            })
-            .catch((error) => {
-                console.error('Error finding driver:', error);
-                alert('Error: Could not find the selected driver.');
-            });
+        })
+        .catch((error) => {
+          console.error('Error finding driver:', error);
+          alert('Error: Could not find the selected driver.');
+        });
     } else {
-        alert('Invalid option selected');
+      alert('Invalid option selected');
     }
-};
+  };
 
   const saveJsonData = async (key, data) => {
     try {
@@ -553,31 +432,7 @@ const GetBenifiaryScreenDmt = ({ route }) => {
       console.error('Error retrieving data', error);
     }
   };
-  const getPidOptions = (rdServicePackage) => {
-    switch (rdServicePackage) {
-      case 'com.mantra.mfs110.rdservice':
-        //return `<PidOptions ver="1.0"><Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000" pTimeout="20000" posh="UNKNOWN" env="P" /><CustOpts><Param name="mantrakey" value="" /></CustOpts></PidOptions>`;
-        return '<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000" pTimeout="20000" wadh="18f4CEiXeXcfGXvgWA/blxD+w2pw7hfQPY45JMytkPw=" posh="UNKNOWN" env="P" /> <CustOpts><Param name="mantrakey" value="" /></CustOpts> </PidOptions>'
-      case 'com.acpl.registersdk_l1':
-        return `<PidOptions ver="1.0">
-                  <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000" pTimeout="20000" wadh="18f4CEiXeXcfGXvgWA/blxD+w2pw7hfQPY45JMytkPw=" posh="UNKNOWN" env="P" />
-                  <CustOpts>
-                    <Param name="" value="" />
-                  </CustOpts>
-                </PidOptions>`;
 
-      case 'com.scl.rdservice':
-        return `<PidOptions ver="1.0">
-                  <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000" pTimeout="20000" posh="UNKNOWN" env="P" />
-                  <CustOpts>
-                    <Param name="" value="" />
-                  </CustOpts>
-                </PidOptions>`;
-
-      default:
-        return null;
-    }
-  };
 
   const checkRadiant = (res, no) => {
     console.log(res.ADDINFO,);
@@ -600,11 +455,14 @@ const GetBenifiaryScreenDmt = ({ route }) => {
       }
 
       if (benes.length === 0) {
+        setIsVisible2(benes.length === 0);
 
         setnodata(true);
       } else {
         setnodata(false);
       }
+
+
     } else if (ADDINFO.statuscode === 'ERR') {
       ToastAndroid.showWithGravity(
         ADDINFO.status,
@@ -621,6 +479,8 @@ const GetBenifiaryScreenDmt = ({ route }) => {
       else if (ADDINFO.statuscode === 'OTP') {
         setShowOtpView(true)
       }
+
+
       //   Alert.alert(
       //     res.ADDINFO || "User does not exist",
       //     "",
@@ -644,47 +504,36 @@ const GetBenifiaryScreenDmt = ({ route }) => {
   }
 
 
-  const readLatLongFromStorage = async () => {
-    try {
-      const locationData = await AsyncStorage.getItem('locationData');
-
-      if (locationData !== null) {
-        const { latitude, longitude } = JSON.parse(locationData);
-        console.log('Latitude:', latitude, 'Longitude:', longitude);
-        return { latitude, longitude };
-      } else {
-        console.log('No location data found');
-        return null;
-      }
-    } catch (error) {
-      console.error('Failed to read location data from AsyncStorage:', error);
-      return null;
-    }
-  };
 
 
+  const [isload, setIsload] = useState(false)
 
-  const checksendernumber = async (number) => {
-    const loc = await readLatLongFromStorage();
+
+  const checksendernumber = useCallback(async (number) => {
+    setIsload(true);
     setBanklist([]);
     setisLoading(true);
     console.log(dmttype);
+
     try {
-      const url = `MoneyDMT/api/Money/GetBeneficiaryList?sender_number=${number}&latitude=${loc?.latitude}&longitude=${loc?.longitude}`;
-      console.log(url, '1111111111111111111111111111111111111');
+      const url = `MoneyDMT/api/Money/GetBeneficiaryList?sender_number=${number}&latitude=${latitude}&longitude=${longitude}`;
+      console.log(url, 'Request URL');
 
       const res = await get({ url });
       console.log(res);
-      setOnTap1(false)
-      checkRadiant(res, number);
+
+      setOnTap1(false);
+      checkRadiant(res, number); // Ensure checkRadiant is defined
 
       setisLoading(false);
-      return;
+      setIsload(false);
     } catch (error) {
+      setIsload(false);
       setisLoading(false);
       console.error('Error:', error);
     }
-  };
+  }, [latitude, longitude]); // Add necessary dependencies
+
 
   const [unqid, setUnqiD] = useState('');
   const getGenUniqueId = async () => {
@@ -845,10 +694,31 @@ const GetBenifiaryScreenDmt = ({ route }) => {
 
   }
 
+  const [searchText, setSearchText] = useState('');
+  const [filteredData, setFilteredData] = useState([]);
+
+  useEffect(() => {
+    filterData(searchText);
+  }, [searchText, isR, beneficiaryData, banklist]);
+
+  const filterData = (text) => {
+    const dataToFilter = isR ? beneficiaryData : banklist;
+
+    if (!text.trim()) {
+      setFilteredData(dataToFilter);
+    } else {
+      const filtered = dataToFilter.filter(item =>
+        item.name?.toLowerCase().includes(text.toLowerCase()) ||
+        item.account?.toString().includes(text)
+      );
+      setFilteredData(filtered);
+    }
+  };
+
   const BeneficiaryList = () => {
     return (
       <FlashList
-        data={isR ? beneficiaryData : banklist}
+        data={filteredData}
         keyExtractor={item => item.id || item.name.toString()}
         renderItem={({ item }) => (
           <View style={styles.itemContainer}>
@@ -911,27 +781,25 @@ const GetBenifiaryScreenDmt = ({ route }) => {
 
   return (
     <View style={styles.main}>
-
+      {isload && <ShowLoader />}
       <LinearGradient colors={[colorConfig.primaryColor, colorConfig.secondaryColor]} style={styles.lineargradient}>
         <View style={styles.container} >
+          {sendernum.length === 10 && <TextInput
+            placeholder="Search by Name or Account No"
+            value={searchText}
+            onChangeText={setSearchText}
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: 5,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              color: '#000',
+              fontSize:wScale(18)
+            }}
+            placeholderTextColor="#888"
+          />
+          }
 
-          {/* <View style={styles.tabstyle}>
-
-            <TabBar
-
-              Unselected="DMT2"
-              Selected="DMT1 "
-              onPress1={() => {
-                console.log('VASTWEB');
-                setDmttype('VASTWEB');
-              }}
-              onPress2={() => {
-                console.log('A2Z');
-
-                setDmttype('A2Z');
-              }}
-            />
-          </View> */}
           <View style={{
             marginTop: hScale(10)
           }}>
@@ -1048,7 +916,9 @@ const GetBenifiaryScreenDmt = ({ route }) => {
               if (banklist.length === 0) {
                 handleNextButtonPress();
               } else {
-                navigation.navigate("DmtAddNewBenificiaryScreen", { no: sendernum });
+
+                setIsVisible2(true)
+                //  navigation.navigate("DmtAddNewBenificiaryScreen", { no: sendernum });
               }
             }}
           />}
@@ -1071,11 +941,45 @@ const GetBenifiaryScreenDmt = ({ route }) => {
         inputCount={4}
         verifyOtp={() => {
           //  setShowOtpView(false);
+          setIsload(true);
           verifyEkycOtp();
         }}
       />
+      <BottomSheet onBackdropPress={() => { setIsVisible2(false) }} isVisible={isVisible2}>
+        {/* no: sendernum, remid: remid, Name: dmttype  */}
+        <DmtAddNewBenificiaryScreen
+          Name={dmttype}
+          Name2={''}
+          no={sendernum}
+          remid={remid}
+          onPress={() => {
+            setIsVisible2(false);
+          }}
+          onPress2={() => {
+            setisLoading(true);
 
+            checksendernumber(sendernum)
+            setIsVisible2(false);
+          }}
+
+        />
+
+      </BottomSheet>
       <ScrollView>
+        {nodata ? <View style={styles.container}>
+          <Text style={styles.title}>{translate('No Data Found')}</Text>
+
+          <DynamicButton title={'ADD ACC'} onPress={() => {
+            setIsVisible2(true)
+            //  navigation.navigate("DmtAddNewBenificiaryScreen", 
+            // 
+            // { no: sendernum, remid: remid, Name: dmttype });
+
+          }} />
+
+        </View>
+          : <></>
+        }
         {showloader && <ShowLoader />}
         {banklist.length == 0 ?
           <View style={styles.container}>
@@ -1117,18 +1021,7 @@ const GetBenifiaryScreenDmt = ({ route }) => {
           </View>
         }
 
-        {nodata ? <View style={styles.container}>
-          <Text style={styles.title}>{translate('No Data Found')}</Text>
 
-          <DynamicButton title={'ADD ACC'} onPress={() => {
-
-            navigation.navigate("DmtAddNewBenificiaryScreen", { no: sendernum, remid: remid, Name: dmttype });
-
-          }} />
-
-        </View>
-          : <></>
-        }
       </ScrollView>
     </View >
   );
@@ -1281,9 +1174,12 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: 'bold',
+    color: '#fff'
+
   },
   value: {
     fontSize: 14,
+    color: '#fff'
   },
   borderview: {
     height: '100%',

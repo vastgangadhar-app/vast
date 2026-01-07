@@ -9,7 +9,6 @@ import BankBottomSite from "../../components/BankBottomSite";
 import OnelineDropdownSvg from "../drawer/svgimgcomponents/simpledropdown";
 import { FlashList } from "@shopify/flash-list";
 import { useDeviceInfoHook } from "../../utils/hooks/useDeviceInfoHook";
-import { useLocationHook } from "../../utils/hooks/useLocationHook";
 import { useSelector } from "react-redux";
 import { colors, FontSize } from "../../utils/styles/theme";
 import NoDatafound from "../drawer/svgimgcomponents/Nodatafound";
@@ -25,9 +24,10 @@ import CheckSvg from "../drawer/svgimgcomponents/CheckSvg";
 import CloseSvg from "../drawer/svgimgcomponents/CloseSvg";
 import { BottomSheet } from "@rneui/themed";
 import ClosseModalSvg2 from "../drawer/svgimgcomponents/ClosseModal2";
+import { useLocationHook } from "../../hooks/useLocationHook";
 
 const DmtAddAccount = () => {
-    const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+    const { colorConfig ,Loc_Data} = useSelector((state: RootState) => state.userInfo);
     const color1 = `${colorConfig.secondaryColor}20`;
     const { get, post } = useAxiosHook()
     const [banklist, setBanklist] = useState([]);
@@ -53,82 +53,47 @@ const DmtAddAccount = () => {
     const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
         useDeviceInfoHook();
     const { userId } = useSelector((state: RootState) => state.userInfo);
-    const readLatLongFromStorage = async () => {
-        try {
-            const locationData = await AsyncStorage.getItem('locationData');
-
-            if (locationData !== null) {
-                const { latitude, longitude } = JSON.parse(locationData);
-                console.log('Latitude:', latitude, 'Longitude:', longitude);
-                return { latitude, longitude };
-            } else {
-                console.log('No location data found');
-                return null;
-            }
-        } catch (error) {
-            console.error('Failed to read location data from AsyncStorage:', error);
-            return null;
-        }
-    };
-    const UpdateRetailerBank = async (id) => {
+console.log(Loc_Data['latitude'], longitude ,'@@@@@@@@@@@@@@@')
+    const UpdateRetailerBank = useCallback(async (id) => {
         setisLoading(true);
-        setAdd(false)
-        const loc = await readLatLongFromStorage();
-        const ip = await getMobileIp();
-        const Model = await getMobileDeviceId();
-        const net = await getNetworkCarrier();
-
-        const data = JSON.stringify({
-            txtid3: id,
-            txtaccholder: name,
-            txtbankaccountno: acnNumber,
-            txtifsc: ifsccode,
-            txtbankname: bank,
-            txtbranchaddress: branch,
-            IP: ip,
-            Latitude: loc?.latitude,
-            Longitude: loc?.longitude,
-            ModelNo: Model,
-            City: city,
-            PostalCode: Pincod,
-            InternetTYPE: net,
-            Address: Addresss,
-        });
-
-        console.log("Request Data Being Sent:", data);
-
         try {
+            const ip = await getMobileIp();
+            const Model = await getMobileDeviceId();
+            const net = await getNetworkCarrier();
+
+            const data = {
+                txtid3: id,
+                txtaccholder: name, // Ensure name is defined
+                txtbankaccountno: acnNumber, // Ensure acnNumber is defined
+                txtifsc: ifsccode, // Ensure ifsccode is defined
+                txtbankname: bank, // Ensure bank is defined
+                txtbranchaddress: branch, // Ensure branch is defined
+                IP: ip,
+                Latitude: Loc_Data['latitude'], // Ensure latitude is defined
+                Longitude: Loc_Data['longitude'], // Ensure longitude is defined
+                ModelNo: Model,
+                City: city, // Ensure city is defined
+                PostalCode: Pincod, // Ensure Pincod is defined
+                InternetTYPE: net,
+                Address: Addresss, // Ensure Addresss is defined
+            };
+
+            console.log("Request Data Being Sent:", JSON.stringify(data));
+
             const url = `${APP_URLS.UpdateRetailerBank}`;
             const response = await post({
                 url: url,
-                data: {
-                    txtid3: id,
-                    txtaccholder: name,
-                    txtbankaccountno: acnNumber,
-                    txtifsc: ifsccode,
-                    txtbankname: bank,
-                    txtbranchaddress: branch,
-                    IP: ip,
-                    Latitude: loc?.latitude,
-                    Longitude: loc?.longitude,
-                    ModelNo: Model,
-                    City: city,
-                    PostalCode: Pincod,
-                    InternetTYPE: net,
-                    Address: Addresss,
-                },
+                data: data,
             });
 
             console.log("Response Received:", response);
 
-
             const sts = response.Response;
-            setidno(idno);
-            setisLoading(false);
-            setLoading(false);
+            setIdno(id); // Ensure id is defined
+
             if (sts === 'Success') {
-                const idno = response.idno.toString();
-                setidno(idno);
+                const newIdno = response.idno.toString();
+                setIdno(newIdno);
                 Alert.alert(
                     '',
                     `${response.Message} \n Select the option for Upload Cancel Check Photo`,
@@ -136,12 +101,7 @@ const DmtAddAccount = () => {
                         {
                             text: 'Camera',
                             onPress: async () => {
-                                await launchCamera({ mediaType: 'photo', includeBase64: true, quality: 0.5 }, (response) => {
-                                    ; setbase64Img(response?.assets?.[0]?.base64);
-                                    // uploadDoCx(response?.assets?.[0]?.base64,response.idno);
-                                    //setisLoading(true)
-                                });
-
+                                await requestCameraPermission();
                             },
                             style: 'default',
                         },
@@ -149,11 +109,9 @@ const DmtAddAccount = () => {
                             text: 'Gallery',
                             onPress: async () => {
                                 await launchImageLibrary({ selectionLimit: 1, mediaType: 'photo', includeBase64: true }, (response) => {
-
-                                    setbase64Img(response?.assets?.[0]?.base64);
-                                    // uploadDoCx(response?.assets?.[0]?.base64,response.idno);
+                                    setBase64Img(response?.assets?.[0]?.base64);
+                                    // Optionally call uploadDoCx here if needed
                                 });
-
                             },
                         },
                         {
@@ -170,16 +128,13 @@ const DmtAddAccount = () => {
             }
         } catch (error) {
             console.error("Error during UpdateRetailerBank request:", error);
-
-            // Enhanced error handling for user notification
             const errorMessage = error?.response?.data?.message || "An error occurred while updating the retailer's bank details.";
-
-            // Show a user-friendly error message along with error details for debugging
             Alert.alert("Error", `${errorMessage}\n\nDetails: ${error?.message || error?.toString()}`);
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
-    };
+    }, [name, acnNumber, ifsccode, bank, branch,Loc_Data, latitude, longitude, city, Pincod, Addresss]);
+
 
     const test = async () => {
         await launchImageLibrary({ selectionLimit: 1, mediaType: 'photo', includeBase64: true }, (response) => {
@@ -239,6 +194,7 @@ const DmtAddAccount = () => {
                     [{ text: 'OK' }]
                 );
             }
+            setAdd(false)
 
         } catch (error) {
             console.error('Error during request:', error);
@@ -278,7 +234,7 @@ const DmtAddAccount = () => {
         };
 
         fetchBankAccounts();
-        requestCameraPermission();
+        // requestCameraPermission();
     }, []);
 
     const fetchBanks = async () => {
@@ -312,6 +268,11 @@ const DmtAddAccount = () => {
 
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
 
+                await launchCamera({ mediaType: 'photo', includeBase64: true, quality: 0.5 }, (response) => {
+                    ; setbase64Img(response?.assets?.[0]?.base64);
+                    // uploadDoCx(response?.assets?.[0]?.base64,response.idno);
+                    //setisLoading(true)
+                });
 
             } else {
                 Dialog.show({
@@ -476,8 +437,7 @@ const DmtAddAccount = () => {
                                     value={bank}
                                     keyboardType="numeric"
                                     editable={false}
-                                    inputstyle={styles.inputstyle}
-                                />
+                                    inputstyle={styles.inputstyle} labelinputstyle={undefined} onChangeTextCallback={undefined} />
                                 {bank.length === 0 ?
                                     <View style={styles.righticon}>
                                         <OnelineDropdownSvg />
@@ -487,51 +447,44 @@ const DmtAddAccount = () => {
                                 label={'IFSC Code'}
                                 value={ifsccode}
                                 editable={bank === '' ? false : true}
-                                onChangeTextCallback={(text) => setIfsccode(text)}
-                            />
+                                onChangeTextCallback={(text) => setIfsccode(text)} inputstyle={undefined} labelinputstyle={undefined} />
                             <FlotingInput
                                 label={'Account Holder Name'}
                                 value={name}
                                 editable={ifsccode === '' ? false : true}
 
-                                onChangeTextCallback={(text) => setName(text)}
-                            />
+                                onChangeTextCallback={(text) => setName(text)} inputstyle={undefined} labelinputstyle={undefined} />
                             <FlotingInput
                                 label={'Account Number'}
                                 value={acnNumber}
                                 editable={name === '' ? false : true}
 
                                 keyboardType="numeric"
-                                onChangeTextCallback={(text) => setAcnNumber(text)}
-                            />
+                                onChangeTextCallback={(text) => setAcnNumber(text)} inputstyle={undefined} labelinputstyle={undefined} />
                             <FlotingInput
                                 label={'Branch'}
                                 value={branch}
                                 onChangeTextCallback={(text) => setBranch(text)}
-                                editable={acnNumber === '' ? false : true}
-
+                                editable={acnNumber === '' ? false : true} inputstyle={undefined} labelinputstyle={undefined}
                             />
                             <FlotingInput
                                 label={'City'}
                                 value={city}
                                 onChangeTextCallback={(text) => setCity(text)}
-                                editable={branch === '' ? false : true}
-
+                                editable={branch === '' ? false : true} inputstyle={undefined} labelinputstyle={undefined}
                             />
                             <FlotingInput
                                 label={'Address'}
                                 value={Addresss}
                                 onChangeTextCallback={(text) => setAddresss(text)}
-                                editable={city === '' ? false : true}
-
+                                editable={city === '' ? false : true} inputstyle={undefined} labelinputstyle={undefined}
                             />
                             <FlotingInput
                                 label={'PinCode'}
                                 value={Pincod}
                                 onChangeTextCallback={(text) => setPincode(text)}
                                 keyboardType={'numeric'}
-                                editable={Addresss === '' ? false : true}
-
+                                editable={Addresss === '' ? false : true} inputstyle={undefined} labelinputstyle={undefined}
                             />
                             <BankBottomSite
                                 setBankId={setBankid}
@@ -539,31 +492,32 @@ const DmtAddAccount = () => {
                                 setisbank={setIsBank}
                                 setBankName={setBank}
                                 bankdata={banklist}
-                            />
+                                onPress1={(onPress1) => { }}
+                                setisFacialTan={(setisFacialTan) => {
+
+                                }} />
                             {base64Img && <Image
                                 source={{ uri: "data:image/png;base64," + base64Img }}
                                 style={styles.image}
                             />}
-                            <DynamicButton title={base64Img ? 'Upload Photo' : 'Submit Detail'}
-                                onPress={() => {
-                                    if (Pincod) {
+                            <DynamicButton
 
+                                title={isLoading ? 'Processing...' : (base64Img ? 'Upload Photo' : 'Submit Detail')} onPress={() => {
+                                    if (Pincod) {
                                         if (base64Img) {
                                             uploadDoCx(base64Img, idno);
                                         } else {
-                                            UpdateRetailerBank('')
+                                            UpdateRetailerBank('');
                                         }
-
                                     }
-                                }}
-                            />
+                                }} styleoveride={undefined} />
                         </View>
                     </View>
 
                 </BottomSheet>
 
                 <View style={[styles.container, { backgroundColor: color1 }]}>
-                    <DynamicButton title={'Add For Aeps A/c'}
+                    <DynamicButton title={'Add For Dmt A/c'}
                         onPress={() => setAdd(!add)}
                         styleoveride={{ marginBottom: hScale(10) }}
                     />
@@ -717,7 +671,7 @@ const styles = StyleSheet.create({
     closeButton: {
         width: wScale(30),
         height: hScale(30),
-        borderRadius: 15,        
+        borderRadius: 15,
         justifyContent: 'center',
         alignItems: 'center',
     },

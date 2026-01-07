@@ -20,6 +20,9 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
 import { encrypt } from '../../utils/encryptionUtils';
 import { useLocationHook } from '../../utils/hooks/useLocationHook';
+import { Card } from 'react-native-paper';
+import { BottomSheet } from "@rneui/themed";
+import { FlashList } from '@shopify/flash-list';
 
 const PrepaidGasScreen = () => {
   const {get, post} = useAxiosHook();
@@ -163,7 +166,7 @@ const onRechargePress = useCallback(async () => {
 
 
 
-  const loc = await readLatLongFromStorage()
+  
   const mobileNetwork = await getNetworkCarrier();
   const ip = await getMobileIp();
   const encryption = await encrypt([
@@ -171,8 +174,8 @@ const onRechargePress = useCallback(async () => {
     consumerNo,
     optcode,
     amount,
-    loc?.latitude,
-    loc?.longitude,
+    latitude ??'0.000',
+    longitude??'0.111',
     'city',
     'address',
     'postcode',
@@ -208,6 +211,11 @@ const onRechargePress = useCallback(async () => {
     url: url,
 
   });
+  if(res.status ==='False'){
+    alert(res.message);
+
+    return
+  }
   if(!res.ok){
     if(res['Response'] === 'Success'){
       Alert.alert(res['Response'],res['Message'] ,  [{ text: 'OK', onPress: () => {} }]);

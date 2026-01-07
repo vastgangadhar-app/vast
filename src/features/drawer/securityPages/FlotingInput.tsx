@@ -73,7 +73,7 @@ const FlotingInput = ({ inputstyle, labelinputstyle, label, onChangeTextCallback
       inputRange: [0, 1],
       outputRange: [hScale(48), hScale(18)],
     }),
-     paddingHorizontal: wScale(2), 
+    paddingHorizontal: wScale(2),
 
     textAlignVertical: 'center',
   };
@@ -84,6 +84,7 @@ const FlotingInput = ({ inputstyle, labelinputstyle, label, onChangeTextCallback
         style={[labelStyle, labelinputstyle, autoFocus && { opacity: 1 },]}>{label}</Animated.Text>
 
       <TextInput
+
         {...props}
         numberOfLines={1}
         ellipsizeMode="tail"

@@ -1,21 +1,28 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Alert, ActivityIndicator, ToastAndroid } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Alert, ActivityIndicator, ToastAndroid, PermissionsAndroid } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { hScale, wScale } from '../utils/styles/dimensions';
 import AppBarSecond from '../features/drawer/headerAppbar/AppBarSecond';
 import { useSelector } from 'react-redux';
 import { APP_URLS } from '../utils/network/urls';
 import { useNavigation } from '../utils/navigation/NavigationService';
+import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
+import { openSettings } from 'react-native-permissions';
+import { RootState } from '../reduxUtils/store';
 
-const AadharCardUpload = () => {
-  const [frontImage64, setFrontImage64] = useState(null); 
-   const [frontImage, setFrontImage] = useState(null);
+const AadharCardUpload = ({ route }) => {
+  const { id } = route.params;
+
+  const [frontImage64, setFrontImage64] = useState(null);
+  const [frontImage, setFrontImage] = useState(null);
   const [backImage, setBackImage] = useState(null);
   const [backImage64, setBackImage64] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const { userId } = useSelector((state: RootState) => state.userInfo);
+  const { userId, IsDealer,Loc_Data } = useSelector((state: RootState) => state.userInfo);
   const navigation = useNavigation();
-
+  useEffect(() => {
+    console.log(id)
+  })
   const handleImageSelect = (side) => {
     const options = {
       selectionLimit: 1,
@@ -25,31 +32,31 @@ const AadharCardUpload = () => {
 
     const cameraOptions = {
       ...options,
-      cameraType: 'back', 
+      cameraType: 'back',
     };
     const handleResponse = (response) => {
-        if (response.didCancel) {
-          console.log('User cancelled image picker');
-        } else if (response.errorCode) {
-          console.log('ImagePicker Error: ', response.errorMessage);
-        } else {
-          const base64Image = response?.assets?.[0]?.base64;
-      
-          if (base64Image) {
-            const source = { uri: `data:image/jpeg;base64,${base64Image}` }; 
-            if (side === 'front') {
-              setFrontImage(source);
-               setFrontImage64(base64Image);
-              
-            } else {
-              setBackImage(source);
-              setBackImage64(base64Image);
-            }
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorCode) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+      } else {
+        const base64Image = response?.assets?.[0]?.base64;
+
+        if (base64Image) {
+          const source = { uri: `data:image/jpeg;base64,${base64Image}` };
+          if (side === 'front') {
+            setFrontImage(source);
+            setFrontImage64(base64Image);
+
           } else {
-            console.log('Base64 image data not available');
+            setBackImage(source);
+            setBackImage64(base64Image);
           }
+        } else {
+          console.log('Base64 image data not available');
         }
-      };
+      }
+    };
 
     Alert.alert(
       'Select Image',
@@ -72,17 +79,17 @@ const AadharCardUpload = () => {
     uploadDoCxAdhar()
   };
   const showToast = (message) => {
-        ToastAndroid.showWithGravity(message, ToastAndroid.SHORT, ToastAndroid.BOTTOM);
-    };
+    ToastAndroid.showWithGravity(message, ToastAndroid.SHORT, ToastAndroid.BOTTOM);
+  };
   const uploadDoCxAdhar = async () => {
-    if(!frontImage64){
-        showToast('Please select front side of aadhar card')
-        setIsUploading(false)
-        return;
-    }else if(!backImage64){
-        showToast('Please select back side of aadhar card');
-        setIsUploading(false)
-        return;
+    if (!frontImage64) {
+      showToast('Please select front side of aadhar card')
+      setIsUploading(false)
+      return;
+    } else if (!backImage64) {
+      showToast('Please select back side of aadhar card');
+      setIsUploading(false)
+      return;
     }
     const data = {
       "AadharcardFront": frontImage64,
@@ -90,13 +97,18 @@ const AadharCardUpload = () => {
       "txtretailerid": userId,
       'currentrole': 'Retailer'
     };
+    const data2 = {
+      "AadharcardFront": frontImage64,
+      "AadharcardBack": backImage64,
+      "txtretailerid": id,
+    };
     console.log(data);
-    const body = JSON.stringify(data);
+    const body = JSON.stringify(IsDealer ? data2 : data);
 
     console.log(body);
 
     try {
-      const response = await fetch(`https://${APP_URLS.baseWebUrl}/api/user/UploadDocumentsImages`, {
+      const response = await fetch(`https://${APP_URLS.baseWebUrl}/${IsDealer ? "api/user/UploadRetailerDocumentsByDealer" : 'api/user/UploadDocumentsImages'}`, {
         method: 'POST',
         headers: {
           "Content-Type": "application/json",
@@ -112,14 +124,14 @@ const AadharCardUpload = () => {
       if (responseData === 'Image Updated Successfully.') {
         Alert.alert(
           responseData,
-          '', 
+          '',
           [
             {
               text: 'Go to Home',
-              onPress: () => navigation.navigate('HomeScreen'), 
+              onPress: () => navigation.goBack(),
             },
           ],
-          { cancelable: false } 
+          { cancelable: false }
         );
       } else {
         Alert.alert(
@@ -139,13 +151,16 @@ const AadharCardUpload = () => {
       console.error(error);
     }
   };
+
+
+
   return (
     <View style={{ flexDirection: 'column', flex: 1 }}>
-      <AppBarSecond title="Aadhar Card " onPressBack={() => navigation.goBack()} />
-      
+      <AppBarSecond title="Aadhar Card " onPressBack={() => { navigation.navigate('HomeScreen') }} />
+
       <View style={styles.container}>
         <Text style={styles.title}>Upload Aadhar Card</Text>
-        
+
         <View style={styles.imageContainer}>
           <TouchableOpacity onPress={() => handleImageSelect('front')} style={styles.imageBox}>
             {frontImage ? (

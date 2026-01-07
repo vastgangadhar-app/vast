@@ -18,7 +18,7 @@ import { SvgXml } from 'react-native-svg';
 import TabBar from '../../Recharge/TabView/TabBarView';
 
 const RadiantGetBenifiaryScreen = (route) => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig, Loc_Data } = useSelector((state: RootState) => state.userInfo);
   const EditIcon = ` 
 
  <?xml version="1.0" encoding="UTF-8"?>
@@ -192,7 +192,7 @@ const RadiantGetBenifiaryScreen = (route) => {
           },
           {
             text: "Register",
-            onPress: () => navigation.navigate("RadiantNumberRegisterScreen", { Name: Name ,sendernum })
+            onPress: () => navigation.navigate("RadiantNumberRegisterScreen", { Name: Name, sendernum })
             ,
           },
         ],
@@ -238,7 +238,7 @@ const RadiantGetBenifiaryScreen = (route) => {
     try {
       const url = `${APP_URLS.getGenIMPSUniqueId}`
       console.log(url);
-      const res = await get({ url: url });  
+      const res = await get({ url: url });
       const res1 = await get({ url: 'Retailer/api/data/DMTStatusCheck1' });
       console.log(res1)
       setUnqiD(res['Message']);
@@ -296,7 +296,7 @@ const RadiantGetBenifiaryScreen = (route) => {
     await setAccHolder(item['name']);
     await setAccNo(item['account']);
     await setBankName(item['bank'])
-    navigation.navigate("toBankScreen", { bankname, ACCno, accHolder, ifsc, mode: 'IMPS', unqid, kyc, sendernum ,dmttype:Name  },);
+    navigation.navigate("toBankScreen", { bankname, ACCno, accHolder, ifsc, mode: 'IMPS', unqid, kyc, sendernum, dmttype: Name },);
 
   };
   const handleNeftPress = async (item) => {
@@ -309,10 +309,10 @@ const RadiantGetBenifiaryScreen = (route) => {
     await setAccHolder(item['name']);
     await setAccNo(item['account']);
     await setBankName(item['bank'])
-    navigation.navigate("toBankScreen", { bankname, ACCno, accHolder, ifsc, mode: 'NEFT', unqid ,kyc, sendernum ,dmttype:Name},);
+    navigation.navigate("toBankScreen", { bankname, ACCno, accHolder, ifsc, mode: 'NEFT', unqid, kyc, sendernum, dmttype: Name },);
     console.log('NEFT pressed for:', item);
-  }; 
-  
+  };
+
   const handleNeftPress2 = async (item) => {
     const bankname = item['bank'];
     const ACCno = item['account'];
@@ -366,7 +366,7 @@ const RadiantGetBenifiaryScreen = (route) => {
       { cancelable: false }
     );
   };
-  
+
   const handleDeletePress = async (item) => {
     setisLoading(true);
     console.log('Delete pressed for:', item);
@@ -444,10 +444,31 @@ const RadiantGetBenifiaryScreen = (route) => {
 
   }
 
+  const [searchText, setSearchText] = useState('');
+  const [filteredData, setFilteredData] = useState([]);
+
+  useEffect(() => {
+    filterData(searchText);
+  }, [searchText, isR, beneficiaryData, banklist]);
+
+  const filterData = (text) => {
+    const dataToFilter = isR ? beneficiaryData : banklist;
+
+    if (!text.trim()) {
+      setFilteredData(dataToFilter);
+    } else {
+      const filtered = dataToFilter.filter(item =>
+        item.name?.toLowerCase().includes(text.toLowerCase()) ||
+        item.account?.toString().includes(text)
+      );
+      setFilteredData(filtered);
+    }
+  };
+
   const BeneficiaryList = () => {
     return (
       <FlashList
-        data={isR ? beneficiaryData : banklist}
+        data={filteredData}
         keyExtractor={item => item.id || item.name.toString()}
         renderItem={({ item }) => (
           <View style={styles.itemContainer}>
@@ -518,23 +539,25 @@ const RadiantGetBenifiaryScreen = (route) => {
       <LinearGradient colors={[colorConfig.primaryColor, colorConfig.secondaryColor]} style={styles.lineargradient}>
         <View style={styles.container} >
 
-          {/* <View style={styles.tabstyle}>
+          {sendernum.length === 10 && <TextInput
+            placeholder="Search by Name or Account No"
+            value={searchText}
+            onChangeText={setSearchText}
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              marginVertical: 10,
+              color: '#000'
+            }}
+            placeholderTextColor="#888"
+          />
+          }
 
-            <TabBar
-
-              Unselected="DMT2"
-              Selected="DMT1 "
-              onPress1={() => {
-
-              }}
-              onPress2={() => {
-
-              }}
-            />
-          </View> */}
-
-          <View style={{     marginTop:hScale(20)
-}}>
+          <View style={{
+            marginTop: hScale(10)
+          }}>
             <TextInput
               placeholder='Enter Remitter Registered  Number'
               style={styles.inputstyle}
@@ -591,7 +614,7 @@ const RadiantGetBenifiaryScreen = (route) => {
                 </Text>
               </View>
             </View>
- }
+          }
 
           {remitter === null ? null :
             <Text style={[styles.limittext, { color: colorConfig.labelColor }]}>

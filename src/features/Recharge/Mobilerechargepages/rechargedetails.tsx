@@ -21,6 +21,10 @@ import LinearGradient from "react-native-linear-gradient";
 import ViewShot, { captureRef } from "react-native-view-shot";
 import Share from "react-native-share";
 import { SvgXml } from "react-native-svg";
+import { APP_URLS } from "../../../utils/network/urls";
+import { playSound } from "../../dashboard/components/Sounds";
+import Refund from "../../drawer/svgimgcomponents/Refund";
+import { onReceiveNotification2 } from "../../../utils/NotificationService";
 
 const Rechargedetails = ({ route }) => {
   const home = `
@@ -40,7 +44,7 @@ const Rechargedetails = ({ route }) => {
   } = route.params;
 
   const navigation = useNavigation<any>();
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig, IsRington } = useSelector((state: RootState) => state.userInfo);
   const color2 = `${colorConfig.primaryColor}15`;
   const color3 = `${colorConfig.secondaryColor}15`;
   const capRef = useRef();
@@ -51,6 +55,27 @@ const Rechargedetails = ({ route }) => {
   const onPressButton2 = () => {
     navigation.goBack();
   };
+  useEffect(() => {
+    playSound(status, IsRington)
+
+    console.log(
+      IsRington,
+      status,
+      Message,
+)
+const mockNotification = {
+  notification: {
+    title: Message || 'Status Unknown',
+    body: `Recharge of ${mobileNumber ?? 'N/A'}. Amount: ${Amount ?? '0'} is ${status ?? 'Unknown'}. Transaction ID: ${idno ?? 'N/A'}. Regards ${APP_URLS?.AppName ?? 'YourApp'}`,
+  },
+};
+
+
+// Call the function
+onReceiveNotification2(mockNotification);  
+  }, [])
+
+
 
   const onShare = useCallback(async () => {
     try {
@@ -59,7 +84,7 @@ const Rechargedetails = ({ route }) => {
         quality: 0.7,
       });
       await Share.open({
-        message: "Hi, I am sharing the transaction details using Smartpay Money App.",
+        message: `Hi, I am sharing the transaction details using ${APP_URLS.AppName} App.`,
         url: uri,
       });
     } catch (e) {
@@ -95,13 +120,18 @@ const Rechargedetails = ({ route }) => {
                       <Successful />
                     ) : status === "Failed" ? (
                       <FailedSvg />
-                    ) : (
+                    ) : status.startsWith('P') ? (
                       <PaddingSvg />
+                    ) : status.startsWith('R') ? (
+                      <Refund size={100} color={'#645fde'} />
+                    ) : (
+                      <Text style={[styles.topheaderText]}>Unknown Status</Text>
                     )}
                     <Text style={[styles.topheaderText]}>
                       Transaction {status}
                     </Text>
                   </View>
+
                 </LinearGradient>
                 <View style={styles.bodyin}>
                   <View
@@ -113,9 +143,11 @@ const Rechargedetails = ({ route }) => {
                             ? "green"
                             : status === "Failed"
                               ? "red"
-                              : status === "PENDING"
+                              : status.startsWith("P")
                                 ? "orange"
-                                : "deepPurple",
+                                : status.startsWith("R")
+                                  ? "#645fde"
+                                  : "deepPurple",
                       },
                     ]}
                   >
@@ -123,6 +155,7 @@ const Rechargedetails = ({ route }) => {
                       {Message}
                     </Text>
                   </View>
+
                   <View style={[styles.detailsContainer]}>
                     <View style={styles.detailItem}>
                       <Text style={styles.label}>Reqest ID</Text>

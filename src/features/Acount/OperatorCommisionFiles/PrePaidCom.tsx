@@ -47,25 +47,32 @@ const list = [
   },
 ];
 
-const headers = [
-  {
-    Header1: "0-199",
-    Header2: "200-300",
-    Header3: "301 & Above"
-  }
-];
+// const headers = [
+//   {
+//     Header1: "0-199",
+//     Header2: "200-300",
+//     Header3: "301 & Above"
+//   }
+// ];
 const RechargeUtilityCommission = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig, IsDealer } = useSelector((state: RootState) => state.userInfo);
   const color1 = `${colorConfig.secondaryColor}20`
-
+  const [headelist,setheaderlist]=useState([])
   const { get } = useAxiosHook();
   const [list, setList] = useState([])
   useEffect(() => {
     const fetchCommissionData = async (operator) => {
       try {
+        const url2 = `${APP_URLS.dealeropcomn}ddltype=${operator}`;
         const url = `${APP_URLS.opComm}ddltype=${operator}`;
-        const response = await get({ url });
+        const url3 = `${APP_URLS.opComm}ddltype=Header`;
+
+        const response = await get({ url: IsDealer ? url2 : url });
         console.log(response);
+        if(!IsDealer){
+          const res = await get({url:url3});
+          setheaderlist(res)
+        }
         console.log('Prepaid');
 
         setList(response);
@@ -76,7 +83,7 @@ const RechargeUtilityCommission = () => {
     fetchCommissionData('Prepaid');
   }, [])
   const renderItem = ({ item }) => (
-    <View style={[styles.header, ]}>
+    <View style={[styles.header,]}>
       <Text style={[styles.cell, styles.firstCell]}>{item.OperatorName}</Text>
       <Text style={[styles.cell, styles.secondCell]}>{item.OperatorCode}</Text>
       <Text style={[styles.cell, styles.third]}>{item.Commission}</Text>
@@ -98,9 +105,9 @@ const RechargeUtilityCommission = () => {
         <View style={[styles.header, { backgroundColor: colorConfig.secondaryColor }]}>
           <Text style={[styles.headerCell, styles.firstCell, styles.headtext2]}>Prepaid/Postpaid</Text>
           <Text style={[styles.headerCell, styles.secondCell, styles.secondCell, styles.headtext2]}>By operator</Text>
-          <Text style={[styles.headerCell, styles.secondCell, styles.third, styles.headtext3]}>{headers[0].Header1}</Text>
-          <Text style={[styles.headerCell, styles.secondCell, styles.third, styles.headtext3]}>{headers[0].Header2}</Text>
-          <Text style={[styles.headerCell, styles.secondCell, styles.third, styles.headtext3]}>{headers[0].Header3}</Text>
+          <Text style={[styles.headerCell, styles.secondCell, styles.third, styles.headtext3]}>{headelist.Header1}</Text>
+          <Text style={[styles.headerCell, styles.secondCell, styles.third, styles.headtext3]}>{headelist.Header2}</Text>
+          <Text style={[styles.headerCell, styles.secondCell, styles.third, styles.headtext3]}>{headelist.Header3}</Text>
         </View>
         <View style={[styles.listcontainer,]}>
           <FlashList

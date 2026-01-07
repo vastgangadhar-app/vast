@@ -17,6 +17,10 @@ import LinearGradient from 'react-native-linear-gradient';
 import { FlashList } from '@shopify/flash-list';
 import { SvgXml } from 'react-native-svg';
 import { colors } from '../../../utils/styles/theme';
+import NumberRegisterScreen from './RegisternNewNumber';
+import { BottomSheet } from '@rneui/base';
+import AddNewBenificiaryScreen from './AddNewBenificiaryScreen';
+import ShowLoader from '../../../components/ShowLoder';
 
 const GetBenifiaryScreen = () => {
   const { colorConfig } = useSelector((state: RootState) => state.userInfo);
@@ -51,6 +55,10 @@ const GetBenifiaryScreen = () => {
   const [kyc, setkyc] = useState(false);
   const [remitter, setremitter] = useState(null);
   const [isTXNP1, setTXNP1] = useState('');
+  const [addinfo, setAddInfo] = useState([]);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible2, setIsVisible2] = useState(false);
+const [isload,setIsload]= useState(false)
   useEffect(() => {
     getGenUniqueId();
   }, []);
@@ -62,24 +70,26 @@ const GetBenifiaryScreen = () => {
   );
 
   const checksendernumber = async (number) => {
+    setIsload(true)
     setisLoading(true);
 
     try {
       const url = `${APP_URLS.getCheckSenderNo}${number}`;
+      console.log("********^^*******",url)
       const res = await get({ url: url });
       console.log('res', JSON.stringify(res));
 
       const addinfo = res['ADDINFO'];
+      setAddInfo(addinfo)
+      console.log(addinfo, '*-*-');
 
-      console.log();
-     
       if (res) {
         setisLoading(false);
         const status = addinfo?.statuscode;
         setTXNP1(status);
         if (status === "TXN") {
- 
-    setremitter(addinfo?.data?.remitter);
+
+          setremitter(addinfo?.data?.remitter);
           setkyc(addinfo?.data?.remitter.kycdone);
 
 
@@ -98,14 +108,16 @@ const GetBenifiaryScreen = () => {
           if (beneficiary.length === 0) {
             setisLoading(false);
             setnodata(true);
+            setIsVisible2(banklist.length === 0);
           } else {
             setnodata(false);
           }
-        } else if(addinfo.statuscode === "RNF" || addinfo.statuscode === "NUMBEROTP" || addinfo.statuscode === "AADHAROTP") {
+        } else if (addinfo.statuscode === "RNF" || addinfo.statuscode === "NUMBEROTP" || addinfo.statuscode === "AADHAROTP") {
+          setIsVisible(addinfo.statuscode === 'RNF' || addinfo.statuscode === 'NUMBEROTP' ||addinfo.statuscode === "AADHAROTP")
 
           if (addinfo.statuscode === "RNF" || addinfo.statuscode === "NUMBEROTP" || addinfo.statuscode === "AADHAROTP") {
             Alert.alert(
-              addinfo.statuscode === "AADHAROTP" ?'Aadhar Verification': "User does not exist",
+              addinfo.statuscode === "AADHAROTP" ? 'Aadhar Verification' : "User does not exist",
               "",
               [
                 {
@@ -114,8 +126,12 @@ const GetBenifiaryScreen = () => {
                   style: "cancel",
                 },
                 {
-                  text:   addinfo.statuscode === "AADHAROTP" ?'Continue Aadhar Verification ': "Register",
-                  onPress: () => navigation.navigate("NumberRegisterScreen", {type: addinfo.statuscode,CName:addinfo.Name, No: number, Name: 'VASTWEB'})
+                  text: addinfo.statuscode === "AADHAROTP" ? 'Continue Aadhar Verification ' : "Register",
+                  onPress: () => 
+
+                    setIsVisible( addinfo.statuscode === 'RNF' || addinfo.statuscode === 'NUMBEROTP')
+                  //  navigation.navigate("NumberRegisterScreen", { type: addinfo.statuscode, CName: addinfo.Name, No: number, Name: 'VASTWEB' })
+
                 },
               ],
               { cancelable: false }
@@ -131,14 +147,15 @@ const GetBenifiaryScreen = () => {
         const status = addinfo?.data?.statuscode;
         console.log(addinfo.statuscode)
         console.log(addinfo.data.status)
-      
-        
+
+
 
         setisLoading(false);
       }
 
       setOnTap1(false);
       setOnTap(true);
+      setIsload(false)
 
     } catch (error) {
       setisLoading(false);
@@ -194,14 +211,14 @@ const GetBenifiaryScreen = () => {
     setAccHolder(item['name']);
     setAccNo(item['account']);
     setBankName(item['bank'])
-    
-    navigation.navigate("toBankScreen", { bankname, ACCno, accHolder, ifsc, mode: 'IMPS', unqid, kyc, senderNo: sendernum ,dmttype:'VASTWEB',id:remid},);
+
+    navigation.navigate("toBankScreen", { bankname, ACCno, accHolder, ifsc, mode: 'IMPS', unqid, kyc, senderNo: sendernum, dmttype: 'VASTWEB', id: remid },);
 
   };
 
 
   const handleNeftPress = async (item) => {
-   
+
     await setIfsc(item['ifsc']);
     await setAccHolder(item['name']);
     await setAccNo(item['account']);
@@ -210,7 +227,7 @@ const GetBenifiaryScreen = () => {
     const ACCno = item['account'];
     const accHolder = item['name'];
     const ifsc = item['ifsc'];
-    navigation.navigate("toBankScreen", { bankname, ACCno, accHolder, ifsc, mode: 'NEFT', unqid ,dmttype:'VASTWEB',id:remid},);
+    navigation.navigate("toBankScreen", { bankname, ACCno, accHolder, ifsc, mode: 'NEFT', unqid, dmttype: 'VASTWEB', id: remid },);
     console.log('NEFT pressed for:', item);
   };
 
@@ -269,10 +286,35 @@ const GetBenifiaryScreen = () => {
 
   }
 
+  const [searchText, setSearchText] = useState('');
+const [filteredData, setFilteredData] = useState([]);
+
+useEffect(() => {
+  filterData(searchText);
+}, [searchText,  banklist]);
+
+const filterData = (text) => {
+  const dataToFilter =  banklist;
+
+  if (!text.trim()) {
+    setFilteredData(dataToFilter);
+  } else {
+    const filtered = dataToFilter.filter(item =>
+      item.name?.toLowerCase().includes(text.toLowerCase()) ||
+      item.account?.toString().includes(text)
+    );
+    setFilteredData(filtered);
+    
+  }
+};
+
   const BeneficiaryList = () => {
+        console.log("************^#%%%%%%%%%",filteredData)
+
     return (
+  
       <FlashList
-        data={banklist}
+        data={filteredData}
         renderItem={({ item }) => (
           <View style={styles.itemContainer}>
 
@@ -309,7 +351,7 @@ const GetBenifiaryScreen = () => {
               <View style={[styles.row, { marginTop: hScale(8), }]}>
                 <View >
                   <Text style={styles.itemLabel}>Account</Text>
-                  <Text style={[styles.itemValue, { width: wScale(100), textAlign: 'left' }]} numberOfLines={1} ellipsizeMode='tail'>{item.account}</Text>
+                  <Text style={[styles.itemValue, { textAlign: 'left' }]} numberOfLines={1} ellipsizeMode='tail'>{item.account}</Text>
                 </View>
                 <TouchableOpacity style={[styles.button, styles.impsButton]} onPress={() => handleImpsPress(item)}>
                   <Text style={styles.buttonText}>IMPS</Text>
@@ -330,7 +372,7 @@ const GetBenifiaryScreen = () => {
 
           </View>
         )}
-        keyExtractor={item => item.name}
+        keyExtractor={item => item.id}
         estimatedItemSize={5}
       />
     );
@@ -341,8 +383,18 @@ const GetBenifiaryScreen = () => {
 
   return (
     <View style={styles.main}>
+
+      {isload && <ShowLoader/>}
       <LinearGradient colors={[colorConfig.primaryColor, colorConfig.secondaryColor]} style={styles.lineargradient}>
         <View style={styles.container} >
+          {sendernum.length === 10 && <TextInput
+            placeholder="Search by Name or Account No"
+            value={searchText}
+            onChangeText={setSearchText}
+            style={styles.inputstyle}
+            placeholderTextColor="#888"
+          />
+          }
 
           <View>
             <TextInput
@@ -354,13 +406,13 @@ const GetBenifiaryScreen = () => {
               maxLength={10}
               keyboardType="numeric"
               value={sendernum}
-            //   onChangeText={(text) => {
-            //     if (/^\d+$/.test(text) && +text >= 1 && +text <= 5000) {
-            //       setSendernum(text);
-            //     } else if (text === '') {
-            //       setSendernum(text);
-            //     }
-            // }}
+              //   onChangeText={(text) => {
+              //     if (/^\d+$/.test(text) && +text >= 1 && +text <= 5000) {
+              //       setSendernum(text);
+              //     } else if (text === '') {
+              //       setSendernum(text);
+              //     }
+              // }}
               editable={banklist.length === 0 ? true : editable}
               onChangeText={text => {
                 setSendernum(text)
@@ -387,7 +439,7 @@ const GetBenifiaryScreen = () => {
                 </View>
             }
           </View>
-          
+
           {remitter === null ? null :
             <View style={[styles.limitview, { flexDirection: 'row' }]}>
               <View style={styles.limitcolum}>
@@ -412,15 +464,17 @@ const GetBenifiaryScreen = () => {
                 </Text>
               </View>
             </View>
- }
-          { isTXNP1 ==='TXN'&&<DynamicButton
+          }
+          {isTXNP1 === 'TXN' && <DynamicButton
             title={onTap1 ? <ActivityIndicator size={'large'} color={colorConfig.labelColor} /> : banklist.length === 0 ? "Next" : "Add Acount"}
             disabled={!nxtbtn}
             onPress={() => {
               if (banklist.length === 0) {
                 handleNextButtonPress();
               } else {
-                navigation.navigate("AddNewBenificiaryScreen", { no: sendernum });
+
+                setIsVisible2(true)
+                // navigation.navigate("AddNewBenificiaryScreen", { no: sendernum });
               }
             }}
           />}
@@ -467,19 +521,61 @@ const GetBenifiaryScreen = () => {
 
 
           </View>
+          
         }
+        </ScrollView>
+        <ScrollView>
         {nodata ? <View style={styles.container}>
           <Text style={styles.title}>{translate('No Data Found')}</Text>
 
           <DynamicButton title={'ADD ACC'} onPress={() => {
-
-            navigation.navigate("AddNewBenificiaryScreen", { no: sendernum });
+            setIsVisible2(true)
+            //  navigation.navigate("AddNewBenificiaryScreen", { no: sendernum });
 
           }} />
 
         </View>
           : <></>
         }
+        {(addinfo && addinfo.statuscode === 'RNF' || addinfo.statuscode === 'NUMBEROTP' ||addinfo.statuscode === 'AADHAROTP') &&
+
+
+          <BottomSheet onBackdropPress={() => { setIsVisible(false) }} isVisible={isVisible}>
+
+            <NumberRegisterScreen
+              type={addinfo.statuscode}
+              CName={addinfo.Name}
+              No={sendernum}
+              Name={'VASTWEB'}
+              onPress={() => {
+                setIsVisible(false);
+              }}
+            />
+          </BottomSheet>
+        }
+
+
+
+        <BottomSheet onBackdropPress={() => { setIsVisible2(false) }} isVisible={isVisible2}>
+
+          <AddNewBenificiaryScreen
+            Name={''}
+            Name2={'vishal'}
+            no={sendernum}
+            remid={''}
+            onPress={() => {
+              setIsVisible2(false);
+            }}
+            onPress2={() => {
+              setisLoading(true);
+
+              checksendernumber(sendernum)
+              setIsVisible2(false);
+            }}
+
+          />
+
+        </BottomSheet>
       </ScrollView>
     </View >
   );
@@ -488,14 +584,13 @@ const GetBenifiaryScreen = () => {
 const styles = StyleSheet.create({
   main: {
     flex: 1,
-    paddingBottom: hScale(20)
   },
   lineargradient: {
     paddingTop: hScale(10)
   },
   container: {
     paddingHorizontal: wScale(10),
-    paddingVertical: wScale(15),
+    paddingBottom: wScale(10),
   },
   inputstyle: {
     backgroundColor: 'white',
@@ -518,9 +613,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: wScale(24),
     fontWeight: 'bold',
-    marginBottom: hScale(20),
     color: '#000'
   },
   titletext: {
@@ -545,7 +638,7 @@ const styles = StyleSheet.create({
     fontSize: wScale(14),
     flex: 1,
     textAlign: 'justify',
-color:colors.black75
+    color: colors.black75
   },
   itemContainer: {
     flex: 1,
@@ -618,9 +711,12 @@ color:colors.black75
   label: {
     fontSize: 14,
     fontWeight: 'bold',
+    color: '#fff'
   },
   value: {
     fontSize: 14,
+    color: '#fff'
+
   },
   borderview: {
     height: '100%',

@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, ScrollView, Alert, ToastAndroid } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { wScale, hScale, SCREEN_WIDTH } from '../../utils/styles/dimensions';
-import RadintTransactSvg from '../drawer/svgimgcomponents/RadintTransactSvg';
-import RadintEditSvg from '../drawer/svgimgcomponents/RadintEditSvg';
 import RadintPickupSvg from '../drawer/svgimgcomponents/RadintPickupSvg';
 import { colors } from '../../utils/styles/theme';
 import RadintDepositSvg from '../drawer/svgimgcomponents/RadintDepositSvg';
@@ -11,49 +9,121 @@ import RadintChequeSvg from '../drawer/svgimgcomponents/RadintChequeSvg';
 import RadintDeliverySvg from '../drawer/svgimgcomponents/RadintDeliverySvg';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
-import PicUpScreen from './RadiantTrxn/PicUpScreen';
-import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
 import LinearGradient from 'react-native-linear-gradient';
-import { SceneMap, TabBar, TabView } from 'react-native-tab-view';
-import BalanceCheck from '../Financial/Aeps/Balancecheck';
-import AepsCW from '../Financial/Aeps/AepsCashwithdrawl';
-import AepsMinistatement from '../Financial/Aeps/AepsMinistatement';
-import AppBar from '../drawer/headerAppbar/AppBar';
-import PagerView from 'react-native-pager-view';
-// import NextErrowSvg2 from './drawer/svgimgcomponents/NextErrowSvg2';
 import NextErrowSvg2 from '../drawer/svgimgcomponents/NextErrowSvg2';
+import { APP_URLS } from '../../utils/network/urls';
+import useAxiosHook from '../../utils/network/AxiosClient';
+import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
+import WalletCard from './RadiantTrxn/WalletCard';
+import CmsTab from './CmsTab';
+import PvcCheckPickupstatusModel from '../../components/PvcCheckPickupstatusModel';
+import CmsQrAddMoney from './RadiantTrxn/CmsQrAddMoney';
+import AllBalance from '../../components/AllBalance';
+import useRadiantHook from '../Financial/hook/useRadiantHook';
+import { log } from 'console';
 
 const RadiantTransactionScreen = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig, userId, fcmToken, rctype } = useSelector((state: RootState) => state.userInfo);
   const color1 = `${colorConfig.secondaryColor}20`;
   const navigation = useNavigation();
   const [index, setIndex] = useState(0);
+  const [showModal, setshowModal] = useState(false);
+  const [pvcStatus, setPvcStatus] = useState('O')
+  const { post } = useAxiosHook()
+  const { cashPickUpTransactionList, fetchCashPickupTransactionList } = useRadiantHook();
+  console.log('0-0-0-0-0-0-0-0-0-0-0');
 
+  useEffect(() => {
+    const checkCE_status = async () => {
+      try {
+        const res = await post({ url: APP_URLS.RCEID });
+        console.log('Raw response:', res);
+
+        // Handle clearly invalid response structure
+        if (typeof res !== 'object' || !res.Content || !res.Content.ADDINFO) {
+          Alert.alert(
+            'Invalid Response',
+            '',
+            [
+              {
+                text: 'Go Back',
+                onPress: () => navigation.goBack(),
+              },
+            ],
+            { cancelable: false }
+          );
+          return;
+        }
+
+        const addInfo = res.Content.ADDINFO;
+        const status = addInfo.sts;
+        const message = addInfo.message || 'CEID not available';
+
+        // Check if CEID or status is missing or false
+        if (!status) {
+          Alert.alert(
+            message,
+            '',
+            [
+              {
+                text: 'Go Back',
+                onPress: () => navigation.goBack(),
+              },
+            ],
+            { cancelable: false }
+          );
+          return;
+        }
+
+        // Optional: Success toast or further logic
+        ToastAndroid.show('CE Status Verified', ToastAndroid.SHORT);
+        console.log('CE Status:', status);
+
+      } catch (error) {
+        console.error('Error fetching CE status:', error);
+        Alert.alert(
+          'Network Error',
+          'Failed to fetch CE status.',
+          [
+            {
+              text: 'Go Back',
+              onPress: () => navigation.goBack(),
+            },
+          ],
+          { cancelable: false }
+        );
+      }
+    };
+
+    // checkCE_status();
+  }, []);
   const transactions = [
     {
-      id: '1', title: 'Cash Pickup',
-      description: 'Humari mobile application ek powerful aur user-friendly tool hai jo aapke dincharya ko behtar banane aur productivity badhane ke liye design ki gayi hai. Is app ke madhyam se users apni tasks aur schedules ko',
+      id: '1', title: 'Cash Pickup Request',
+      description: 'Through this function, you are required to enter the pickup time, slip number and full details of the currency picked up from the customer point, as well as correctly enter the count of all types of notes which should match the total amount perfectly.',
       nav: 'CashPickup',
       img: <RadintPickupSvg />
     },
     {
-      id: '2', title: 'Cash Delivery',
-      description: 'Humari mobile application ek powerful aur user-friendly tool hai jo aapke dincharya ko behtar banane aur productivity badhane ke liye design ki gayi hai. Is app ke madhyam se',
+      id: '2', title:
+        "Pay Due's & Add Slips",
+      description: 'Through this function, you will see a list of all payments to be transferred to the company, as per the uploaded pickup slip. All these payments can be made separately or together.',
 
-      nav: 'CashDelivery', img: <RadintDeliverySvg />
+      nav: 'InprocessReportCms', img: <RadintDeliverySvg />
     },
     {
-      id: '3', title: 'Cheque Pickup',
-      description: 'Humari mobile application ek powerful aur user-friendly tool hai jo aapke dincharya ko behtar banane aur productivity badhane ke liye design ki gayi hai. Is app ke madhyam se',
+      id: '3', title: 'Cash Deposit A/C List',
+      description: 'Through this function we are sharing with you the list of Radiant Cash Management Services Limited bank accounts and QR Codes in which you can Deposit Cash, Online Transfer and QR Code Scan.',
 
-      nav: 'ChequePickup', img: <RadintChequeSvg />
+      nav: 'CmsACList', img: <RadintChequeSvg />
     },
     {
-      id: '4', title: 'Deposit',
-      description: 'Humari mobile application ek powerful aur user-friendly tool hai jo aapke dincharya ko behtar banane aur productivity badhane ke liye design ki gayi hai. Is app ke madhyam se',
+      id: '4', title: 'Cash Pickup Report',
+      description: 'Hamari mobile application ek powerful aur user-friendly tool hai jo aapke dincharya ko behtar banane aur productivity badhane ke liye design ki gayi hai. Is app ke madhyam se',
 
-      nav: 'Deposit', img: <RadintDepositSvg />
+      nav: 'CashPicUpReport', img: <RadintDepositSvg />
     },
+
   ];
 
   const handleTransactionPress = (item) => {
@@ -62,13 +132,9 @@ const RadiantTransactionScreen = () => {
     navigation.navigate(item.nav);
   };
 
-  const handleBack = () => {
-    navigation.goBack();
-  };
-
-
   const renderTransactionItem = ({ item }) => (
-    <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={() => handleTransactionPress(item)}>
+    <TouchableOpacity style={[styles.card,
+    ]} activeOpacity={0.7} onPress={() => handleTransactionPress(item)}>
       <View style={[styles.svgimg, { backgroundColor: color1 }]}>
         {item.img}
       </View>
@@ -83,34 +149,24 @@ const RadiantTransactionScreen = () => {
   );
 
   return (
-    <LinearGradient colors={[colorConfig.primaryColor, colorConfig.secondaryColor]} style={styles.LinearGradient}>
-      <AppBar title={'R A D I A N T   C M S'} />
+    <View style={{ flex: 1 }}>
+      <AppBarSecond title={'R A D I A N T   C M S'} />
+      {rctype === 'PrePay' && <AllBalance />
+      }
 
+      {rctype === 'PostPay' &&
+        <View >
 
-      <View style={styles.main}>
-        <View style={[styles.topcontainer,
-        { backgroundColor: '#ffe066', borderColor: '#fccb0a' }
-        ]}>
-          <Image source={require('../../../assets/images/images__1___1_.jpg')}
-            style={styles.imgstyle}
-            resizeMode="contain" />
-          <View style={styles.column}>
-            <Text style={styles.title}>Radiant</Text>
-            <Text style={styles.title2}>Cash Management Services LTD.</Text>
-          </View>
+          <WalletCard />
         </View>
-        <ScrollView>
-          <View style={styles.container}>
-            <FlatList
-              data={transactions}
-              renderItem={renderTransactionItem}
-              keyExtractor={item => item.id}
-              showsVerticalScrollIndicator={false}
-            />
-          </View>
-        </ScrollView>
+
+      }
+      <View style={{ marginTop: hScale(15), flex: 1 }}>
+        <CmsTab />
       </View>
-    </LinearGradient >
+
+
+    </View>
   );
 };
 
@@ -118,9 +174,9 @@ const styles = StyleSheet.create({
   main: {
     flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.4)',
-    marginHorizontal: wScale(10),
     borderTopLeftRadius: 5,
-    borderTopRightRadius: 5
+    borderTopRightRadius: 5,
+    paddingTop: hScale(4)
   },
   LinearGradient: {
     flex: 1,
@@ -150,10 +206,9 @@ const styles = StyleSheet.create({
   },
   cardText: {
     color: 'black',
-    fontSize: wScale(20),
+    fontSize: wScale(18),
     fontWeight: 'bold',
     textAlign: 'center',
-    paddingBottom: wScale(3),
   },
   inveiw: {
     flex: 1,
@@ -161,7 +216,7 @@ const styles = StyleSheet.create({
   },
   description: {
     color: 'black',
-    fontSize: wScale(14),
+    fontSize: wScale(11),
     textAlign: 'justify',
   },
   imgstyle: {

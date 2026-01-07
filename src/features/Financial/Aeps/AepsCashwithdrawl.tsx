@@ -1,5 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Image, ToastAndroid, Modal, Alert, AsyncStorage } from 'react-native';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Image, ToastAndroid, Alert, AsyncStorage } from 'react-native';
+import { Modal as RNModal } from 'react-native';
 import useAxiosHook from '../../../utils/network/AxiosClient';
 import { APP_URLS } from '../../../utils/network/urls';
 import AppBar from '../../drawer/headerAppbar/AppBar';
@@ -16,22 +17,31 @@ import { useSelector } from 'react-redux';
 import { AepsContext } from './context/AepsContext';
 import OnelineDropdownSvg from '../../drawer/svgimgcomponents/simpledropdown';
 import BankBottomSite from '../../../components/BankBottomSite';
-import { useLocationHook } from '../../../utils/hooks/useLocationHook';
 import ShowLoader from '../../../components/ShowLoder';
 import RNFS from 'react-native-fs';
 import DeviceInfo from 'react-native-device-info';
 import SelectDevice from './DeviceSelect';
-import { isDriverFound, openFingerPrintScanner } from 'react-native-rdservice-fingerprintscanner';
+import { isDriverFound, openFingerPrintScanner, openFaceAuth } from 'react-native-rdservice-fingerprintscanner';
 import { useNavigation } from '../../../utils/navigation/NavigationService';
 import QrcodAddmoneysvg from '../../drawer/svgimgcomponents/QrcodAddmoneysvg';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import { useRdDeviceConnectionHook } from '../../../hooks/useRdDeviceConnectionHook';
+import { check } from 'react-native-permissions';
+import TwoFAVerify from './TwoFaScreen';
+import CheckSvg from '../../drawer/svgimgcomponents/CheckSvg';
+import { useLocationHook } from '../../../hooks/useLocationHook';
+import { appendLog } from '../../../components/log_file_Saver';
+import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
+import Modal from "react-native-modal";
 
 const AepsCW = () => {
 
+
     const [lodervisi, setLodervisi] = useState(false);
-    const {setBankId,
-        bankid, aadharNumber, setFingerprintData, setAadharNumber, mobileNumber, setMobileNumber, consumerName, setConsumerName, bankName, setBankName, scanFingerprint, fingerprintData, isValid, setIsValid, deviceName, setDeviceName } = useContext(AepsContext);
+    const { setBankId,
+        bankid, aadharNumber, setFingerprintData, setAadharNumber, mobileNumber,
+        setMobileNumber, consumerName, setConsumerName, bankName, setBankName, scanFingerprint,
+        fingerprintData, isValid, setIsValid, deviceName, setDeviceName } = useContext(AepsContext);
     const [amountcont, setAmountcont] = useState('');
     const [servifee, setServifee] = useState('');
     const [otpcontroller, setOtpcontroller] = useState('');
@@ -52,6 +62,7 @@ const AepsCW = () => {
     const navigation = useNavigation<any>();
 
     const [isVisible, setIsVisible] = useState(true);
+    const [isVisible2, setIsVisible2] = useState(false);
     const [showDialog, setShowDialog] = useState(false);
     const [status, setStatus] = useState('');
     const [amount, setamount] = useState('')
@@ -74,56 +85,64 @@ const AepsCW = () => {
     const seconds = now.getSeconds();
 
     const formattedDate = `${dayOfWeek} ${dayOfMonth} ${month} ${hours}:${minutes}:${seconds}`;
- 
+
     const { getNetworkCarrier, getMobileDeviceId, getMobileIp, getMobilePhoneNumber } =
         useDeviceInfoHook();
-    const { userId } = useSelector((state: RootState) => state.userInfo);
+    const { userId, Loc_Data, activeAepsLine } = useSelector((state: RootState) => state.userInfo);
     const { colorConfig } = useSelector((state: RootState) => state.userInfo);
     const color1 = `${colorConfig.secondaryColor}20`
     const color2 = `${colorConfig.primaryColor}40`
     const color3 = `${colorConfig.secondaryColor}15`
-    const { latitude, longitude } = useLocationHook();
+    const { latitude, longitude } = Loc_Data;
     const [isScan, setIsScan] = useState(false);
-
+    const [isFacialTan, setisFacialTan] = useState(false)
     const { get, post } = useAxiosHook();
     useEffect(() => {
-     
-     //   checkAepsStatus();
+
+        CheckEkyc();
         const banks = async () => {
+
             try {
-                const response = await post({ url: `${APP_URLS.aepsBanklist}` })
-    
+                const response = await post({ url: activeAepsLine ? `${APP_URLS.aepsBanklistNifi}` : `${APP_URLS.aepsBanklist}` })
+                console.log(response['ADDINFO']['data'][0])
                 if (response.RESULT === '0') {
                     setBanklist(response['ADDINFO']['data'])
                 }
             } catch (error) {
-    
+
             }
         };
         if (fingerprintData == 720) {
             if (fingerprintData === 720) {
                 return;
             } else if (fingerprintData["PidData"].Resp.errCode === 0 && isScan) {
-                OnPressEnq();
+                //  OnPressEnq();
             }
         }
         banks();
-    }, [fingerprintData])
+    }, [])
 
 
 
     async function getUserNamefunction(MoNumber) {
+        setIsLoading(true)
         try {
-            const response = await get({ url: `${APP_URLS.aepsNameinfo}${MoNumber}` })
+            const response = await get({ url: activeAepsLine ? `${APP_URLS.aepsNameinfoNifi}${MoNumber}` : `${APP_URLS.aepsNameinfo}${MoNumber}` })
             setAutofcs(true);
             setConsumerName(response.RESULT);
+            setIsLoading(false)
+
         } catch (error) {
             console.error('Error:', error);
         }
     }
     const checkvideo = async (transamount, agentid, AddharpayResponse) => {
         try {
-            const response = await post({ url: `${APP_URLS.checkadharpayvideo}?transamount=${transamount}&agentid=${agentid}` });
+            const response = await post({
+                url: activeAepsLine ? `${APP_URLS.checkadharpayvideoNifi}?transamount=${transamount}&agentid=${agentid}`
+                    :
+                    `${APP_URLS.checkadharpayvideo}?transamount=${transamount}&agentid=${agentid}`
+            });
 
             const { ADDINFO, RESULT } = await response.json();
 
@@ -138,7 +157,7 @@ const AepsCW = () => {
                         {
                             text: "OK",
                             onPress: () => {
-                               
+
                             },
                             style: "default"
                         }
@@ -147,8 +166,8 @@ const AepsCW = () => {
                 );
             } else {
                 const addinfo = AddharpayResponse.ADDINFO
-              
-              aepsresponsepress(addinfo);
+
+                aepsresponsepress(addinfo);
 
             };
         } catch (error) {
@@ -157,7 +176,7 @@ const AepsCW = () => {
     }
     const checkAepsStatus = async () => {
         try {
-            const respone = await get({ url: `${APP_URLS.checkaepsStatus}` });
+            const respone = await get({ url: activeAepsLine ? `${APP_URLS.checkaepsStatusNifi}` : `${APP_URLS.checkaepsStatus}` });
             if (respone['Response'] === true) {
                 videostatus();
             } else {
@@ -176,53 +195,157 @@ const AepsCW = () => {
 
         }
     };
-    const uploadvideo = async (video, Agentid) => {
+
+    async function adhar_Validation(adharnumber) {
+        setIsLoading(true)
+
         try {
-            const respone = post({ url: `${APP_URLS.checkadharpayvideo}Videolink=${video}&agentid=${Agentid}` });
+            const response = await get({ url: activeAepsLine ? `${APP_URLS.aadharValidation}${adharnumber}` : `${APP_URLS.aadharValidation}${adharnumber}` })
 
-            console.log(respone);
+            // if (response['status'] === true){
+            //                     setadharIsValid(true);
+
+            // }else
+            if (response['status'] === true) {
+                setIsValid(true);
+            } else {
+                setIsValid(false);
+
+                ToastAndroid.showWithGravity(
+                    `Please Enter Valid Aadhar number`,
+                    ToastAndroid.SHORT,
+                    ToastAndroid.BOTTOM,
+                );
+            }
+            setIsLoading(false)
+
         } catch (error) {
+        }
+    }
+    const [isFace, setIsFace] = useState(false)
 
-        }
-    };
-    const handleSelection = (selectedOption) => {
-        if (deviceName === 'Device') {
-            ToastAndroid.showWithGravity('Please Select Your Device', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
-            return;
-        }
-        console.log(selectedOption)
-        const captureMapping = {
-            'mantra L0': 'com.mantra.rdservice',
-            'mantra L1': 'com.mantra.mfs110.rdservice',
-            'startek L0': 'com.acpl.registersdk',
-            'startek L1': 'com.acpl.registersdk_l1',
-            'morpho L0': 'com.scl.rdservice',
-            'morpho L1': 'com.idemia.l1rdservice',
+
+
+
+
+    const OnPressEnq2 = async (fingerprintData) => {
+        const pidData = fingerprintData.pidDataJson.PidData;
+        const DevInfo = pidData.DeviceInfo;
+        const Resp = pidData.Resp;
+
+        console.log(DevInfo);
+
+        const cardnumberORUID = {
+            adhaarNumber: aadharNumber,
+            indicatorforUID: "0",
+            nationalBankIdentificationNumber: bankid
         };
 
-        console.log(captureMapping[selectedOption])
-        if (captureMapping[selectedOption]) {
-            isDriverFound(captureMapping[selectedOption])
-                .then((res) => {             capture(captureMapping[selectedOption]);
+        console.log(cardnumberORUID);
 
-                 
+        const captureResponse = {
+            Devicesrno: isFace ? '' : (DevInfo.additional_info ? DevInfo.additional_info.Param[0].value : ''),
+            PidDatatype: "X",
+            Piddata: pidData.Data.content,
+            ci: pidData.Skey.ci,
+            dc: DevInfo.dc,
+            dpID: DevInfo.dpId,
+            errCode: Resp.errCode,
+            errInfo: isFace ? fingerprintData.errInfo : Resp.errInfo,
+            fCount: Resp.fCount,
+            fType: Resp.fType,
+            hmac: pidData.Hmac,
+            iCount: Resp.fCount,
+            iType: "0",
+            mc: DevInfo.mc,
+            mi: DevInfo.mi,
+            nmPoints: Resp.nmPoints,
+            pCount: "0",
+            pType: "0",
+            qScore: Resp.qScore,
+            rdsID: DevInfo.rdsId,
+            rdsVer: DevInfo.rdsVer,
+            sessionKey: pidData.Skey.content
+        };
 
-                    //  alert(`Capture Mapping: ${captureMapping[selectedOption]}\nResponse: ${JSON.stringify(res)}`);
+        console.log(captureResponse, '>>>>>>>>>>>>>>>>>>>>>>');
 
-                })
-                .catch((error) => {
-                    console.error('Error finding driver:', error);
-                    alert('Error: Could not find the selected driver.');
-                });
+        try {
+            BEnQ(captureResponse, cardnumberORUID,"", true);
+        } catch (error) {
+            Alert.alert('Error', 'An error occurred while processing your request. Please try again.');
+        } finally {
+            // setIsLoading(true);
+        }
+    };
+
+
+    const openFace = () => {
+        openFaceAuth(userId)
+            .then(async (response) => {
+                console.log('Face Auth Response:', response);
+                if (response.errorCode === 892) {
+                    return;
+                }
+                OnPressEnq2(response);
+            })
+            .catch((error) => {
+                console.error('Error during face authentication:', error);
+                return null;
+            });
+    };
+    const saveResponseToFile = async (response) => {
+        const path = RNFS.DownloadDirectoryPath + '/response-face2.json'; // File path
+        try {
+            // Write JSON data to file
+            await RNFS.writeFile(path, JSON.stringify(response, null, 2), 'utf8');
+            console.log('Response saved to', path);
+        } catch (error) {
+            console.error('Error writing to file:', error);
+        }
+    };
+
+    const handleSelection = (selectedOption) => {
+        if (deviceName === 'Device') {
+            return;
+        }
+
+
+        const captureMapping = {
+            'Mantra L0': 'com.mantra.rdservice',
+            'Mantra L1': 'com.mantra.mfs110.rdservice',
+            'Startek L0': 'com.acpl.registersdk',
+            'Startek L1': 'com.acpl.registersdk_l1',
+            'Morpho L0': 'com.scl.rdservice',
+            'Morpho L1': 'com.idemia.l1rdservice',
+            'Aadhaar Face RD': 'Aadhaar Face RD',
+        };
+
+        const selectedCapture = captureMapping[selectedOption];
+        if (selectedCapture) {
+            if (selectedOption === 'Aadhaar Face RD') {
+                // setisFacialTan(false)        //ch
+                setIsFace(selectedOption === 'Aadhaar Face RD')
+                openFace();
+            } else {
+                isDriverFound(selectedCapture)
+                    .then((res) => {
+                        capture(selectedCapture);
+                    })
+                    .catch((error) => {
+                        console.error('Error finding driver:', error);
+                        alert('Error: Could not find the selected driver.');
+                    });
+            }
         } else {
             alert('Invalid option selected');
         }
     };
-  
+
 
     const videostatus = async () => {
         try {
-            const response = await get({ url: `${APP_URLS.adharpayvideostatus}` })
+            const response = await get({ url: activeAepsLine ? `${APP_URLS.adharpayvideostatusNifi}` : `${APP_URLS.adharpayvideostatus}` })
             if (response.Status === true) {
 
                 setShowDialog(false);
@@ -246,7 +369,7 @@ const AepsCW = () => {
         try {
 
             const response = await post({
-                url: `${APP_URLS.adharpaysendotp}amount=${amountcont}&usermobile=${mobileNumber}`
+                url: activeAepsLine ? `${APP_URLS.adharpaysendotpNifi}amount=${amountcont}&usermobile=${mobileNumber}` : `${APP_URLS.adharpaysendotp}amount=${amountcont}&usermobile=${mobileNumber}`
             });
             if (response.status === "1") {
                 ToastAndroid.showWithGravity(
@@ -263,25 +386,25 @@ const AepsCW = () => {
         }
     };
 
-    const OnPressEnq = async (fingerprintData) => {
-        setIsLoading(true); 
+    const OnPressEnq = async (fingerprintData, pidDataXx) => {
+        setIsLoading(true);
 
-        
+        const pidDataX = pidDataXx;
         if (!fingerprintData || !fingerprintData["PidData"]) {
             Alert.alert('Error', 'Invalid fingerprint data. Please try again.', [{ text: 'OK', onPress: () => { } }]);
-            setIsLoading(false);  
+            setIsLoading(false);
             return;
         }
 
-        if (!aadharNumber || !bankid) {
+        if (!aadharNumber) {
             Alert.alert('Error', 'Aadhar number and Bank ID are required.', [{ text: 'OK', onPress: () => { } }]);
-            setIsLoading(false);  
+            setIsLoading(false);
             return;
         }
 
         const cardnumberORUID = {
             adhaarNumber: aadharNumber,
-            indicatorforUID: "0", 
+            indicatorforUID: "0",
             nationalBankIdentificationNumber: bankid,
         };
 
@@ -311,8 +434,7 @@ const AepsCW = () => {
         };
 
         try {
-            await BEnQ(captureResponse, cardnumberORUID);
-            setIsLoading(false);
+            await BEnQ(captureResponse, cardnumberORUID, pidDataX, false);
             /// Alert.alert('Success', 'Fingerprint data submitted successfully.', [{ text: 'OK', onPress: () => {} }]);
         } catch (error) {
             console.error('Error during fingerprint data submission:', error);
@@ -344,21 +466,21 @@ const AepsCW = () => {
     };
 
 
-    const BEnQ = async (captureResponse1, cardnumberORUID1) => {
-
-
-        const lac = await readLatLongFromStorage();
+    const BEnQ = useCallback(async (captureResponse1, cardnumberORUID1, pidDataX, isface) => {
+        ToastAndroid.show(String(isface ? 'ok' : 'OK'), ToastAndroid.SHORT);
+        setIsLoading(true);
 
         try {
-            const Model = await getMobileDeviceId();
-            const address = lac?.latitude + lac?.longitude;
+            const Model = getMobileDeviceId();
+            const address = latitude + longitude;
 
             const jdata = {
+                capxml: pidDataX,
                 captureResponse: captureResponse1,
                 cardnumberORUID: cardnumberORUID1,
                 languageCode: 'en',
-                latitude: lac?.latitude,
-                longitude: lac?.longitude,
+                latitude: latitude,
+                longitude: longitude,
                 mobileNumber: mobileNumber,
                 merchantTranId: userId,
                 merchantTransactionId: userId,
@@ -370,9 +492,9 @@ const AepsCW = () => {
                 transactionType: 'CW',
                 name: consumerName,
                 Address: address,
-                transactionAmount: amountcont
+                transactionAmount: amountcont,
+                isFacialTan: isface  //ch
             };
-
             const headers = {
                 trnTimestamp: formattedDate,
                 deviceIMEI: Model,
@@ -383,38 +505,54 @@ const AepsCW = () => {
             const data = JSON.stringify(jdata);
 
             const response = await post({
-                url: 'AEPS/api/app/Aeps/cashWithdrawal',
+                url: activeAepsLine ? 'AEPS/api/Nifi/app/Aeps/cashWithdrawal' : 'AEPS/api/app/Aeps/cashWithdrawal',
                 data: data,
-                config: {
-                    headers,
-                },
+                config: { headers },
             });
 
-
-            // const path = RNFS.DownloadDirectoryPath + `/MiniStatement_${Date.now()}.json`; 
-            // await RNFS.writeFile(path, JSON.stringify(response, null, 2), 'utf8')
-            //     .then(() => {
-            //         Alert.alert('Success', 'Response saved to Downloads folder');
-            //     })
-            //     .catch(err => {
-            //         console.error('Error saving file:', err);
-            //         Alert.alert('Error', 'Failed to save the file');
-            //     });
             const { RESULT, ADDINFO, agentid } = response;
             setFingerprintData(720);
-            setIsLoading(false)
-            if (RESULT === '0') {
-                 const addinfo = ADDINFO;
-                aepsresponsepress(addinfo);
+            setIsLoading(false);
 
-                checkvideo(amount, agentid, response)
+            if (RESULT === '0') {
+                const addinfo = ADDINFO;
+                aepsresponsepress(addinfo);
+                checkvideo(amount, agentid, response);
             } else {
-                Alert.alert(`Note:`, ADDINFO);
+
+                if (isface) {
+                    Dialog.show({
+                        type: ALERT_TYPE.DANGER,
+                        title: 'cashWithdrawal....',
+                        textBody: ADDINFO || 'Unknown error occurred',
+                        closeOnOverlayTap: false,
+                        button: 'OK',
+                        onPressButton: () => {
+                            Dialog.hide();
+
+                        },
+                    });
+                } else {
+                    Alert.alert(isface ? 'cashWithdrawal-F' : 'CW-NF', ADDINFO);
+
+                }
             }
         } catch (error) {
             console.error('Error during balance enquiry:', error);
+            setIsLoading(false);
         }
-    };
+    }, [
+        latitude,
+        longitude,
+        mobileNumber,
+        userId,
+        otpcontroller,
+        formattedDate,
+        consumerName,
+        amountcont,
+        isFacialTan,
+        isFace  //ch
+    ]);
     const handleClose = () => {
         setIsVisible(false);
     };
@@ -426,7 +564,7 @@ const AepsCW = () => {
 
 
         return (
-            <Modal
+            <RNModal
                 visible={isVisible}
                 transparent
                 animationType="slide"
@@ -456,7 +594,7 @@ const AepsCW = () => {
                         </TouchableOpacity>
                     </View>
                 </View>
-            </Modal>
+            </RNModal >
         );
     };
     const AadharResponseDialog = ({
@@ -470,7 +608,7 @@ const AepsCW = () => {
         bankname,
     }) => {
         return (
-            <Modal
+            <RNModal
                 visible={isVisible}
                 transparent={true}
                 animationType="slide"
@@ -506,12 +644,9 @@ const AepsCW = () => {
                         </View>
                     </View>
                 </View>
-            </Modal>
+            </RNModal >
         );
     };
-
-
-
     const capture = async (rdServicePackage) => {
         let pidOptions = '';
         const aepscode = await AsyncStorage.getItem('aepscode');
@@ -542,22 +677,23 @@ const AepsCW = () => {
         openFingerPrintScanner(rdServicePackage, pidOptions)
 
             .then(async (res) => {
+                setisFacialTan(false)
                 const deviceInfoString = JSON.stringify(res, null, 2);
-               
+
                 if (res.errorCode === 720) {
                     setFingerprintData(720);
                 } else if (res.status === -1) {
                     setFingerprintData(-1);
                 } else if (res.errorCode === 0) {
 
-                    OnPressEnq(res.pidDataJson);
+                    OnPressEnq(res.pidDataJson, res.pidDataXML);
 
                     //    Alert.alert('Tab Fingerprint Data', responseString);
 
                 }
             })
             .catch(async (error) => {
-             
+
                 setFingerprintData(720);
                 Alert.alert('Please check if the device is connected.');
             });
@@ -575,27 +711,27 @@ const AepsCW = () => {
     //     })
     // };
 
-     const aepsresponsepress = (addinfo) => {
+    const aepsresponsepress = (addinfo) => {
         // "Transaction Details",
         //             `Status: ${ADDINFO.TransactionStatus}\n` +
         //             `Bank RRN: ${ADDINFO.BankRrn}\n` +
         //             `Transaction Amount: ${ADDINFO.TransactionAmount}\n` +
         //             `Balance Amount: ${ADDINFO.BalanceAmount}`,
-        const ministate={
+        const ministate = {
             bankName,
-            TransactionStatus:addinfo.TransactionStatus,
-            Name:consumerName,
-            Aadhar:aadharNumber,
-            mobileNumber:mobileNumber,
-            BankRrn:addinfo.BankRrn,
-            TransactionAmount:addinfo.TransactionAmount,
-            RequestTransactionTime:formattedDate,
-            BalanceAmount:addinfo.BalanceAmount
+            TransactionStatus: addinfo.TransactionStatus,
+            Name: consumerName,
+            Aadhar: aadharNumber,
+            mobileNumber: mobileNumber,
+            BankRrn: addinfo.BankRrn,
+            TransactionAmount: addinfo.TransactionAmount,
+            RequestTransactionTime: formattedDate,
+            BalanceAmount: addinfo.BalanceAmount
         }
 
         navigation.navigate("AepsRespons", {
-            
-            ministate: 
+
+            ministate:
                 ministate,
             mode: 'AEPS'
         })
@@ -604,88 +740,196 @@ const AepsCW = () => {
     const onSuccess = (e) => {
         setisScan2(false);
         const data = e.data;
-        
+
         const obj = {};
         const regex = /([a-zA-Z0-9]+)="([^"]+)"/g;
         let match;
-        
+
         while ((match = regex.exec(data)) !== null) {
-          obj[match[1]] = match[2];
+            obj[match[1]] = match[2];
         }
-     setAadharNumber(obj.uid)
-     setConsumerName(obj.name)
+        setAadharNumber(obj.uid)
+        setConsumerName(obj.name)
         // Linking.openURL(e.data).catch((err) => console.error('An error occurred', err));
     };
+    const CheckEkyc = async () => {
+
+        setIsLoading(true)
+        try {
+            const url = activeAepsLine ? `${APP_URLS.checkekycNifi}` : `${APP_URLS.checkekyc}`;
+            const response = await get({ url: url });
+            const msg = response.Message;
+            const Status = response.Status;
+            console.log(response)
+            if (response.Status === true) {
+                setIsLoading(false)
+                //CheckAeps();
+                return;
+            } else if (msg === '2FAREQUIRED') {
+                setIsVisible2(msg === '2FAREQUIRED')
+                setIsLoading(false)
+
+                // navigation.replace("TwoFAVerify");
+
+                return;
+            } else if (msg === 'REQUIREDOTP') {
+                setIsLoading(false)
+
+                //  setUserStatus(msg);
+                navigation.replace("Aepsekyc");
+            } else if (msg === 'REQUIREDSCAN') {
+                setIsLoading(false)
+
+                //  setUserStatus(msg);
+
+                navigation.replace("Aepsekycscan");
+                return;
+            } else {
+                setIsLoading(false)
+
+                Alert.alert('', msg, [
+                    { text: 'OK', onPress: () => navigation.goBack(), },
+                ], { cancelable: false });
+            }
+            setIsLoading(false)
+
+        } catch (error) {
+
+            console.log(error);
+        } finally {
+        }
+    };
+    const findIsFacialTan = (iINNo) => {
+
+        console.log(iINNo)
+        const bank = banklist.find(item => item.iINNo === iINNo);
+        console.log(bank, '&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
+
+        if (bank.isFacialTan) {
+            console.error(bank.isFacialTan);
+            setisFacialTan(bank.isFacialTan);
+            CheckEkyc()
+        } else {
+            CheckEkyc()
+        }
+    };
+
     const [isScan2, setisScan2] = useState(false)
     if (isScan2) {
-          return   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <View style={{ alignItems: 'center', position: 'absolute', top: 30, right: 20 }}>
-            <TouchableOpacity
-              onPress={() => setisScan2(false)}
-              style={{
-                backgroundColor: '#ff4d4d',
-                padding: 10,
-                borderRadius: 10,
-                width:hScale(40),
-                height:hScale(40),
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ color: 'white', fontSize: 20 }}>X</Text>
-            </TouchableOpacity>
-          </View>
-  
-          {/* QR Code Scanner */}
-          <QRCodeScanner onRead={onSuccess} />
+        return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ alignItems: 'center', position: 'absolute', top: 30, right: 20 }}>
+                <TouchableOpacity
+                    onPress={() => setisScan2(false)}
+                    style={{
+                        backgroundColor: '#ff4d4d',
+                        padding: 10,
+                        borderRadius: 10,
+                        width: hScale(40),
+                        height: hScale(40),
+                        alignItems: 'center',
+                    }}
+                >
+                    <Text style={{ color: 'white', fontSize: 20 }}>X</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* QR Code Scanner */}
+            <QRCodeScanner onRead={onSuccess} />
         </View>
-      }
+    }
+    const getFaceAuthResponse = async () => {
+        try {
+            const storedResponse = await AsyncStorage.getItem('faceAuthResponse');
+            if (storedResponse !== null) {
+                const response = JSON.parse(storedResponse);
+                console.log('Stored Face Auth Response:', response);
+            } else {
+                console.log('No face authentication response found in AsyncStorage');
+            }
+        } catch (error) {
+            console.error('Error reading face authentication response from AsyncStorage:', error);
+        }
+    };
+
+
     return (
         <View style={styles.main}>
 
-            <ScrollView>
+            <ScrollView contentContainerStyle={{ paddingBottom: 50 }}
+                pointerEvents={isVisible2 ? "box-none" : "auto"}>
                 <View style={styles.container}>
                     <View style={styles.body}>
 
-                       
-                    <View style={{}}>
+                        <TouchableOpacity
+                            style={{}}
+                            onPress={() => { setIsVisible2(false), setisbank(true) }}
+                        >
+                            <>
 
-<FlotingInput
-    label="Enter Aadhar Number"
-    value={aadharNumber}
-    maxLength={12}
-    onChangeText={setAadharNumber}
-    keyboardType="numeric"
-    onChangeTextCallback={(text) => {
-        setAadharNumber(text);
-        if (text.length === 12) {
-            adhar_Validation(text)
-        } else {
-            setIsValid(false)
 
-        }
+                                <FlotingInput
+                                    editable={false}
+                                    label={bankName.toString()}
+                                    onChangeText={setServifee}
+                                    placeholder={bankName ? "" : "Select Your Bank"}
+                                    keyboardType="numeric"
+                                    onChangeTextCallback={(text) => {
+                                        setServifee(text);
+                                    }}
+                                />
+                            </>
+                            <View style={styles.righticon}>
+                                <OnelineDropdownSvg />
+                            </View>
+                        </TouchableOpacity>
+                        <View style={{}}>
 
-    }}
-/>
+                            <FlotingInput
+                                editable={bankName !== ''}
 
-<View style={[styles.righticon2]}>
+                                label={'Enter Aadhar Number'}
+                                value={aadharNumber}
+                                maxLength={12}
+                                onChangeText={setAadharNumber}
+                                keyboardType="numeric"
+                                onChangeTextCallback={(text) => {
+                                    setAadharNumber(text);
+                                    if (text.length === 12) {
+                                        adhar_Validation(text)
+                                    } else {
+                                        setIsValid(false)
 
-    <TouchableOpacity
-        onPress={() => {
-            setisScan2(true)
-        }}
-    >
-        <QrcodAddmoneysvg />
+                                    }
 
-    </TouchableOpacity>
-</View>
-</View>
+                                }}
+                            />
+
+                            <View style={[styles.righticon2]}>
+                                {isValid && <CheckSvg color='green' />}
+
+                                <TouchableOpacity
+                                    onLongPress={() => {
+                                        alert(`latitude--${latitude}\nlongitude--${longitude}`,)
+                                    }}
+                                    onPress={() => {
+                                        setisScan2(true)
+                                    }}
+                                    style={{ marginLeft: wScale(30) }}>
+                                    <QrcodAddmoneysvg />
+
+                                </TouchableOpacity>
+                            </View>
+                        </View>
 
 
                         <FlotingInput
                             label="Enter Mobile Number"
                             value={mobileNumber}
                             onChangeText={setMobileNumber}
+                            onChangeText={setMobileNumber}
                             keyboardType="numeric"
+                            maxLength={10}
+                            editable={bankName !== ''}
                             onChangeTextCallback={(text) => {
                                 setMobileNumber(text);
                                 if (text.length === 10) {
@@ -695,6 +939,8 @@ const AepsCW = () => {
                             }}
                         />
                         <FlotingInput
+                            editable={bankName !== ''}
+
                             label="Enter Consumer Name"
                             value={consumerName}
                             onChangeText={setConsumerName}
@@ -705,6 +951,8 @@ const AepsCW = () => {
                             }}
                         />
                         <FlotingInput
+                            editable={bankName !== ''}
+
                             label="Enter Amount"
                             value={amountcont}
                             onChangeText={setAmountcont}
@@ -720,6 +968,8 @@ const AepsCW = () => {
                             <ShowLoader />
                         ) : null}
                         <FlotingInput
+                            editable={bankName !== ''}
+
                             label="Enter Service Fee"
                             value={servifee}
                             onChangeText={setServifee}
@@ -728,53 +978,67 @@ const AepsCW = () => {
                                 setServifee(text);
 
                             }}
+                            maxLength={3}
+
                         />
-                        <TouchableOpacity
-                            style={{}}
-                            onPress={() => { setisbank(true) }}
-                        >
-                            <>
 
 
-                                <FlotingInput
-                                    editable={false}
-                                    label={bankName.toString()}
-                                    onChangeText={setServifee}
-                                    placeholder={bankName ? "" : "Select Your Bank"}
-                                    keyboardType="numeric"
-                                    onChangeTextCallback={(text) => {
-                                        setServifee(text);
-                                    }}
-                                    inputstyle={styles.inputstyle}
-                                />
-                            </>
-                            <View style={styles.righticon}>
-                                <OnelineDropdownSvg />
-                            </View>
-                        </TouchableOpacity>
 
+                        <SelectDevice
+                            isProcees={
+                                consumerName.length >= 4 && amountcont !== '' && isValid && mobileNumber.length >= 10 && aadharNumber.length >= 12 && bankName !== 'Select Bank'}
+                            setDeviceName={setDeviceName}
+                            device={'Device'}
+                            isface2={false}
+                            isface={isFacialTan
 
-                        <SelectDevice setDeviceName={setDeviceName} device={'Device'} opPress={() => { setDeviceName(deviceName); handleSelection(deviceName) }} />
+                            }
+
+                            opPress={() => {
+
+                                setDeviceName(deviceName);
+
+                                handleSelection(deviceName);
+                            }} pkg={undefined}
+                            onPressface={() => openFace()}
+                        />
                         <View style={{ marginBottom: hScale(10) }} />
 
-                        <DynamicButton
-                            onPress={() => {
-                                if (bankName === 'Select Bank' || mobileNumber.length < 10 || consumerName === null || aadharNumber.length < 12 || isValid === false || amountcont === '') {
+                        {(bankName !== '' && deviceName !== 'Device') &&
+                            <DynamicButton
+                                onPress={() => {
+                                    setisFacialTan(false)
+                                    console.log(amountcont !== '' && isValid && mobileNumber.length >= 10 && aadharNumber.length >= 12 && bankName !== 'Select Bank')
+                                    console.log(amountcont, isValid, mobileNumber, aadharNumber, bankName, consumerName, "()()()()()()()()()((")
 
-                                } else {
-                                    handleSelection(deviceName);
+                                    if (bankName === 'Select Bank' ||
+                                        mobileNumber.length < 10 ||
+                                        consumerName === null ||
+                                        aadharNumber.length < 12 ||
+                                        isValid === false ||
+                                        amountcont === '') {
+
+                                    } else {
+                                        handleSelection(deviceName);
+                                    }
+                                }}
+                                title={'Scan & Proceed'}
+                            />
+
+                        }
+
+                        {/* {true &&
+                            <DynamicButton
+                                onPress={() => {
+console.log(latitude ,longitude)
+                                    getFaceAuthResponse()
 
 
-                                    // if (fingerprintData == 720) {
-                                    //     setIsScan(true);
-                                    //     scanFingerprint();
-                                    // } else {
-                                    //     OnPressEnq();
-                                    // }
-                                }
-                            }}
-                            title={'Scan & Proceed'}
-                        />
+                                }}
+                                title={'Scan & Proceed'}
+                            />
+
+                        } */}
 
                         {showDialog && (
                             <AepsVideoResponseDialog
@@ -795,8 +1059,16 @@ const AepsCW = () => {
                 </View>
             </ScrollView>
             <BankBottomSite
-                setBankId={setBankId}
 
+                setBankId={setBankId}
+                setisFacialTan={setisFacialTan}
+                onPress1={(id) => {
+                    console.log(id)
+
+                    findIsFacialTan(id)
+                }
+
+                }
                 bankdata={banklist}
                 isbank={isbank}
                 setBankName={setBankName}
@@ -804,8 +1076,37 @@ const AepsCW = () => {
             />
 
 
+            <Modal
+                isVisible={isVisible2}
+                backdropOpacity={0}
+                animationIn="slideInUp"
+                animationOut="slideOutDown"
+                useNativeDriver={true}
+                propagateSwipe={true}
+                coverScreen={false}
+                style={{
+                    margin: 0,
+                    justifyContent: "flex-end",
+                    pointerEvents: "box-none",
+                }}
+            >
+                <View
+                    pointerEvents="auto"
+                    style={{
+                        height: "85%",
+                        // backgroundColor: "white",
+                        // borderTopLeftRadius: 20,
+                        // borderTopRightRadius: 20,
+                        // padding: 20,
+                        // elevation: 10,
+                        // flex: 1
+                    }}
+                >
+                    <TwoFAVerify handle={() => setIsVisible2(false)} />
+                </View>
+            </Modal>
 
-        </View>
+        </View >
     );
 };
 
@@ -816,11 +1117,12 @@ const styles = StyleSheet.create({
         right: wScale(0),
         top: hScale(0),
         height: "85%",
-        alignItems: "flex-end",
+        alignItems: "center",
         justifyContent: "center",
         paddingRight: wScale(12),
-        width: wScale(44),
+        // width: wScale(44),
         marginRight: wScale(-2),
+        flexDirection: 'row'
     },
     main: {
         flex: 1,

@@ -16,7 +16,7 @@ import {useNavigation} from '@react-navigation/native';
 import {SvgXml} from 'react-native-svg';
 import {hScale, wScale} from '../../../utils/styles/dimensions';
 import FlotingInput from './FlotingInput';
-import {useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from '../../../reduxUtils/store';
 import {colors} from '../../../utils/styles/theme';
 import LinearGradient from 'react-native-linear-gradient';
@@ -34,6 +34,7 @@ import {APP_URLS} from '../../../utils/network/urls';
 import {encrypt} from '../../../utils/encryptionUtils';
 import OTPModal from '../../../components/OTPModal';
 import CloseSvg from '../svgimgcomponents/CloseSvg';
+import { reset } from '../../../reduxUtils/store/userInfoSlice';
 
 const BackArrowImg = `    
 
@@ -63,6 +64,7 @@ const Changepassword = () => {
   const bgcolorAnimated = new Animated.Value(bgcolorindex);
   const {post} = useAxiosHook();
   const navigation = useNavigation<any>();
+  const dispatch = useDispatch();
 
   const gradientColors = [colorConfig.primaryColor, colorConfig.secondaryColor, 'red'];
 
@@ -120,7 +122,8 @@ const Changepassword = () => {
             textBody: response.Message || 'Your password has been changed successfully.',
             button: 'OK',
             onPressButton: () => {
-              navigation.replace('Logout');
+              dispatch(reset())
+             // navigation.replace('Logout');
 
               Dialog.hide();
             },

@@ -117,7 +117,7 @@ const LoanScreen = () => {
   }
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
-  const { userId } = useSelector((state: RootState) => state.userInfo);
+  const { userId ,Loc_Data} = useSelector((state: RootState) => state.userInfo);
   const { latitude, longitude } = useLocationHook();
 
   const readLatLongFromStorage = async () => {
@@ -139,7 +139,7 @@ const LoanScreen = () => {
   };
   const onRechargePress = useCallback(async () => {
 
-    const loc = await readLatLongFromStorage()
+    
     setProceedSheetVisible(false);
     setShowLoader(true)
 
@@ -150,8 +150,8 @@ const LoanScreen = () => {
       paramname,
       optcode,
       amount,
-      loc?.latitude,
-      loc?.longitude,
+      Loc_Data['latitude'],Loc_Data['longitude'],
+
       'city',
       'address',
       'postcode',
@@ -189,7 +189,12 @@ const LoanScreen = () => {
       });
       console.log(res);
       console.log(status);
+      if(res.status ==='False'){
+        alert(res.message);
+        setShowLoader(false);
 
+        return
+      }
       status = res.Response;
       Message = res.Message;
       await recenttransactions();
@@ -206,14 +211,15 @@ const LoanScreen = () => {
     setShowLoader(false);
 
     navigation.navigate('Rechargedetails', {
-      mobileNumber: CustomerID,
-      Amount: amount,
-      operator: FastagOpt,
-      status,
-      reqId,
-      reqTime,
-      Message
+      mobileNumber: CustomerID ?? '',
+      Amount: amount ?? 0,
+      operator: FastagOpt ?? 'N/A',
+      status: status ?? 'Unknown',
+      reqId: reqId ?? '',
+      reqTime: reqTime ?? new Date().toISOString(),
+      Message: Message ?? 'No message available'
     });
+    
 
   }, [
     amount,
@@ -229,11 +235,14 @@ const LoanScreen = () => {
   async function billInfo() {
     try {
       const url = `${APP_URLS.rechargeViewBill}billnumber=${CustomerID}&Operator=${optcode}&billunit=&ProcessingCycle=&acno=&lt=&ViewBill=Y`;
-      const res = await post({ url: url });
-      console.log('url', res);
+      console.log(url)
+      const res = await get({ url: url });
+      console.log('"""""""""""url', res);
 
-      const result = res.data['RESULT'];
-      const resp = res.data['ADDINFO'];
+      const result = res["RESULT"];
+      console.log('"""""""""""url',result)
+      const resp = res["ADDINFO"];
+      console.log('"""""""""""url',resp)
       console.log(res);
       if (result === '0') {
         // if (res['RESULT'] === 0) {
@@ -246,6 +255,8 @@ const LoanScreen = () => {
         setStatus(billinfo['customerStatus']);
         setProceedSheetVisible(true);
 
+      }else{
+        ToastAndroid.show(resp.Message || "No message available", ToastAndroid.CENTER);
       }
     } catch (error) {
       console.error(error);
@@ -451,7 +462,6 @@ const LoanScreen = () => {
 
             onChangeTextCallback={text => {
               setCustomerID(text);
-              //setCustomerID(text.replace(/\D/g, ""));
               if (text.length >= 5) {
                 setIsInfo(true)
               } else {
@@ -525,9 +535,11 @@ const LoanScreen = () => {
           </View>
         )}
 
-        <FlotingInput label={'Enter Amount'} value={amount} keyboardType="numeric"
+        <FlotingInput label={'Enter Amount'}
+             maxLength={5}
+              value={amount} keyboardType="numeric"
           onChangeTextCallback={text => {
-            setAmount(text); setAmount(text.replace(/\D/g, ""));
+            setAmount(text); 
           }} />
 
 

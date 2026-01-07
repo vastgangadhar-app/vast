@@ -212,7 +212,8 @@ export const displayAlert = (title, value) => {
  
 }
 export const commonPaymentParam = (route) => {
-  var txnid = new Date().getTime().toString();
+  console.log(route,'********************')
+  var txnid = route.txnId;
 
   return {
     key: route.merchantKey,

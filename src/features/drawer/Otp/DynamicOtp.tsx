@@ -1,74 +1,60 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, Modal, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Keyboard } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { hScale, wScale } from '../../../utils/styles/dimensions';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../reduxUtils/store';
-import DynamicButton from '../button/DynamicButton';
-import { Dialog, ALERT_TYPE } from 'react-native-alert-notification';
 import { colors } from '../../../utils/styles/theme';
 
-
-
-const DynamicOtp = () => {
-    // const [showModal, setShowModal] = useState(false);
-    const [modalVisible, setModalVisible] = useState(false);
-    const [otp, setOtp] = useState(Array.from({ length: 6 }, () => ''));
-    const [mobileotp, setMobileOtp] = useState(Array.from({ length: 4 }, () => ''));
-    const [error, setError] = useState(false);
+const DynamicOtp = ({ otp, setOtp }) => {
+    const [error, setError] = useState('');
     const inputRefs = useRef(otp.map(() => React.createRef()));
-    const mobileinputRefs = useRef(mobileotp.map(() => React.createRef()));
 
-    const handleOtpChange = (index, value) => {
-        const updatedOtp = [...otp];
-        console.log(updatedOtp)
-        updatedOtp[index] = value;
-        setOtp(updatedOtp);
-
-        const predefinedOtp = '123456';
-        const enteredOtp = updatedOtp.join('  ');
-
-        if (enteredOtp === predefinedOtp || enteredOtp.length === 6) {
-            console.log('is ok');
-        }
-
-        erroetext(updatedOtp);
-    };
-
-    const registeredmobileotp = (index, value) => {
-        const updatedMobileOtp = [...mobileotp];
-        updatedMobileOtp[index] = value;
-
-
-        setMobileOtp(updatedMobileOtp);
-    };
+    const { colorConfig } = useSelector((state: RootState) => state.userInfo);
 
     const numberOfInputs = 6;
-    const { colorConfig } = useSelector((state: RootState) => state.userInfo);
     const color1 = `${colorConfig.primaryColor}15`;
     const color2 = `${colorConfig.secondaryColor}15`;
 
+    const predefinedOtp = '123456';
 
-    const erroetext = (text) => {
-        if (text === '123456') {
-            console.warn('otp is true')
-        } else {
-            console.warn('otp is false')
+    const handleOtpChange = useCallback(
+        (index, value) => {
+            const updatedOtp = [...otp];
+            updatedOtp[index] = value;
+            setOtp(updatedOtp);
+
+            const enteredOtp = updatedOtp.join('');
+
+            if (enteredOtp.length === numberOfInputs) {
+                if (enteredOtp === predefinedOtp) {
+                    console.log('✅ Correct OTP');
+                    setError('');
+
+                } else {
+                    console.warn('❌ Incorrect OTP');
+                    setError('Incorrect OTP. Please try again.');
+                }
+            }
+        },
+        [otp, setOtp]
+    );
+
+    useEffect(() => {
+        const isOtpComplete = otp.every((digit) => digit !== '');
+        if (isOtpComplete) {
+            Keyboard.dismiss();
+            console.log('All 6 digits entered');
         }
-    }
+    }, [otp]);
 
     return (
         <View style={styles.container}>
-            <View style={[styles.otpcontainer, {
-            }]}>
-                <View
-                    style={[
-                        styles.texttitalView,
-                        { backgroundColor: colorConfig.primaryColor },
-                    ]}>
-
+            <View style={styles.otpcontainer}>
+                <View style={[styles.texttitalView, { backgroundColor: colorConfig.primaryColor }]}>
                     <Text style={styles.texttital}>ENTER OTP</Text>
                 </View>
+
                 <Text style={styles.otptext}>
                     OTP will be sent to your registered Email-ID and Mobile number for status change
                 </Text>
@@ -76,69 +62,61 @@ const DynamicOtp = () => {
                 <LinearGradient
                     style={styles.LinearGradient}
                     colors={[color1, color2]}
-                    start={{ x: 0, y: .5 }}
-                    end={{ x: 1, y: .5 }} >
-
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', }}>
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                >
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                         {otp.map((digit, index) => (
                             <TextInput
                                 key={index}
                                 ref={inputRefs.current[index]}
-                                style={styles.input}
+                                style={[styles.input, {
+                                    backgroundColor: digit !== '' ? '#c6f6d5' : '#fff',  // light green if filled
+                                    borderColor: digit !== '' ? 'green' : '#000',
+                                }]}
                                 value={digit}
                                 keyboardType="numeric"
                                 maxLength={1}
-                                onChangeText={value => {
+                                onChangeText={(value) => {
                                     handleOtpChange(index, value);
 
                                     if (value !== '' && index < numberOfInputs - 1) {
-                                        inputRefs.current[index + 1].current.focus();
+                                        inputRefs.current[index + 1]?.current?.focus();
                                     } else if (value === '' && index > 0) {
-                                        inputRefs.current[index - 1].current.focus();
+                                        inputRefs.current[index - 1]?.current?.focus();
                                     }
                                 }}
                             />
                         ))}
                     </View>
 
-
-
-
-
-
-
-
-                    {error ? <Text style={styles.errortext}>{error}</Text> : null}
-
+                    {/* {error ? <Text style={styles.errortext}>{error}</Text> : null} */}
                 </LinearGradient>
 
                 <TouchableOpacity style={styles.resend}>
-                    <Text style={styles.resendtext}>
-                        Resend OTP
-                    </Text>
+                    <Text style={styles.resendtext}>Resend OTP</Text>
                 </TouchableOpacity>
-
             </View>
         </View>
     );
 };
+
 const styles = StyleSheet.create({
     container: {
-        // flex:1
-        width: '100%'
+        width: '100%',
     },
     LinearGradient: {
         paddingVertical: hScale(10),
-        paddingHorizontal: wScale(15),
-        marginBottom: hScale(5)
+        paddingHorizontal: wScale(10),
+        marginBottom: hScale(5),
     },
     otpcontainer: {
         borderRadius: wScale(5),
         backgroundColor: '#fff',
         paddingHorizontal: wScale(15),
         width: '100%',
-        paddingTop:hScale(50),
-        paddingBottom: hScale(20)
+        paddingTop: hScale(50),
+        paddingBottom: hScale(20),
     },
     otptext: {
         color: '#000',
@@ -148,50 +126,45 @@ const styles = StyleSheet.create({
     },
     input: {
         width: wScale(43),
-        height: hScale(40),
+        // height: hScale(40),
         borderWidth: wScale(0.4),
         borderRadius: wScale(2),
         textAlign: 'center',
-        fontSize: wScale(16),
+        fontSize: wScale(20),
         marginHorizontal: wScale(5),
         backgroundColor: '#fff',
         borderColor: '#000',
-        color:"#000"
+        color: '#000',
+        fontWeight: 'bold'
     },
     errortext: {
         color: 'red',
         marginTop: hScale(10),
+        textAlign: 'center',
     },
-    modlecancelButton: {
-        paddingRight: wScale(10),
-        width: '30%',
-    },
-
     texttitalView: {
         borderRadius: wScale(5),
         position: 'absolute',
-        top: -10,
-        left: 5,
+        top: hScale(-15),
+        left: wScale(10),
         alignItems: 'center',
         paddingBottom: wScale(3),
-        paddingHorizontal: wScale(10)
+        paddingHorizontal: wScale(10),
     },
-
     texttital: {
         fontSize: wScale(28),
-        // fontWeight: 'bold',
         color: '#fff',
     },
     resend: {
         alignSelf: 'flex-end',
         paddingHorizontal: 5,
-        alignItems: 'center'
+        alignItems: 'center',
     },
     resendtext: {
         fontSize: wScale(18),
         fontWeight: 'bold',
-        color:colors.black75
-    }
+        color: colors.black75,
+    },
+});
 
-})
 export default DynamicOtp;

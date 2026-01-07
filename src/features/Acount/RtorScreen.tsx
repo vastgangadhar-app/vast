@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Modal, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Modal, Alert, AsyncStorage } from 'react-native';
 import { useSelector } from 'react-redux';
 import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
 import DynamicButton from '../drawer/button/DynamicButton';
 import FlotingInput from '../drawer/securityPages/FlotingInput';
 import { hScale } from '../../utils/styles/dimensions';
 import useAxiosHook from '../../utils/network/AxiosClient';
-import { useLocationHook } from '../../utils/hooks/useLocationHook';
 import { RootState } from '../../reduxUtils/store';
 import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
 import { encrypt } from '../../utils/encryptionUtils';
 import ShowLoader from '../../components/ShowLoder';
+import { useLocationHook } from '../../hooks/useLocationHook';
 
 const RtorScreen = () => {
-    const { colorConfig } = useSelector((state) => state.userInfo);
+    const { userId, colorConfig, Loc_Data } = useSelector((state: RootState) => state.userInfo);
     const color1 = `${colorConfig.secondaryColor}20`;
 
     const [id, setId] = useState('');
@@ -23,7 +23,7 @@ const RtorScreen = () => {
     const { get, post } = useAxiosHook();
     const [dialogVisible, setDialogVisible] = useState(false);
     const [retailer, setRetailer] = useState([])
-const [isLoading,setisLoading]= useState(false);
+    const [isLoading, setisLoading] = useState(false);
     const data = {
         "sts": "Success",
         "data": {
@@ -35,7 +35,6 @@ const [isLoading,setisLoading]= useState(false);
         }
     };
     const { latitude, longitude } = useLocationHook();
-    const { userId } = useSelector((state: RootState) => state.userInfo);
     const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
         useDeviceInfoHook();
 
@@ -57,6 +56,7 @@ const [isLoading,setisLoading]= useState(false);
     //         console.error(error);
     //     }
     // };
+
 
 
     const RetailerData = async (mobile) => {
@@ -86,88 +86,92 @@ const [isLoading,setisLoading]= useState(false);
         }
     };
 
-
     const FundTransfer = async () => {
         setisLoading(true);
         console.log(id);
+
+        // Retrieve location data from storage
+
         try {
+            // Retrieve mobile network, IP, and device model
             const mobileNetwork = await getNetworkCarrier();
             const ip = await getMobileIp();
             const Model = await getMobileDeviceId();
             console.log("Model", Model);
-            
+
+            // Encrypt the data, including location and other details
             const encryption = await encrypt([
                 id,
                 amount,
                 comments,
                 ip,
                 'token',
-                'null',
                 Model,
                 mobileNetwork,
+                Loc_Data['latitude'],
+                Loc_Data['longitude'],
+
+                'Address',
+                'City',
+                '123456',
             ]);
-    
+
             const RetailerId = encodeURIComponent(encryption.encryptedData[0]);
             const Amount = encodeURIComponent(encryption.encryptedData[1]);
             const Commnets = encodeURIComponent(encryption.encryptedData[2]);
             const IP = encodeURIComponent(encryption.encryptedData[3]);
             const Token = encodeURIComponent(encryption.encryptedData[4]);
-            const loc = encodeURIComponent(encryption.encryptedData[5]);
             const Model1 = encodeURIComponent(encryption.encryptedData[6]);
             const net = encodeURIComponent(encryption.encryptedData[7]);
-    
-            console.log([
-                id,
-                amount,
-                comments,
-                ip,
-                'token',
-                'null',
-                Model,
-                mobileNetwork,
-            ]);
-    
-            const value1 = encodeURIComponent(encryption.keyEncode);
-            console.log('value1:', value1);
-    
-            const value2 = encodeURIComponent(encryption.ivEncode);
-    
-            const res = await post({
-                url: `Retailer/api/data/rem_rem_fund_transfer?RetailerId=${RetailerId}&txtbal=${Amount}&comment=${Commnets}&IP=${IP}&Devicetoken=${Token}&Latitude=${loc}&Longitude=${loc}&ModelNo=${Model1}&City=${loc}&PostalCode=${loc}&InternetTYPE=${net}&Addresss=${loc}&value1=${value1}&value2=${value2}`
-            });
-    
-            const url = `Retailer/api/data/rem_rem_fund_transfer?RetailerId=${RetailerId}&txtbal=${Amount}&comment=${Commnets}&IP=${IP}&Devicetoken=${Token}&Latitude=${loc}&Longitude=${loc}&ModelNo=${Model1}&City=${loc}&PostalCode=${loc}&InternetTYPE=${net}&Addresss=${loc}&value1=${value1}&value2=${value2}`;
-         
-            
-            console.log('Url', url,res);
+            const encryptedPostalCode = encodeURIComponent(encryption.encryptedData[11]);
+
+            const encryptedLatitude = encodeURIComponent(encryption.encryptedData[7]);  // Latitude
+            const encryptedLongitude = encodeURIComponent(encryption.encryptedData[8]);  // Longitude
+            const encryptedAddress = encodeURIComponent(encryption.encryptedData[9]);    // Address
+            const encryptedCity = encodeURIComponent(encryption.encryptedData[10]);      // City
+            const encryptedInternetType = encodeURIComponent(encryption.encryptedData[7]); // Internet Type (mobile network)
+
+            const value1 = encryption.keyEncode;
+            const value2 = encryption.ivEncode;
+
+            const url = `Retailer/api/data/rem_rem_fund_transfer?RetailerId=${RetailerId}&txtbal=${Amount}&comment=${Commnets}&IP=${IP}&Devicetoken=${Token}&Latitude=${encryptedLatitude}&Longitude=${encryptedLongitude}&ModelNo=${Model1}&City=${encryptedCity}&PostalCode=${encryptedPostalCode}&InternetTYPE=${encryptedInternetType}&Addresss=${encryptedAddress}&value1=${value1}&value2=${value2}`;
+
+            const res = await post({ url });
+
+            console.log('Url:', url);
+            console.log('Response:', res);
+
             setisLoading(false);
+
             if (res?.Response === "Success") {
                 Alert.alert(
-                    "Success", 
-                    `${res?.Message}\n Amount :${amount}`, 
-                    
+                    "Success",
+                    `${res?.Message}\n Amount :${amount}`,
                     [{ text: "OK" }]
                 );
+                setAmount('');
+                setReAmount('');
+                setComments('')
             } else {
-                setisLoading(false);
                 Alert.alert(
-                    "Error", 
-                    `${res?.Message}`, 
-                    
+                    "Error",
+                    `${res?.Message}`,
                     [{ text: "OK" }]
                 );
             }
-    
         } catch (error) {
             console.error(error);
+            setisLoading(false);
             Alert.alert(
-                "Error", 
-                "An error occurred while processing the fund transfer.", 
+                "Error",
+                "An error occurred while processing the fund transfer.",
                 [{ text: "OK" }]
             );
         }
     };
-    
+
+
+
     const RetailerDetailsDialog = ({ visible, onClose, retailerDetails }) => (
         <Modal transparent={true} visible={visible} animationType="slide" onRequestClose={onClose}>
             <View style={styles.overlay}>
@@ -214,7 +218,7 @@ const [isLoading,setisLoading]= useState(false);
                         }
                     }}
                 />
-                {isLoading && <ShowLoader/>}
+                {isLoading && <ShowLoader />}
                 <FlotingInput
                     label="Amount"
                     keyboardType="numeric"
@@ -237,8 +241,7 @@ const [isLoading,setisLoading]= useState(false);
                         setComments(text);
                     }} />
                 <DynamicButton title={'Fund Transfer'}
-                    onPress={FundTransfer
-                    }
+                    onPress={FundTransfer}
                 />
             </View>
             <RetailerDetailsDialog

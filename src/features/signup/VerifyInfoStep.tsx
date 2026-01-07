@@ -95,7 +95,7 @@ const VerifyInfoStep = () => {
   const JoinUs = useCallback(async () => {
     console.log(stateId)
     try {
-      const url = 'https://native.vastwebindia.com//api/Account/Registernew';
+      const url =   `${APP_URLS.baseapiurl}`;
       const Pin = '1234';
 
       const encryption = await encrypt([

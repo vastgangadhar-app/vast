@@ -3,28 +3,28 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import useAxiosHook from '../../../utils/network/AxiosClient';
 import { APP_URLS } from '../../../utils/network/urls';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../reduxUtils/store';
 
 const PancardCom = () => {
+  const { colorConfig,IsDealer } = useSelector((state: RootState) => state.userInfo);
+
   const { get } = useAxiosHook();
   const [list, setList] = useState([]);
 
   useEffect(() => {
-    const fetchCommissionData = async () => {
+    const fetchCommissionData = async (operator) => {
       try {
-        const url = `${APP_URLS.opComm}ddltype=Pancard`;
-        const response = await get({ url });
-
-        if (response && Array.isArray(response)) {
-          setList(response);
-        } else {
-          console.error("Invalid response format:", response);
-        }
-      } catch (error) {
-        console.error("Error fetching commission data:", error);
-      }
+          const url2 = `${APP_URLS.dealeropcomn}ddltype=${operator}`
+            const url = `${APP_URLS.opComm}ddltype=${operator}`;
+            const response = await get({ url:IsDealer?url2:url });
+            setList(response);
+          } catch (error) {
+            console.error(error);
+          }
     };
 
-    fetchCommissionData();
+    fetchCommissionData('Pancard');
   }, []);
 
   const renderItem = ({ item }) => {

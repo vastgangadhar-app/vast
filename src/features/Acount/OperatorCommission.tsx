@@ -21,10 +21,10 @@ import OnelineDropdownSvg from '../drawer/svgimgcomponents/simpledropdown';
 import { BottomSheet } from '@rneui/base';
 import ClosseModalSvg2 from '../drawer/svgimgcomponents/ClosseModal2';
 
-const operatorList = ["Prepaid", "Utility", "Money", "Pancard", "Aeps & Aadhar Services", "MPOS", "FLIGHT", "HOTEL", "BUS", "MICROATM CASH", "VM30 PURCHASE"];
+const operatorList = ["Prepaid", "Utility", "Money", "Pancard", "Aeps & Aadhar Services", "MPOS", "FLIGHT", "HOTEL", "BUS", "MICROATM CASH", "VM30PURCHASE"];
 
 const OperatorCommissionReport = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig ,IsDealer} = useSelector((state: RootState) => state.userInfo);
   const color1 = `${colorConfig.secondaryColor}20`;
   const [isVisible, setIsVisible] = useState(false);
   const [selectedOperator, setSelectedOperator] = useState("Prepaid");
@@ -41,8 +41,10 @@ const OperatorCommissionReport = () => {
     const fetchHeaderData = async () => {
       await fetchCommissionData("Prepaid");
       try {
+
+        const url2 =`${APP_URLS.dealeropcomn}ddltype=Header`
         const url = `${APP_URLS.opComm}ddltype=Header`;
-        const response = await get({ url });
+        const response = await get({ url :IsDealer?url2:url});
         console.log('Header', response.data);
         console.log('Header', response.data);
       } catch (error) {
@@ -82,8 +84,9 @@ const OperatorCommissionReport = () => {
 
   const fetchCommissionData = async (operator) => {
     try {
+      const url2 =`${APP_URLS.dealeropcomn}ddltype=${operator}`
       const url = `${APP_URLS.opComm}ddltype=${operator}`;
-      const response = await get({ url });
+      const response = await get({url:IsDealer?url2:url });
       console.log(url, response)
 
       setOperatorInfoList(response.data);

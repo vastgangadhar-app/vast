@@ -10,6 +10,7 @@ import { RootState } from '../../reduxUtils/store';
 import DateRangePicker from '../../components/DateRange';
 import NoDatafound from '../drawer/svgimgcomponents/Nodatafound';
 import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
+import PDFGenerator from '../../components/Pdf_Print';
 
 const RechargeUtilitisR = () => {
   const { colorConfig } = useSelector((state: RootState) => state.userInfo);
@@ -28,6 +29,7 @@ const RechargeUtilitisR = () => {
   const handlePress = (item) => {
     console.log(item)
     navigation.navigate('RechargeHistory', { ...item });
+    //navigation.navigate('PDFGenerator', { ...item });
   };
 
   const recentTransactions = async (from, to, status) => {
@@ -38,7 +40,7 @@ const RechargeUtilitisR = () => {
       const url = `${APP_URLS.recenttransaction}pageindex=1&pagesize=500&retailerid=${userId}&fromdate=${formattedFrom}&todate=${formattedTo}&role=Retailer&rechargeNo=ALL&status=${status}&OperatorName=ALL&portno=ALL`;
 
       const response = await get({ url });
-      console.log(url,'++++++++++url')
+      console.log(url, '++++++++++url')
       setTransactions(response);
     } catch (error) {
       console.error(error);
@@ -71,9 +73,14 @@ const RechargeUtilitisR = () => {
       </View>
       <View style={styles.rightcoloum}>
         <Text style={styles.number}>₹ {item.Recharge_amount}</Text>
-        <Text style={[styles.successtext, { color: item.Status === 'FAILED' ? 'red' : item.Status === 'SUCCESS' ? "green" : '#d9a20b' }]}>
+        <Text style={[styles.successtext, {
+          color: item.Status === 'FAILED' ? 'red' :
+            item.Status === 'SUCCESS' ? 'green' :
+              item.Status.startsWith('R') ? 'blue' : '#d9a20b'
+        }]}>
           {item.Status}
         </Text>
+
       </View>
     </TouchableOpacity>
   ), [colorConfig.secondaryColor]);
@@ -90,7 +97,14 @@ const RechargeUtilitisR = () => {
           recentTransactions(from, to, status); // Pass status here
         }}
         status={selectedStatus} // Pass the current status
-        setStatus={setSelectedStatus} // Pass the function to update status
+        setStatus={setSelectedStatus}
+        isStShow={true}
+
+        isshowRetailer={false}
+        retailerID={(id) => { console.log(id) }}
+
+
+      // Pass the function to update status
       />
 
       <View style={styles.container}>
@@ -107,7 +121,8 @@ const RechargeUtilitisR = () => {
           />
         )}
       </View>
-    </View>
+       
+        </View>
   );
 };
 

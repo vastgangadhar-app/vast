@@ -18,7 +18,6 @@ import useAxiosHook from '../../utils/network/AxiosClient';
 import { BottomSheet, Card } from '@rneui/base';
 import { translate } from '../../utils/languageUtils/I18n';
 import { encrypt } from '../../utils/encryptionUtils';
-import { useLocationHook } from '../../utils/hooks/useLocationHook';
 import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
@@ -32,8 +31,9 @@ import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
 import { useNavigation } from '@react-navigation/native';
 import OnelineDropdownSvg from '../drawer/svgimgcomponents/simpledropdown';
 import RecentText from '../../components/RecentText';
+import { useLocationHook } from '../../hooks/useLocationHook';
 
-const CabelTvScreen = () => {
+const CableTvScreen = () => {
   const { get, post } = useAxiosHook();
   const [textInput1, setTextInput1] = useState('');
   const [consumerNo, setconsumerNo] = useState(translate(''));
@@ -236,7 +236,7 @@ const CabelTvScreen = () => {
 
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
-  const { userId } = useSelector((state: RootState) => state.userInfo);
+  const { userId ,Loc_Data } = useSelector((state: RootState) => state.userInfo);
   const { latitude, longitude } = useLocationHook();
   const readLatLongFromStorage = async () => {
     try {
@@ -258,7 +258,7 @@ const CabelTvScreen = () => {
 
   const onRechargePress = useCallback(async () => {
     setShowLoader(true);
-const loc = await readLatLongFromStorage();
+;
     const mobileNetwork = await getNetworkCarrier();
     const ip = await getMobileIp();
     const encryption = await encrypt([
@@ -266,8 +266,8 @@ const loc = await readLatLongFromStorage();
       consumerNo,
       optcode,
       amount,
-      loc?.latitude,
-      loc?.longitude,
+      Loc_Data['latitude'],Loc_Data['longitude'],
+
       'city',
       'address',
       'postcode',
@@ -329,7 +329,12 @@ const loc = await readLatLongFromStorage();
       });
       console.log(res);
       console.log(status);
+      if(res.status ==='False'){
+        alert(res.message);
+        setShowLoader(false);
 
+        return
+      }
       status = res.Response;
       Message = res.Message;
       await recenttransactions();
@@ -346,14 +351,15 @@ const loc = await readLatLongFromStorage();
     setShowLoader(false);
 
     navigation.navigate('Rechargedetails', {
-      mobileNumber: consumerNo,
-      Amount: amount,
-      operator: selectedOpt,
-      status,
-      reqId,
-      reqTime,
-      Message
+      mobileNumber: consumerNo ?? '',        // Default to empty string if consumerNo is null or undefined
+      Amount: amount ?? 0,                   // Default to 0 if amount is null or undefined
+      operator: selectedOpt ?? 'N/A',        // Default to 'N/A' if selectedOpt is null or undefined
+      status: status ?? 'Unknown',           // Default to 'Unknown' if status is null or undefined
+      reqId: reqId ?? '',                    // Default to empty string if reqId is null or undefined
+      reqTime: reqTime ?? new Date().toISOString(),  // Default to current time if reqTime is null or undefined
+      Message: Message ?? 'No message available'  // Default to 'No message available' if Message is null or undefined
     });
+    
 
   }, [
     amount,
@@ -491,7 +497,7 @@ const loc = await readLatLongFromStorage();
         )}
         <View>
 
-          <FlotingInput label={paramname} value={consumerNo} keyboardType="numeric"
+          <FlotingInput label={paramname} value={consumerNo} 
             
             onChangeTextCallback={text => {
               setconsumerNo(text); setconsumerNo(text.replace(/\D/g, ""));
@@ -524,7 +530,9 @@ const loc = await readLatLongFromStorage();
           </View>
         </View>
 
-        <FlotingInput label={'Enter Amount'} value={amount} onChangeTextCallback={text => setAmount(text)}
+        <FlotingInput label={'Enter Amount'}
+             maxLength={5}
+              value={amount} onChangeTextCallback={text => setAmount(text)}
           keyboardType="numeric" />
         <DynamicButton title={'Next'} onPress={() => {
           validateFields();
@@ -629,4 +637,4 @@ const styles = StyleSheet.create({
     paddingVertical: hScale(10),
   },
 });
-export default CabelTvScreen;
+export default CableTvScreen;

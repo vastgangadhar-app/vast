@@ -30,7 +30,7 @@ const RegisterVM30 = ({ route }) => {
       const data = JSON.stringify({
         DeviceSnNo: serialno,
       });
-      const res = await post({ url: 'MICROATM/api/data/SubmitSnNo', data: data });
+      const res = await post({ url: `MICROATM/api/data/SubmitSnNo?DeviceSnNo=${serialno}` });
 
       const { status, msg } = res;
 
@@ -41,7 +41,8 @@ const RegisterVM30 = ({ route }) => {
           [
             {
               text: 'OK',
-              onPress: () => navigation.replace('Dashboard'),
+              onPress: () =>   navigation.goBack()
+              
             },
           ],
           { cancelable: false }

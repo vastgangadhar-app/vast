@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
-    height: SCREEN_HEIGHT / 1.2
+    // height: SCREEN_HEIGHT / 1.2
   },
   header: {
     alignSelf: 'center',
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: wScale(1),
     width: '80%',
     alignItems: 'center',
-    paddingTop: hScale(20),
+    paddingTop: hScale(15),
   },
   headerText: {
     fontSize: wScale(22),
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     color: '#000'
   },
   detailsContainer: {
-    marginTop: hScale(30),
+    marginTop: hScale(20),
     borderRadius: 10,
     paddingHorizontal: wScale(20),
     paddingBottom: hScale(20),
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     color: '#000'
   },
   value: {
-    fontSize: wScale(40),
+    fontSize: wScale(35),
     fontWeight: 'bold',
     color: '#000'
   },
@@ -116,8 +116,8 @@ const styles = StyleSheet.create({
     color: '#000'
   },
   lotiimg2: {
-    height: hScale(80),
-    width: wScale(80),
+    height: hScale(70),
+    width: wScale(70),
     marginRight: wScale(-2)
   },
 

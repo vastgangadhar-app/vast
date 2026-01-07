@@ -342,7 +342,7 @@ function App() {
         <PersistGate loading={null} persistor={persistor}>
 
           <NavigationContainer onReady={() => {
-            setTimeout(() => BootSplash.hide(), 100);
+            setTimeout(() => BootSplash.hide(), 50);
           }}>
             <AppContainer />
           </NavigationContainer>

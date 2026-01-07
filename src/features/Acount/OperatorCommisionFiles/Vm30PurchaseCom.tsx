@@ -4,8 +4,12 @@ import useAxiosHook from '../../../utils/network/AxiosClient';
 import { APP_URLS } from '../../../utils/network/urls';
 import NoDatafound from '../../drawer/svgimgcomponents/Nodatafound';
 import { hScale, wScale } from '../../../utils/styles/dimensions';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../reduxUtils/store';
 
 const Vm30PurchaseCom = () => {
+  const { colorConfig, IsDealer } = useSelector((state: RootState) => state.userInfo);
+
   const { get } = useAxiosHook();
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,9 +17,10 @@ const Vm30PurchaseCom = () => {
   useEffect(() => {
     const fetchCommissionData = async () => {
       try {
+        const url2 = `${APP_URLS.dealeropcomn}ddltype=VM30PURCHASE`;
         const url = `${APP_URLS.opComm}ddltype=VM30PURCHASE`;
-        const response = await get({ url });
-
+        const response = await get({ url :IsDealer?url2:url});
+console.log(IsDealer?url2:url,response)
         if (response && Array.isArray(response) && response.length > 0) {
           setList(response);
         } else {
@@ -54,13 +59,13 @@ const Vm30PurchaseCom = () => {
           <View style={styles.rangeRow}>
             <View>
               <Text style={styles.rangeLabel}>Min Value</Text>
-              <Text style={styles.rangeValue}>{`\u{20B9} ${item.minvalue}`}</Text>
+              <Text style={styles.rangeValue}>{`\u{20B9} ${item.minvalue?item.minvalue:'N/A'}`}</Text>
             </View>
             <View style={styles.divider} />
 
             <View>
               <Text style={styles.rangeLabel}>Max Value</Text>
-              <Text style={styles.rangeValue}>{`\u{20B9} ${item.maxvalue}`}</Text>
+              <Text style={styles.rangeValue}>{`\u{20B9} ${item.maxvalue?item.maxvalue:'N/A'}`}</Text>
             </View>
 
           </View>

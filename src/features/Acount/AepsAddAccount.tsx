@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react"
-import { TouchableOpacity, View, Text, StyleSheet, ScrollView, Alert, Image, AsyncStorage, PermissionsAndroid, Keyboard } from "react-native"
+import { TouchableOpacity, View, Text, StyleSheet, ScrollView, Alert, Image, AsyncStorage, PermissionsAndroid, Keyboard, ToastAndroid } from "react-native"
 import useAxiosHook from "../../utils/network/AxiosClient";
 import { APP_URLS } from "../../utils/network/urls";
 import { hScale, SCREEN_HEIGHT, SCREEN_WIDTH, wScale } from "../../utils/styles/dimensions";
@@ -7,7 +7,6 @@ import FlotingInput from "../drawer/securityPages/FlotingInput";
 import BankBottomSite from "../../components/BankBottomSite";
 import OnelineDropdownSvg from "../drawer/svgimgcomponents/simpledropdown";
 import { useDeviceInfoHook } from "../../utils/hooks/useDeviceInfoHook";
-import { useLocationHook } from "../../utils/hooks/useLocationHook";
 import { useSelector } from "react-redux";
 import DynamicButton from "../drawer/button/DynamicButton";
 import { ALERT_TYPE, Dialog } from "react-native-alert-notification";
@@ -21,6 +20,7 @@ import CloseSvg from "../drawer/svgimgcomponents/CloseSvg";
 import { BottomSheet } from "@rneui/themed";
 import ClosseModalSvg2 from "../drawer/svgimgcomponents/ClosseModal2";
 import OTPModal from "../../components/OTPModal";
+import { useLocationHook } from "../../hooks/useLocationHook";
 
 const AepsAddAccount = () => {
     const { colorConfig } = useSelector((state: RootState) => state.userInfo);
@@ -45,183 +45,161 @@ const AepsAddAccount = () => {
     const [isLoading, setisLoading] = useState(false);
     const [isotp, setIsOtp] = useState(false);
     const [otp, setOtp] = useState('');
-
+const {latitude,longitude} = useLocationHook()
     const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
         useDeviceInfoHook();
     const { userId } = useSelector((state: RootState) => state.userInfo);
-    const readLatLongFromStorage = async () => {
-        try {
-            const locationData = await AsyncStorage.getItem('locationData');
+ 
+    // const UpdateRetailerBank = async (id) => {
+    //     setisLoading(true);
 
-            if (locationData !== null) {
-                const { latitude, longitude } = JSON.parse(locationData);
-                console.log('Latitude:', latitude, 'Longitude:', longitude);
-                return { latitude, longitude };
-            } else {
-                console.log('No location data found');
-                return null;
-            }
-        } catch (error) {
-            console.error('Failed to read location data from AsyncStorage:', error);
-            return null;
-        }
-    };
-    const UpdateRetailerBank = async (id) => {
-        setisLoading(true);
+    //     const loc = await readLatLongFromStorage();
+    //     const ip = await getMobileIp();
+    //     const Model = await getMobileDeviceId();
+    //     const net = await getNetworkCarrier();
 
-        const loc = await readLatLongFromStorage();
-        const ip = await getMobileIp();
-        const Model = await getMobileDeviceId();
-        const net = await getNetworkCarrier();
+    //     const data = JSON.stringify({
+    //         txtid3: id,
+    //         txtaccholder: name,
+    //         txtbankaccountno: acnNumber,
+    //         txtifsc: ifsccode,
+    //         txtbankname: bank,
+    //         txtbranchaddress: branch,
+    //         IP: ip,
+    //         Latitude: loc?.latitude,
+    //         Longitude: loc?.longitude,
+    //         ModelNo: Model,
+    //         City: city,
+    //         PostalCode: Pincod,
+    //         InternetTYPE: net,
+    //         Address: Addresss,
+    //     });
 
-        const data = JSON.stringify({
-            txtid3: id,
-            txtaccholder: name,
-            txtbankaccountno: acnNumber,
-            txtifsc: ifsccode,
-            txtbankname: bank,
-            txtbranchaddress: branch,
-            IP: ip,
-            Latitude: loc?.latitude,
-            Longitude: loc?.longitude,
-            ModelNo: Model,
-            City: city,
-            PostalCode: Pincod,
-            InternetTYPE: net,
-            Address: Addresss,
-        });
+    //     console.log("Request Data Being Sent:", data);
 
-        console.log("Request Data Being Sent:", data);
+    //     try {
+    //         const url = `${APP_URLS.UpdateRetailerBank}`;
+    //         const response = await post({
+    //             url: url,
+    //             data: {
+    //                 txtid3: id,
+    //                 txtaccholder: name,
+    //                 txtbankaccountno: acnNumber,
+    //                 txtifsc: ifsccode,
+    //                 txtbankname: bank,
+    //                 txtbranchaddress: branch,
+    //                 IP: ip,
+    //                 Latitude: loc?.latitude,
+    //                 Longitude: loc?.longitude,
+    //                 ModelNo: Model,
+    //                 City: city,
+    //                 PostalCode: Pincod,
+    //                 InternetTYPE: net,
+    //                 Address: Addresss,
+    //             },
+    //         });
 
-        try {
-            const url = `${APP_URLS.UpdateRetailerBank}`;
-            const response = await post({
-                url: url,
-                data: {
-                    txtid3: id,
-                    txtaccholder: name,
-                    txtbankaccountno: acnNumber,
-                    txtifsc: ifsccode,
-                    txtbankname: bank,
-                    txtbranchaddress: branch,
-                    IP: ip,
-                    Latitude: loc?.latitude,
-                    Longitude: loc?.longitude,
-                    ModelNo: Model,
-                    City: city,
-                    PostalCode: Pincod,
-                    InternetTYPE: net,
-                    Address: Addresss,
-                },
-            });
-
-            console.log("Response Received:", response);
+    //         console.log("Response Received:", response);
 
 
-            const sts = response.Response;
-            setidno(idno);
-            setisLoading(false);
-            setLoading(false);
-            if (sts === 'Success') {
-                const idno = response.idno.toString();
-                setidno(idno);
-                Alert.alert(
-                    '',
-                    `${response.Message} \n Select the option for Upload Cancel Check Photo`,
-                    [
-                        {
-                            text: 'Camera',
-                            onPress: async () => {
-                                await launchCamera({ mediaType: 'photo', includeBase64: true, quality: 0.5 }, (response) => {
-                                    ; setbase64Img(response?.assets?.[0]?.base64);
-                                    // uploadDoCx(response?.assets?.[0]?.base64,response.idno);
-                                    //setisLoading(true)
-                                });
+    //         const sts = response.Response;
+    //         setidno(idno);
+    //         setisLoading(false);
+    //         setLoading(false);
+    //         if (sts === 'Success') {
+    //             const idno = response.idno.toString();
+    //             setidno(idno);
+    //             Alert.alert(
+    //                 '',
+    //                 `${response.Message} \n Select the option for Upload Cancel Check Photo`,
+    //                 [
+    //                     {
+    //                         text: 'Camera',
+    //                         onPress: async () => {
+    //                             await launchCamera({ mediaType: 'photo', includeBase64: true, quality: 0.5 }, (response) => {
+    //                                 ; setbase64Img(response?.assets?.[0]?.base64);
+    //                                 // uploadDoCx(response?.assets?.[0]?.base64,response.idno);
+    //                                 //setisLoading(true)
+    //                             });
 
-                            },
-                            style: 'default',
-                        },
-                        {
-                            text: 'Gallery',
-                            onPress: async () => {
-                                await launchImageLibrary({ selectionLimit: 1, mediaType: 'photo', includeBase64: true }, (response) => {
+    //                         },
+    //                         style: 'default',
+    //                     },
+    //                     {
+    //                         text: 'Gallery',
+    //                         onPress: async () => {
+    //                             await launchImageLibrary({ selectionLimit: 1, mediaType: 'photo', includeBase64: true }, (response) => {
 
-                                    setbase64Img(response?.assets?.[0]?.base64);
-                                    // uploadDoCx(response?.assets?.[0]?.base64,response.idno);
-                                });
+    //                                 setbase64Img(response?.assets?.[0]?.base64);
+    //                                 // uploadDoCx(response?.assets?.[0]?.base64,response.idno);
+    //                             });
 
-                            },
-                        },
-                        {
-                            text: "Cancel",
-                            onPress: () => {
-                                console.log("Cancel button clicked");
-                            },
-                            style: "cancel"
-                        }
-                    ]
-                );
-            } else {
-                Alert.alert(`${response.Message}`);
-            }
-        } catch (error) {
-            console.error("Error during UpdateRetailerBank request:", error);
+    //                         },
+    //                     },
+    //                     {
+    //                         text: "Cancel",
+    //                         onPress: () => {
+    //                             console.log("Cancel button clicked");
+    //                         },
+    //                         style: "cancel"
+    //                     }
+    //                 ]
+    //             );
+    //         } else {
+    //             Alert.alert(`${response.Message}`);
+    //         }
+    //     } catch (error) {
+    //         console.error("Error during UpdateRetailerBank request:", error);
 
-            // Enhanced error handling for user notification
-            const errorMessage = error?.response?.data?.message || "An error occurred while updating the retailer's bank details.";
+    //         // Enhanced error handling for user notification
+    //         const errorMessage = error?.response?.data?.message || "An error occurred while updating the retailer's bank details.";
 
-            // Show a user-friendly error message along with error details for debugging
-            Alert.alert("Error", `${errorMessage}\n\nDetails: ${error?.message || error?.toString()}`);
-        } finally {
-            setLoading(false);
-        }
-    };
+    //         // Show a user-friendly error message along with error details for debugging
+    //         Alert.alert("Error", `${errorMessage}\n\nDetails: ${error?.message || error?.toString()}`);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
-    const test = async () => {
-        await launchImageLibrary({ selectionLimit: 1, mediaType: 'photo', includeBase64: true }, (response) => {
-
-            setbase64Img(response?.assets?.[0]?.base64);
-            uploadDoCx(response?.assets?.[0]?.base64, '')
-
-        });
-
-    }
 
     const uploadDoCx = async (bs64, idno) => {
         setisLoading(true);
-
+    
         const data = {
             cancelledcheque: bs64,
             cancellchecque_idno: idno,
             currentrole: 'Retailer',
         };
-
+    
         const body = JSON.stringify(data);
-
+    
         console.log('Request Body:', body);
-
+    
         try {
-            const response = await fetch(`https://${APP_URLS.baseWebUrl}/api/user/Uploadcancelledcheque`, {
+            const response = await fetch(`http://${APP_URLS.baseWebUrl}/api/user/Uploadcancelledcheque`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'Authorization': 'Bearer ',
+                    'Authorization': 'Bearer YOUR_ACCESS_TOKEN', // Replace with actual token
                 },
                 body: body,
             });
-
+    
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-
+    
             const responseData = await response.json();
             console.log('Response Data:', responseData);
-
-            const { Message: status, data: responseDataContent } = responseData;
-
+    
+            // Check if responseData has the expected structure
+            const { Message: status, data: responseDataContent } = responseData || {};
+    
+            // Set loading state to false after processing
             setisLoading(false);
-
+    
+            // Handle success or error based on status message
             if (status === 'Image Updated Successfully.') {
                 Alert.alert(
                     'Success',
@@ -235,11 +213,11 @@ const AepsAddAccount = () => {
                     [{ text: 'OK' }]
                 );
             }
-
+    
         } catch (error) {
             console.error('Error during request:', error);
             setisLoading(false);
-
+    
             Alert.alert(
                 'Error',
                 `Failed to upload the image: ${error.message}`,
@@ -247,7 +225,7 @@ const AepsAddAccount = () => {
             );
         }
     };
-
+    
 
     useEffect(() => {
 
@@ -274,7 +252,7 @@ const AepsAddAccount = () => {
         };
 
         fetchBankAccounts();
-        requestCameraPermission();
+        //requestCameraPermission();
     }, []);
 
     const fetchBanks = async () => {
@@ -328,7 +306,7 @@ const AepsAddAccount = () => {
 
     const sendotp = async () => {
         Keyboard.dismiss();
-
+        setisLoading(true)
         if (Addresss == '') {
             return;
         }
@@ -339,6 +317,7 @@ const AepsAddAccount = () => {
             console.log(res, 'res+++++');
             if (res.Status) {
                 setIsOtp(true)
+                setisLoading(false)
             } else {
                 alert(res.Message)
             }
@@ -349,6 +328,7 @@ const AepsAddAccount = () => {
     }
 
     const submitOtp = async (otp) => {
+        setisLoading(true)
         try {
             const data = {
                 "BankName": bank,
@@ -362,7 +342,59 @@ const AepsAddAccount = () => {
             console.log(url, 'otpurl')
             const res = await post({ url, data });
             console.log(res, 'otpres');
+            // {"Message": "Otp Miss Match!.", "Status": false}
 
+
+            if(res){
+                if (res && res.Message === "Otp Miss Match!." && res.Status === false) {
+                    ToastAndroid.show('OTP Miss Match!', ToastAndroid.LONG); 
+
+                }else{
+                    setIsOtp(false)
+                    setAdd(false)
+//  Alert.alert(
+//                     '',
+//                     `${res.Message} \n Select the option for Upload Cancel Check Photo`,
+//                     [
+//                         {
+//                             text: 'Camera',
+//                             onPress: async () => {
+//                                 await launchCamera({ mediaType: 'photo', includeBase64: true, quality: 0.5 }, (response) => {
+//                                     ; setbase64Img(response?.assets?.[0]?.base64);
+//                                      uploadDoCx(response?.assets?.[0]?.base64,res.idno);
+//                                     //setisLoading(true)
+//                                 });
+
+//                             },
+//                             style: 'default',
+//                         },
+//                         {
+//                             text: 'Gallery',
+//                             onPress: async () => {
+//                                 await launchImageLibrary({ selectionLimit: 1, mediaType: 'photo', includeBase64: true }, (response) => {
+
+//                                     setbase64Img(response?.assets?.[0]?.base64);
+//                                      uploadDoCx(response?.assets?.[0]?.base64,res.idno);
+//                                 });
+
+//                             },
+//                         },
+//                         {
+//                             text: "Cancel",
+//                             onPress: () => {
+//                                 console.log("Cancel button clicked");
+//                             },
+//                             style: "cancel"
+//                         }
+//                     ]
+//                 );
+
+
+                    ToastAndroid.show(res.Message, ToastAndroid.LONG); 
+
+                }
+            }
+            setisLoading(false)
         }
         catch {
             console.error();
@@ -388,6 +420,8 @@ const AepsAddAccount = () => {
                                 <ClosseModalSvg2 />
                             </TouchableOpacity>
                         </View>
+                        {isLoading && <ShowLoader />}
+
                         <View style={{ paddingHorizontal: wScale(10) }}>
                             <TouchableOpacity onPress={() => setIsBank(true)}>
                                 <FlotingInput
@@ -434,8 +468,13 @@ const AepsAddAccount = () => {
                                 isbank={isBank}
                                 setisbank={setIsBank}
                                 setBankName={setBank}
-                                bankdata={banklist}
-                            />
+                                bankdata={banklist} 
+                                
+                                onPress1={(onPress1)=>{
+
+                                }} setisFacialTan={(setisFacialTan)=>{
+
+                                }}                            />
 
                             <DynamicButton title={'Submit Detail'}
                                 onPress={() => {
@@ -446,6 +485,7 @@ const AepsAddAccount = () => {
                     </View>
 
                 </BottomSheet>
+
                 <View style={[styles.container, { backgroundColor: color1 }]} >
                     <DynamicButton title={'Add For Aeps A/c'}
                         onPress={() => setAdd(!add)}
@@ -529,7 +569,6 @@ const AepsAddAccount = () => {
                     }}
                     disabled={otp.length !== 4}
                 />
-                {isLoading && <ShowLoader />}
             </ScrollView>
 
         </View>

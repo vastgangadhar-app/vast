@@ -32,8 +32,9 @@ const ToWallet = ({ route}) => {
     const { post, get } = useAxiosHook();
     const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
         useDeviceInfoHook();
-        const { latitude, longitude } = useLocationHook();
-        const { userId } = useSelector((state: RootState) => state.userInfo);
+        const { userId ,Loc_Data} = useSelector((state: RootState) => state.userInfo);
+
+        const { latitude, longitude } = Loc_Data;;
 
     useEffect(() => {console.log(route)
         

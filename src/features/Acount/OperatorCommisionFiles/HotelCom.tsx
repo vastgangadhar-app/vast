@@ -2,17 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { APP_URLS } from '../../../utils/network/urls';
 import useAxiosHook from '../../../utils/network/AxiosClient';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../reduxUtils/store';
 
 const HotelCom = () => {
+  const { colorConfig, IsDealer } = useSelector((state: RootState) => state.userInfo);
+
   const { get } = useAxiosHook();
   const [data, setData] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const url2 = `${APP_URLS.dealeropcomn}ddltype=HOTEL`;
         const url = `${APP_URLS.opComm}ddltype=HOTEL`;
-        const response = await get({ url });
 
+        const response = await get({ url: IsDealer ? url2 : url });
+console.log(IsDealer ? url2 : url)
         if (response && Array.isArray(response) && response.length > 0) {
           setData(response);
         } else {
@@ -26,8 +32,15 @@ const HotelCom = () => {
     fetchData();
   }, [get]);
 
-  // Function to handle null values
-  const handleNullValue = (value) => (value === null ? '0.00' : value.toFixed(2));
+  // Function to handle null or invalid values
+  const handleNullValue = (value) => {
+    // Check if the value is a valid number
+    if (value === null || isNaN(value)) {
+      return '0.00';
+    }
+    // Return the value with two decimal places
+    return value.toFixed(2);
+  };
 
   return (
     <View style={styles.container}>

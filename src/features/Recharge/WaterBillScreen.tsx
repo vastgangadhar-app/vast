@@ -9,13 +9,13 @@ import {
   FlatList,
   ActivityIndicator,
   AsyncStorage,
+  Alert,
 } from 'react-native';
 import { translate } from '../../utils/languageUtils/I18n';
 import { APP_URLS } from '../../utils/network/urls';
 import { colors } from '../../utils/styles/theme';
 import useAxiosHook from '../../utils/network/AxiosClient';
 import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
-import { useLocationHook } from '../../utils/hooks/useLocationHook';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
 import { encrypt } from '../../utils/encryptionUtils';
@@ -29,6 +29,7 @@ import RecentHistory from '../../components/RecentHistoryBottomSheet';
 import { useNavigation } from '@react-navigation/native';
 import ShowLoader from '../../components/ShowLoder';
 import RecentText from '../../components/RecentText';
+import { useLocationHook } from '../../hooks/useLocationHook';
 
 const WaterBillScreen = () => {
   const { get, post } = useAxiosHook();
@@ -138,7 +139,7 @@ const WaterBillScreen = () => {
   };
   const onRechargePress = useCallback(async () => {
 
-    const loc = await readLatLongFromStorage()
+    
     setShowLoader(true)
     setProceedSheetVisible(false);
 
@@ -149,8 +150,8 @@ const WaterBillScreen = () => {
       CustomerID,
       optcode,
       amount,
-      loc?.latitude,
-      loc?.longitude,
+      latitude ??'0.000',
+      longitude??'0.111',
       'city',
       'address',
       'postcode',
@@ -181,6 +182,10 @@ const WaterBillScreen = () => {
     const value2 = encodeURIComponent(encryption.ivEncode);
 
     const url = `${APP_URLS.rechTask}rd=${rd}&n=${n1}&ok=${ok1}&amn=${amn}&pc=${agencyCode}&bu=${agencyCode}&acno&lt&ip=${ip1}&mc&em=${em}&offerprice&commAmount&Devicetoken=${devtoken}&Latitude=${Latitude}&Longitude=${Longitude}&ModelNo=${ModelNo}&City=${City}&PostalCode=${PostalCode}&InternetTYPE=${InternetTYPE}&Addresss=${Addresss}&value1=${value1}&value2=${value2}`;
+    
+    console.log("^^^^^^^^^^^^^^^^",url)
+    
+    
     let status, Message;
     try {
       const res = await post({
@@ -188,7 +193,12 @@ const WaterBillScreen = () => {
       });
       console.log(res);
       console.log(status);
+      if(res.status ==='False'){
+        alert(res.message);
+        setShowLoader(false);
 
+        return
+      }
       status = res.Response;
       Message = res.Message;
       await recenttransactions();
@@ -205,14 +215,15 @@ const WaterBillScreen = () => {
     setShowLoader(false);
 
     navigation.navigate('Rechargedetails', {
-      mobileNumber: CustomerID,
-      Amount: amount,
-      operator: FastagOpt,
-      status,
-      reqId,
-      reqTime,
-      Message
+      mobileNumber: CustomerID || '',
+      Amount: amount || 0,
+      operator: FastagOpt || 'N/A',
+      status: status || 'Unknown',
+      reqId: reqId || '',
+      reqTime: reqTime || new Date().toISOString(),
+      Message: Message || 'No message available'
     });
+    
 
   }, [
     amount,
@@ -258,69 +269,105 @@ const WaterBillScreen = () => {
   //     console.error(error);
   //   }
   // }
-  async function billInfo() {
-    try {
-      const token = await APP_URLS.getToken;
-      if (!token) {
-        console.error('No token found');
-        return { result: '0' }; // Indicate failure
+  // async function billInfo() {
+  //   try {
+  //     const token = await APP_URLS.getToken;
+  //     if (!token) {
+  //       console.error('No token found');
+  //       return { result: '0' }; // Indicate failure
+  //     }
+
+  //     const config = {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     };
+
+  //     const url = `${APP_URLS.rechargeViewBill}billnumber=${encodeURIComponent(CustomerID)}&Operator=${encodeURIComponent(optcode)}&billunit=&ProcessingCycle=''&acno=''&lt=""&ViewBill="Y"`;
+  //     console.log('Request URL:', url);
+
+  //     const res = await post({ url: url, config });
+  //     console.log('API Response:', res);
+
+  //     const result = res.data['RESULT'];
+  //     if (result === '1') {
+  //       const resp = res.data['ADDINFO'];
+  //       const billinfo = resp['BillInfo'];
+  //       setDueDate(billinfo['billDueDate']);
+  //       setAmount(billinfo['billAmount']);
+  //       setCustomerName(billinfo['customerName']);
+  //       setCustBal(billinfo['balance']);
+  //       setStatus(billinfo['customerStatus']);
+
+  //       console.log('Bill Info:', {
+  //         CustomerID,
+  //         dueDate: billinfo['billDueDate'],
+  //         amount: billinfo['billAmount'],
+  //         custBal: billinfo['balance1234567890-/*-/*-/*--+/*-/*-/*-/*-/*-/*-'],
+  //       });
+  //       return { result, billinfo };
+  //     } else {
+  //       console.error('Error fetching bill info:', res.data['MESSAGE']);
+  //       return { result: '1' }; // Indicate failure
+  //     }
+  //   } catch (error) {
+  //     console.error('Error in billInfo function:', error);
+  //     return { result: '1' }; // Indicate failure
+  //   }
+  // }
+
+const billInfo = useCallback(async () => {
+  try {
+    setShowLoader2(true);
+
+    const url = `${APP_URLS.rechargeViewBill}billnumber=${CustomerID}&Operator=${optcode}&billunit&ProcessingCycle&acno&lt&ViewBill=Y`;
+
+    console.log("🔗 BillInfo URL:", url);
+
+    const res = await get({ url });
+
+    console.log("📥 BillInfo Response:", res);
+
+    if (res?.RESULT === 0) {
+      const billInfo = res?.ADDINFO?.BillInfo;
+
+      if (billInfo) {
+        setDueDate(billInfo.billDueDate || "");
+        setAmount(billInfo.billAmount || "");
+        setCustomerName(billInfo.customerName || "");
+        setCustBal(billInfo.balance || "");
       }
+     // setLandLineOPSheet(true)
+       setProceedSheetVisible(true);
 
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
-      const url = `${APP_URLS.rechargeViewBill}billnumber=${encodeURIComponent(CustomerID)}&Operator=${encodeURIComponent(optcode)}&billunit=&ProcessingCycle=''&acno=''&lt=""&ViewBill="Y"`;
-      console.log('Request URL:', url);
-
-      const res = await post({ url: url, config });
-      console.log('API Response:', res);
-
-      const result = res.data['RESULT'];
-      if (result === '1') {
-        const resp = res.data['ADDINFO'];
-        const billinfo = resp['BillInfo'];
-        setDueDate(billinfo['billDueDate']);
-        setAmount(billinfo['billAmount']);
-        setCustomerName(billinfo['customerName']);
-        setCustBal(billinfo['balance']);
-        setStatus(billinfo['customerStatus']);
-
-        console.log('Bill Info:', {
-          CustomerID,
-          dueDate: billinfo['billDueDate'],
-          amount: billinfo['billAmount'],
-          custBal: billinfo['balance1234567890-/*-/*-/*--+/*-/*-/*-/*-/*-/*-'],
-        });
-        return { result, billinfo };
-      } else {
-        console.error('Error fetching bill info:', res.data['MESSAGE']);
-        return { result: '1' }; // Indicate failure
-      }
-    } catch (error) {
-      console.error('Error in billInfo function:', error);
-      return { result: '1' }; // Indicate failure
+    } else {
+      Alert.alert(
+        res?.ADDINFO || "Error",
+        res?.Message || "Something went wrong",
+        [{ text: "OK" }]
+      );
     }
+  } catch (error) {
+    console.log("❌ Bill Info Error:", error);
+    Alert.alert("Error", "Unable to fetch bill details");
+  } finally {
+    setShowLoader2(false);
   }
-
+}, [CustomerID, optcode]);
 
   const handlePayPress = async () => {
     if (FastagOpt === 'Select Your Operator') {
       ToastAndroid.show('Please Select an Operator', ToastAndroid.SHORT);
     } else if (!CustomerID) {
       ToastAndroid.showWithGravity(`Please Enter ${paramname}`, ToastAndroid.SHORT, ToastAndroid.BOTTOM);
-    } else if (!amount || amount === 'Enter Amount' || amount === '0' || parseFloat(amount) <= 0) {
-      ToastAndroid.showWithGravity('Please Enter the Recharge Amount', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
-    } else {
-      const billResult = await billInfo();
-      if (billResult.result === '1') {
-        setProceedSheetVisible(true);
-      } else {
-        // Handle the case where the result is not '0'
-        ToastAndroid.show('Failed to fetch bill information', ToastAndroid.SHORT);
-      }
+    } else  {
+     billInfo();
+      // if (billResult.result === '1') {
+      //   setProceedSheetVisible(true);
+      // } else {
+      //   // Handle the case where the result is not '0'
+      //   ToastAndroid.show('Failed to fetch bill information', ToastAndroid.SHORT);
+      // }
     }
   };
 
@@ -482,10 +529,10 @@ const WaterBillScreen = () => {
         )}
 
         <View>
-          <FlotingInput label={paramname} value={CustomerID} keyboardType="numeric"
+          <FlotingInput label={paramname} value={CustomerID} 
             
             onChangeTextCallback={text => {
-              handleTextChange(text); setCustomerID(text.replace(/\D/g, ""));
+              handleTextChange(text); 
               if (text.length >= 5) {
                 setIsInfo(true)
               } else {
@@ -497,7 +544,7 @@ const WaterBillScreen = () => {
               <TouchableOpacity
                 style={styles.infobtn}
 
-                onPress={handlePayPress}
+                onPress={()=>handlePayPress()}
               >
                 {
                   showLoader2 ? <ActivityIndicator size={'large'} /> : <Text style={[styles.infobtntex,]}>Info</Text>
@@ -509,12 +556,14 @@ const WaterBillScreen = () => {
          
         </View>
         
-        <FlotingInput label={'Enter Amount'} value={amount} keyboardType="numeric"
+        <FlotingInput label={'Enter Amount'}
+             maxLength={5}
+              value={amount} keyboardType="numeric"
           onChangeTextCallback={text => {
             setAmount(text); setAmount(text.replace(/\D/g, ""));
           }} />
 
-        <DynamicButton title={'Next'} onPress={() => { handlePayPress() }} />
+        <DynamicButton title={'Next'} onPress={() => { handlePayPress(); } } styleoveride={undefined} />
         <View >
           <RecentHistory
             isModalVisible={isrecent}

@@ -59,12 +59,14 @@ const RecentHistory = ({
                   <Text style={styles.amountText}>₹ {item['Recharge_amount']}</Text>
                   <Text style={[
                     styles.rechTypeText,
-                    { color: item['Status'] === 'SUCCESS' ? 'green' : item['Status'] === 'FAILED' ? 'red' : 
-                      '#a89b0a' }
+                    {
+                      color: item['Status'] === 'SUCCESS' ? 'green' : item['Status'] === 'FAILED' ? 'red' :
+                        '#a89b0a'
+                    }
                   ]}>
                     {item['Status']}
-                  </Text> 
-                  </View>
+                  </Text>
+                </View>
               </TouchableOpacity>
             );
           }}
@@ -74,7 +76,6 @@ const RecentHistory = ({
     );
   };
   useEffect(() => {
-    console.log(historylistdata, '*/*/')
   })
 
   return (

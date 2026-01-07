@@ -18,7 +18,7 @@ import NoDatafound from '../drawer/svgimgcomponents/Nodatafound';
 import { FlashList } from '@shopify/flash-list';  
 
 const DayLedgerReport = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig ,IsDealer} = useSelector((state: RootState) => state.userInfo);
   const color1 = `${colorConfig.secondaryColor}20`
   const [inforeport, setInforeport] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -36,11 +36,13 @@ const DayLedgerReport = () => {
     try {
       const formattedFrom = new Date(from).toISOString().split('T')[0];
       const formattedTo = new Date(to).toISOString().split('T')[0];
-      const response = await get({ url: `${APP_URLS.dayLedger}from=${formattedFrom}&to=${formattedTo}` });
+
+    const url = `${APP_URLS.DealerLedger}${formattedFrom}`
+      const response = await get({ url: IsDealer?url: `${APP_URLS.dayLedger}from=${formattedFrom}&to=${formattedTo}` });
       if (!response) {
         throw new Error('Network response was not ok');
       }
-      setInforeport(response);
+      setInforeport(IsDealer ?response.Report :response);
       console.log(response, 'resssss');
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -106,6 +108,7 @@ const DayLedgerReport = () => {
         status={selectedStatus}
         setStatus={setSelectedStatus}
         isStShow={false}
+        isshowRetailer={false}
       />
 
       <View style={styles.container}>

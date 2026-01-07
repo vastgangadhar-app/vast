@@ -6,12 +6,14 @@ import { hScale, wScale } from '../../../utils/styles/dimensions';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../reduxUtils/store';
 
-const AppBar = ({ title, actionButton, onActionPress }) => {
+const AppBar = ({ title, actionButton, onActionPress,onPressBack }) => {
   const { colorConfig } = useSelector((state: RootState) => state.userInfo);
 
   const navigation = useNavigation();
-  const handleBack = () => {
-    navigation.goBack();
+   const handleBack = () => {
+    if (onPressBack) {
+      onPressBack();
+    } else { navigation.goBack(); }
   };
   const onPressDeleteUser = () => {
     navigation.navigate('DeletUser');
@@ -59,12 +61,10 @@ const styles = StyleSheet.create({
     height: hScale(42),
     justifyContent: 'center',
     alignItems: 'center',
-    // borderRightWidth: wScale(0.8),
-    // borderColor: 'rgba(25,25,25,0.3)',
+    
   },
   optionalbtn: {
     width: wScale(60),
-    // height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
 

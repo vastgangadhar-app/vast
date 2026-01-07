@@ -1,8 +1,9 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, StyleSheet, ToastAndroid } from 'react-native';
 import useAxiosHook from '../../../utils/network/AxiosClient';
 import { APP_URLS } from '../../../utils/network/urls';
-import { hScale, wScale } from '../../../utils/styles/dimensions';
+import { hScale, SCREEN_HEIGHT, SCREEN_WIDTH, wScale } from '../../../utils/styles/dimensions';
 import { translate } from '../../../utils/languageUtils/I18n';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSelector } from 'react-redux';
@@ -14,11 +15,13 @@ import { SvgXml } from 'react-native-svg';
 import AppBarSecond from '../../drawer/headerAppbar/AppBarSecond';
 import OTPModal from '../../../components/OTPModal';
 import ShowLoader from '../../../components/ShowLoder';
+import { BottomSheet } from '@rneui/base';
+import CloseSvg from '../../drawer/svgimgcomponents/CloseSvg';
 
-const NumberRegisterScreen = ({ route }) => 
-  
-  {
-  const { Name, No, type, CName } = route.params;
+const NumberRegisterScreen = ({
+  Name, No, type, CName,
+  onPress }) => {
+  // const { Name, No, type, CName } = route.params;
 
   const { colorConfig } = useSelector((state: RootState) => state.userInfo)
   const adduser = `
@@ -34,18 +37,20 @@ const NumberRegisterScreen = ({ route }) =>
   const [otpDigits, setOtpDigits] = useState(['', '', '', '']);
   const { post, get } = useAxiosHook();
   const otpRefs = useRef([]);
-const [adharData,setadharData]= useState({});
+  const [adharData, setadharData] = useState({});
   const [remitterid, setRemitterid] = useState('');
 
   const [otpModalVisible, setOtpModalVisible] = useState(false);
   const [mobileOtp, setMobileOtp] = useState('');
-  const [isOtp,setisOtp]= useState(false);
-const [type2,settype2]= useState('')
+  const [isOtp, setisOtp] = useState(false);
+  const [type2, settype2] = useState('')
 
-  const [load , setisload]= useState(false);
+  const [load, setisload] = useState(false);
 
-
-  useEffect(()=>{
+const handlepress=()=>{
+  onPress()
+}
+  useEffect(() => {
     console.log(type)
   })
   const sendOtp = async (num, name) => {
@@ -56,12 +61,13 @@ const [type2,settype2]= useState('')
       //       ? await get({ url: `Money/api/Radiant/RegisterMobileForIMPS?sender_number=${num}&Name=${name}` })
       //       : 
       const res = await post({ url: baseUrl });
-
-if(res.RESULT ==='1'){
-  ToastAndroid.show(res.ADDINFO, ToastAndroid.LONG);
-  setisload(false)
-  return;
-}
+console.log(baseUrl);
+console.log(res);
+      if (res.RESULT === '1') {
+        ToastAndroid.show(res.ADDINFO, ToastAndroid.LONG);
+        setisload(false)
+        return;
+      }
 
       // {"ADDINFO": "Some technical error occured.", "RESULT": "1"}
 
@@ -79,12 +85,15 @@ if(res.RESULT ==='1'){
         setRemitterid(remitter?.id || '');
         console.log('Remitter ID:', remitter?.id);
         console.log('Is Verified:', remitter?.is_verified);
-        ToastAndroid.show('OTP sent successfully. Please check your phone.', ToastAndroid.LONG);
+        ToastAndroid.show(status || 'OTP sent successfully. Please check your phone.', ToastAndroid.LONG);
         setRemitterOtp(false);
         // if (remitter?.is_verified === 0) {
         //   Alert.alert('Verification Pending', 'Your mobile number is not yet verified.', [{ text: 'OK' }]);
         // } else {
         // }
+      } else if (statuscode === 'ERR') {
+        ToastAndroid.show(status, ToastAndroid.LONG);
+
       } else {
         setIsLoading(false);
 
@@ -98,77 +107,80 @@ if(res.RESULT ==='1'){
     }
   };
 
-    const checksendernumber = async (number) => {
-      setRemitterOtp(true);
+  const checksendernumber = async (number) => {
+    setRemitterOtp(true);
+    setisload(true)
+    try {
+      const url = `${APP_URLS.getCheckSenderNo}${number}`;
+      const res = await get({ url: url });
+      console.log('res', JSON.stringify(res));
 
-      try {
-        const url = `${APP_URLS.getCheckSenderNo}${number}`;
-        const res = await get({ url: url });
-        console.log('res', JSON.stringify(res));
-  
-        const addinfo = res['ADDINFO'];
-  
-        console.log();
-       
-        if (res) {
-          const status = addinfo?.statuscode;
-          if (status === "TXN") {
-   
-            settype2("AADHAROTP")
+      const addinfo = res['ADDINFO'];
 
-  
-  
-            const remmname = addinfo?.data?.remitter?.name || '';
-            const consumelimit = addinfo?.data?.remitter?.consumedlimit?.toString() || '0';
-            const remainlimit = addinfo?.data?.remitter?.remaininglimit?.toString() || '0';
-            const kycsts = addinfo?.data?.remitter?.kycdone?.toString() || '';
-            const photo = addinfo?.data?.remitter?.Photo?.toString() || '';
-            const beneficiary = addinfo?.data?.beneficiary || [];
-            const remid = addinfo?.data?.remitter?.id || '';
-            console.log(beneficiary);
-            setRemitterOtp(true)
-            if (beneficiary.length === 0) {
-            } else {
-            }
-          } else if(addinfo.statuscode === "RNF" || addinfo.statuscode === "NUMBEROTP" || addinfo.statuscode === "AADHAROTP") {
-  
-            if (addinfo.statuscode === "RNF" || addinfo.statuscode === "NUMBEROTP" || addinfo.statuscode === "AADHAROTP") {
-              settype2("AADHAROTP")
-            }
-  
-          } else if (status === 'ERR') {
-            ToastAndroid.showWithGravity(addinfo, ToastAndroid.SHORT, ToastAndroid.BOTTOM);
+      console.log();
+
+      if (res) {
+        const status = addinfo?.statuscode;
+        if (status === "TXN") {
+
+          settype2("AADHAROTP")
+
+
+
+          const remmname = addinfo?.data?.remitter?.name || '';
+          const consumelimit = addinfo?.data?.remitter?.consumedlimit?.toString() || '0';
+          const remainlimit = addinfo?.data?.remitter?.remaininglimit?.toString() || '0';
+          const kycsts = addinfo?.data?.remitter?.kycdone?.toString() || '';
+          const photo = addinfo?.data?.remitter?.Photo?.toString() || '';
+          const beneficiary = addinfo?.data?.beneficiary || [];
+          const remid = addinfo?.data?.remitter?.id || '';
+          console.log(beneficiary);
+          setRemitterOtp(true)
+          if (beneficiary.length === 0) {
+          } else {
           }
-        } else if (res?.RESULT === '1') {
+        } else if (addinfo.statuscode === "RNF" || addinfo.statuscode === "NUMBEROTP" || addinfo.statuscode === "AADHAROTP") {
+
+          if (addinfo.statuscode === "RNF" || addinfo.statuscode === "NUMBEROTP" || addinfo.statuscode === "AADHAROTP") {
+            settype2("AADHAROTP")
+          }
+
+        } else if (status === 'ERR') {
           ToastAndroid.showWithGravity(addinfo, ToastAndroid.SHORT, ToastAndroid.BOTTOM);
-  
-          const status = addinfo?.data?.statuscode;
-          console.log(addinfo.statuscode)
-          console.log(addinfo.data.status)
-        
-          
-  
         }
-  
-      
-      } catch (error) {
-        console.error('Error:', error);
-        // Handle error
+      } else if (res?.RESULT === '1') {
+        ToastAndroid.showWithGravity(addinfo, ToastAndroid.SHORT, ToastAndroid.BOTTOM);
+
+        const status = addinfo?.data?.statuscode;
+        console.log(addinfo.statuscode)
+        console.log(addinfo.data.status)
+
+
+
       }
-    };
+
+      setisload(false)
+
+    } catch (error) {
+      console.error('Error:', error);
+      // Handle error
+    }
+  };
   const sendAadharOtp = async (num) => {
+    setisload(true)
+
     try {
       console.log('Sending Aadhar OTP request...');
       console.log('Aadhar Data:', adharData);
-  
+
       const { agentid, clientid } = adharData;
       const url = `${APP_URLS.Register_aadhar_new}mobile=${num}&aadharno=${aadharnum}&pancardnumber=${Pan}`;
       const url2 = `${APP_URLS.Verify_aadhar_new}mobile=${num}&otp=${mobileOtp}&aadhar=${aadharnum}&clientid=${clientid}&agentid=${agentid}`;
-  
+
       console.log('Constructed URL:', isOtp ? url2 : url);
-  
+
       const res = await post({ url: isOtp ? url2 : url });
-      console.log(res);
+      console.log(res,'****************');
       if (res) {
         if (isOtp) {
           console.log('OTP Verification Response:', res);
@@ -183,10 +195,9 @@ if(res.RESULT ==='1'){
           }
         } else {
           setadharData(res.ADDINFO);
-  
           const aadharMsg = res.ADDINFO?.msg || 'Aadhar registration failed, please try again.';
           const aadharStatus = res.ADDINFO?.stsmsg === true;
-  
+
           if (aadharStatus) {
             setisOtp(true);
             setOtpModalVisible(true);
@@ -206,33 +217,43 @@ if(res.RESULT ==='1'){
       ToastAndroid.show('An error occurred. Please try again.', ToastAndroid.LONG);
     }
   };
-  
-  
+
+
 
   const verifyOtp = async (otp) => {
     try {
       const url = `${APP_URLS.verifynewRemSendOtp}Mobile=${sendNum}&OTP=${otp}&RequestId&remitterid=${remitterid}&beneficiaryid&Action=add`;
-
+  
       const res = await post({ url });
-
+  
       console.log(res, '==========================');
-
-      if (res['RESULT'] === '1') {  // Check if the result indicates an error
+  
+      // Check if the result indicates an error
+      if (res['RESULT'] === '1') {
         setIsLoading(false);  // Stop the loading state
         Alert.alert('Error', res['ADDINFO'], [{ text: 'OK', onPress: () => { } }]); // Show error message
       } else {
         // Handle successful response
-        const data = res['ADDINFO']['data'];
-
-        // Check if status is available
-        if (data && data.status) {
-          Alert.alert('Success', data['status'], [{ text: 'OK', onPress: () => { checksendernumber(sendNum)} }]);  // Show success message
+        const data = res['ADDINFO'] && res['ADDINFO']['data'];
+  
+        if (data) {
+          if (data.status === 'OTP Verified') {
+            ToastAndroid.show(data.status, ToastAndroid.LONG);
+            
+            // Optionally, you can call checksendernumber here or handle the next action
+            // checksendernumber(sendNum);  // Uncomment if necessary
+          } else {
+            Alert.alert('Success', 'Transaction Successful', [{
+              text: 'OK', onPress: () => {
+                checksendernumber(sendNum); // This will trigger after success
+              }
+            }]);
+          }
         } else {
-          Alert.alert('Success', 'Transaction Successful', [{ text: 'OK', onPress: () => {  checksendernumber(sendNum)
-          } }]);
+          // If no data is available in ADDINFO
+          Alert.alert('Error', 'Invalid response from server. Please try again.', [{ text: 'OK', onPress: () => { } }]);
         }
       }
-
     } catch (error) {
       // Handle errors from API call
       console.error('Failed to verify OTP:', error);
@@ -240,11 +261,12 @@ if(res.RESULT ==='1'){
       setIsLoading(false);  // Make sure to stop loading in case of error
     }
   };
+  
 
 
   const handleRemitterNameNext = () => {
 
-    if (type == 'AADHAROTP' ||type2 == 'AADHAROTP'  ) {
+    if (type == 'AADHAROTP' || type2 == 'AADHAROTP') {
       setisload(true)
       sendAadharOtp(sendNum)
     } else {
@@ -298,19 +320,32 @@ if(res.RESULT ==='1'){
   };
 
   return (
-    <View style={styles.main}>
+    <View style={[styles.main, { borderColor: colorConfig.secondaryColor }]}>
 
-      <AppBarSecond title={'Remitter Number Register'} />
-      <LinearGradient colors={[colorConfig.primaryColor, colorConfig.secondaryColor]} style={{
-        paddingTop: hScale(20), marginBottom: hScale(20)
-
-      }}>
-        {/* <View style={[styles.topappbar, styles.container]}>
-          <SvgXml xml={adduser} width={wScale(50)} height={wScale(50)} />
-
-          <Text style={styles.title}>Register New User</Text>
-        </View> */}
-      </LinearGradient>
+      {/* <AppBarSecond title={'Remitter Number Register'} /> */}
+      <View
+        style={[
+          styles.texttitalView,
+          { backgroundColor: colorConfig.secondaryColor },
+        ]}>
+        <View
+          style={[
+            styles.cutout,
+            { borderTopColor: colorConfig.secondaryColor },
+          ]}
+        />
+        <Text style={styles.texttital}>Remitter Number Register</Text>
+      </View>
+      <TouchableOpacity
+        onPress={() => {
+          handlepress()
+        }}
+        activeOpacity={0.7}
+        style={[
+          styles.closebuttoX, { backgroundColor: colorConfig.secondaryColor },
+        ]}>
+        <CloseSvg />
+      </TouchableOpacity>
       <View style={styles.container}>
         {remitterOtp ? (
           <View>
@@ -330,16 +365,17 @@ if(res.RESULT ==='1'){
               editable={false}
               textInputStyle={{ textAlign: 'center' }}
             />
-            {(type === 'AADHAROTP' || type2 === 'AADHAROTP') && <FlotingInput
-              label={translate('Aadhar')}
-              value={aadharnum}
-              keyboardType='numeric'
-              onChangeTextCallback={setaadharnum}
-              editable={!isLoading}
-              maxLength={12}
+            {(type === 'AADHAROTP' || type2 === 'AADHAROTP') &&
+              <FlotingInput
+                label={translate('Aadhar')}
+                value={aadharnum}
+                keyboardType='numeric'
+                onChangeTextCallback={setaadharnum}
+                editable={!isLoading}
+                maxLength={12}
 
-              textInputStyle={{ textAlign: 'center' }}
-            />}
+                textInputStyle={{ textAlign: 'center' }}
+              />}
             {(type === 'AADHAROTP' || type2 === 'AADHAROTP') &&
               <FlotingInput
                 label={'Pan Card(Optional)'}
@@ -350,7 +386,7 @@ if(res.RESULT ==='1'){
               />}
 
             <DynamicButton
-              title={translate('Next')}
+              title={ translate('Next')}
               onPress={handleRemitterNameNext}
               disabled={isLoading}
               isLoading={isLoading}
@@ -375,27 +411,26 @@ if(res.RESULT ==='1'){
             </View>
 
             {(type === 'AADHAROTP' || type2 === 'AADHAROTP') ? (
-  <DynamicButton
-    title={'Verify Aadhar OTP'}
-    onPress={handleVerifyOtp2}
-    disabled={isLoading}
-    isLoading={isLoading}
-  />
-) : (
-  <DynamicButton
-    title={'Verify OTP'}
-    onPress={handleVerifyOtp}
-    disabled={isLoading}
-    isLoading={isLoading}
-  />
-)}
+              <DynamicButton
+                title={'Verify Aadhar OTP'}
+                onPress={handleVerifyOtp2}
+                disabled={isLoading}
+                isLoading={isLoading}
+              />
+            ) : (
+              <DynamicButton
+                title={'Verify OTP'}
+                onPress={handleVerifyOtp}
+                disabled={isLoading}
+                isLoading={isLoading}
+              />
+            )}
 
           </View>
         )}
         {isLoading && <ActivityIndicator size='large' color={colorConfig.labelColor} />}
-      </View>
-
-     {load  && <ShowLoader/>}
+     
+        {load && <ShowLoader />}
       <OTPModal
         setShowOtpModal={setOtpModalVisible}
         disabled={mobileOtp.length !== 6}
@@ -403,23 +438,33 @@ if(res.RESULT ==='1'){
         setMobileOtp={setMobileOtp}
         setEmailOtp={null}
         inputCount={6}
-        verifyOtp={() => {      sendAadharOtp(sendNum);
+        verifyOtp={() => {
+          sendAadharOtp(sendNum);
 
-   ;
+          ;
         }}
       />
+      </View>
+
+     
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   main: {
-    flex: 1,
     backgroundColor: '#FFFFFF',
+    elevation: 5,
+    borderWidth: 1,
+    marginTop: hScale(20),
+    borderRadius: 5,
+    height:SCREEN_WIDTH/0.8,
+    marginHorizontal:wScale(13)
   },
   container: {
-    paddingHorizontal: wScale(15),
+    paddingHorizontal: wScale(10),
     justifyContent: 'center',
+    paddingTop: hScale(50)
   },
   topappbar: {
     flexDirection: 'row',
@@ -451,6 +496,53 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: 'bold'
   },
+
+  texttitalView: {
+    width: wScale(200),
+    height: hScale(40),
+    borderTopLeftRadius: wScale(5),
+    position: 'absolute',
+    top: hScale(-1),
+    left: wScale(-1),
+    justifyContent: 'center',
+    paddingBottom: hScale(3),
+    borderBottomRightRadius: 0,
+  },
+  cutout: {
+    borderTopWidth: hScale(40), // Height of the triangle
+    borderRightWidth: wScale(33), // Width of the triangle
+    borderBottomWidth: wScale(0), // Set to 0 to hide the bottom edge
+    borderLeftWidth: wScale(3), // Width of the triangle
+    width: '100%',
+    height: hScale(40),
+    borderRightColor: 'transparent', // Hide the right edge
+    borderBottomColor: 'transparent', // Hide the bottom edge
+    borderLeftColor: 'transparent', // Hide the left edge
+    position: 'absolute',
+    right: wScale(-50),
+    zIndex: wScale(0),
+    top: wScale(0),
+  },
+  texttital: {
+    fontSize: wScale(18),
+    fontWeight: 'bold',
+    color: '#fff',
+    width: 240,
+    paddingLeft: wScale(10)
+  },
+  closebuttoX: {
+    borderRadius: wScale(24),
+    alignItems: 'center',
+    height: wScale(42),
+    width: wScale(42),
+    justifyContent: 'center',
+    elevation: 5,
+    position: 'absolute',
+    right: wScale(-11),
+    top: hScale(-11),
+  },
 });
 
 export default NumberRegisterScreen;
+
+

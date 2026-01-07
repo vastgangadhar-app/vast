@@ -1,27 +1,19 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React, {useCallback, useEffect, useMemo, useState } from 'react';
+import {StyleSheet, Text, TouchableOpacity,  Alert
+,  View} from 'react-native';
 import AppBarSecond from '../headerAppbar/AppBarSecond';
 import {hScale, wScale} from '../../../utils/styles/dimensions';
 import DynamicButton from '../button/DynamicButton';
 import DynamicSecurityPages from './DynamicComponet';
-import {useSelector} from 'react-redux';
 import {RootState} from '../../../reduxUtils/store';
 import {ALERT_TYPE, Dialog} from 'react-native-alert-notification';
 import useAxiosHook from '../../../utils/network/AxiosClient';
 import {APP_URLS} from '../../../utils/network/urls';
 import { getPhoneNumber } from 'react-native-device-info';
+import ShowLoader from '../../../components/ShowLoder';
+import { useSelector, useDispatch } from 'react-redux';
+import { reset } from '../../../reduxUtils/store/userInfoSlice'
 
-const BtnPress = () => {
-  Dialog.show({
-    type: ALERT_TYPE.SUCCESS,
-    title: 'SUCCESS',
-    textBody: 'Update Successfully',
-    button: 'OK',
-    onPressButton: () => {
-      Dialog.hide();
-    },
-  });
-};
 const SetOtpPass = () => {
   const {colorConfig} = useSelector((state: RootState) => state.userInfo);
   const color1 = `${colorConfig.secondaryColor}10`;
@@ -29,6 +21,8 @@ const SetOtpPass = () => {
   const [securityType, setSecurityType] = useState('');
   const [clickCount, setClickCount] = useState(0);
   const [textColor, setTextColor] = useState('#000'); // Setting default text color to black
+
+  const [isload,setIsload]= useState(false)
   const {get, post} = useAxiosHook();
   const texts = useMemo(
     () => [
@@ -47,13 +41,33 @@ const SetOtpPass = () => {
   const topsvgimg = `
     <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="512" height="512" x="0" y="0" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><rect width="512" height="512" rx="102.4" ry="102.4" fill="#e5e5e5" shape="rounded"></rect><g transform="matrix(0.8600000000000002,0,0,0.8600000000000002,35.83999893188468,35.840002136230424)"><path d="M375.199 504.5H136.801c-17.853 0-32.325-14.472-32.325-32.325V39.825c0-17.853 14.472-32.325 32.325-32.325h238.398c17.853 0 32.325 14.472 32.325 32.325v432.35c0 17.853-14.472 32.325-32.325 32.325z" style="stroke-width: 8;" fill="#d8ecfe" data-original="#d8ecfe" stroke-width="8" class=""></path><path d="M375.199 7.5h-28.285c17.853 0 32.325 14.473 32.325 32.325v432.35c0 17.853-14.473 32.325-32.325 32.325h28.285c17.853 0 32.325-14.473 32.325-32.325V39.825c0-17.852-14.472-32.325-32.325-32.325z" style="stroke-width: 8;" fill="#c4e2ff" data-original="#c4e2ff" stroke-width="8" class=""></path><path d="M407.524 130.74H104.476c-11.158 0-20.203 9.045-20.203 20.203v88.894c0 11.158 9.045 20.203 20.203 20.203h119.199l22.583 29.531a12.265 12.265 0 0 0 19.486 0l22.582-29.531h119.199c11.158 0 20.203-9.045 20.203-20.203v-88.894c0-11.158-9.046-20.203-20.204-20.203z" style="stroke-width: 8;" fill="#55ed96" data-original="#cb97e7" stroke-width="8" class="" opacity="1"></path><path d="M407.524 130.74H381.26c11.158 0 20.203 9.045 20.203 20.203v88.894c0 11.158-9.045 20.203-20.203 20.203h26.264c11.158 0 20.203-9.045 20.203-20.203v-88.894c.001-11.158-9.045-20.203-20.203-20.203z" style="stroke-width: 8;" fill="#19b85d" data-original="#bd80e1" stroke-width="8" class="" opacity="1"></path><path d="M365.098 381.26H146.902c-5.579 0-10.102-4.523-10.102-10.102v-34.346c0-5.579 4.523-10.102 10.102-10.102h218.195c5.579 0 10.102 4.523 10.102 10.102v34.346c0 5.58-4.522 10.102-10.101 10.102z" style="stroke-width: 8;" fill="#ff4f4f" data-original="#8ac9fe" stroke-width="8" class="" opacity="1"></path><path d="M407.52 130.74V99.8M104.48 130.74V39.83c0-17.85 14.47-32.33 32.32-32.33h238.4c17.85 0 32.32 14.48 32.32 32.33V64.7M407.52 260.04v212.13c0 17.85-14.47 32.33-32.32 32.33H136.8c-17.85 0-32.32-14.48-32.32-32.33V260.04M245.898 39.825h20.204M245.898 472.175h20.204M298.427 39.825h0M213.573 39.825h0M248.729 168.138h30.125M263.731 169.88v52.807M311.179 198.994v23.693M342.063 183.532c0 8.502-7.193 15.394-15.695 15.394-4.216 0-15.189.068-15.189.068v-30.855h15.189c8.502-.001 15.695 6.891 15.695 15.393z" style="stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10;" fill="none" stroke="#000000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" data-original="#000000"></path><circle cx="197.211" cy="195.368" r="27.274" style="stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10;" fill="none" stroke="#000000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" data-original="#000000"></circle><path d="M84.27 212.92v26.92c0 11.16 9.05 20.2 20.21 20.2h119.19l22.59 29.53a12.248 12.248 0 0 0 15.17 3.55c1.67-.82 3.15-2.03 4.31-3.55l22.59-29.53h119.19c11.16 0 20.21-9.04 20.21-20.2v-88.9c0-11.15-9.05-20.2-20.21-20.2H104.48c-11.16 0-20.21 9.05-20.21 20.2v26.88M315.55 381.26h49.55c5.58 0 10.1-4.52 10.1-10.1v-34.35c0-5.58-4.52-10.1-10.1-10.1H146.9c-5.58 0-10.1 4.52-10.1 10.1v34.35c0 5.58 4.52 10.1 10.1 10.1h133.55M175.187 353.986h0M207.512 353.986h0M239.837 353.986h0M272.163 353.986h0M304.488 353.986h0M336.813 353.986h0" style="stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; stroke-miterlimit: 10;" fill="none" stroke="#000000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" data-original="#000000"></path></g></svg>
     `;
-  const pressbtn = () => {
-    const res = post({
+    const dispatch = useDispatch();
+
+  const pressbtn = async () => {
+    setIsload(true)
+    const res = await post({
       url: `${APP_URLS.setTwoFAStatus}status=true&passcodetype=${securityType}`,
     });
+    console.log(res);
+    setIsload(false)
+
+
     if (res) {
-      BtnPress();
-    }
+
+      Alert.alert(
+        'SUCCESS',
+        'Update Successfully',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              dispatch(reset());
+            },
+          },
+        ],
+        { cancelable: false }
+      );    }
+
   };
 
   const handlePress = () => {
@@ -73,7 +87,21 @@ const SetOtpPass = () => {
   useEffect(() => {
     getSecurityLevel();
   }, [getSecurityLevel]);
-
+  const BtnPress = () => {
+    const dispatch = useDispatch();
+  
+    Dialog.show({
+      type: ALERT_TYPE.SUCCESS,
+      title: 'SUCCESS',
+      textBody: 'Update Successfully',
+      button: 'OK',
+      onPressButton: () => {
+        Dialog.hide();
+        dispatch(reset())
+  
+      },
+    });
+  };
   return (
     <View>
       <AppBarSecond title=" Set OTP & Passcode" />
@@ -94,8 +122,10 @@ const SetOtpPass = () => {
           buttonImg={help}
           onPressImg={handlePress}
         />
-        <DynamicButton title="Save Change" onPress={pressbtn} />
+        <DynamicButton title="Save Change" onPress={()=>pressbtn()} />
       </View>
+
+      {isload &&  <ShowLoader/>}
     </View>
   );
 };

@@ -84,6 +84,20 @@ useEffect(()=>{
     <View style={styles.container}>
       <TouchableOpacity
         style={[styles.walletItem, { backgroundColor: '#3A81F1' }]}
+
+        onPress={() => 
+          
+          initiatePayment('INTENT', 'com.google.android.apps.nbu.paisa.user')
+        
+        }
+      >
+        <Text style={styles.walletText}>intent_app</Text>
+
+
+
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.walletItem, { backgroundColor: '#3A81F1' }]}
         onPress={() => walletMakePayment('upi', 'TEZ')}
       >
         <Text style={styles.walletText}>Google Pay</Text>

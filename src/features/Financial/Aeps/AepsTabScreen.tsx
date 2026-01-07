@@ -23,8 +23,12 @@ import Aeps from '../../../utils/svgUtils/Aeps';
 import AadharPaysvg from '../../../utils/svgUtils/AadhaarPaysvg';
 import StatementSvg from '../../../utils/svgUtils/StatementSvg';
 
-const AepsTabScreen = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+const AepsTabScreen = ({  }) => {
+    const { colorConfig,activeAepsLine } = useSelector((state: RootState) => state.userInfo);
+
+  console.log('====================================23423234444444',activeAepsLine);
+  console.warn('Green flag:', activeAepsLine);
+  console.log('====================================254423342545');
   const color1 = `${colorConfig.primaryColor}20`;
   const navigation = useNavigation<any>();
   const [fingerprintData, setFingerprintData] = useState<any>();
@@ -32,15 +36,16 @@ const AepsTabScreen = () => {
   const [bankName, setBankName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [consumerName, setConsumerName] = useState('');
-  const { get,post } = useAxiosHook();
+  const { get, post } = useAxiosHook();
   const [index, setIndex] = useState(0);
-  const [isValid,setIsValid]= useState(false);
+  const [isValid, setIsValid] = useState(false);
 
   const [routes] = useState([
-   
+
     { key: 'AepsCW', title: 'Aeps' },
-    { key: 'AepsMiniStatement', title: 'M. Statement' },
     { key: 'BalanceCheck', title: 'Check Bal' },
+    { key: 'AepsMiniStatement', title: 'M. Statement' },
+
     { key: 'AadharPay', title: 'Aadhar Pay' },
   ]);
 
@@ -64,7 +69,9 @@ const AepsTabScreen = () => {
 
     try {
       const url = `AEPS/api/data/AepsStatusCheck`;
-      const response = await get({ url: url });
+      const url2 = `AEPS/api/Nifi/data/AepsStatusCheck`;
+
+      const response = await get({ url: activeAepsLine ? url2 : url });
 
       const msg = response.Message;
       const status = response.Response;
@@ -74,7 +81,7 @@ const AepsTabScreen = () => {
         setUserStatus('Success');
         setIsSucess(status === 'Success')
         if (fingerprintData === 720) {
-         // start();
+          // start();
         }
       } else if (status === 'BOTHNOTDONE' || status === 'NOTOK' || status === 'ALLNOTDONE' || msg === 'PURCHASE') {
 
@@ -82,7 +89,7 @@ const AepsTabScreen = () => {
         navigation.navigate('ServicepurchaseScreen', { typename: 'AEPS' });
       } else if (msg === 'OTPREQUIRED') {
 
-      }else{
+      } else {
         Alert.alert('', msg, [
           { text: 'OK', onPress: () => console.log('OK Pressed') },
         ], { cancelable: false });
@@ -102,10 +109,10 @@ const AepsTabScreen = () => {
       const deviceInfoString = JSON.stringify(res, null, 2);
       const rdServicePackage = res.rdServicePackage;
       const status = res.rdServiceInfoJson.RDService.status;
-      if (status ==='READY') {
+      if (status === 'READY') {
         setIsReady(true);
       }
-   
+
 
 
 
@@ -116,19 +123,19 @@ const AepsTabScreen = () => {
   const [PidData, setPiDData] = useState('');
   const start = (callback) => {
     callback?.();
-  
+
     // Fetch device information
     getDeviceInfo()
       .then(async (res) => {
         const deviceInfoString = JSON.stringify(res, null, 2);
         const isReady = res.rdServiceInfoJson.RDService.status;
         const rdServicePackage = res.rdServicePackage;
-        
-  
+
+
         if (isReady === 'READY') {
           setIsReady(true);
         }
-  
+
         const deviceNames = {
           "com.scl.rdservice": 'Morpho L0',
           "com.acpl.registersdk": 'Startek L0',
@@ -137,22 +144,22 @@ const AepsTabScreen = () => {
           "com.mantra.mfs110.rdservice": 'Mantra L1',
           "com.idemia.l1rdservice": 'Morpho L1',
         };
-  
-  
+
+
         if (isReady === 'READY') {
           capture(rdServicePackage, callback);
         } else {
-          const alertMessage = isReady === 'NOTREADY' 
+          const alertMessage = isReady === 'NOTREADY'
             ? `Device is not ready. The ${deviceName} RD service is available on the mobile. Please install only the finger scanner app you are going to use on your phone. Uninstall the other apps.`
             : `${deviceName} Device is ready.`;
-          
+
           Alert.alert('Device Status', alertMessage, [
             { text: 'OK', onPress: () => console.log('OK Pressed') },
           ], { cancelable: false });
-          
-          setFingerprintData(720);  
+
+          setFingerprintData(720);
         }
-  
+
         // Optionally save the device info to a file
         // const path = `${RNFS.DownloadDirectoryPath}/deviceInfo-today-${rdServicePackage}.json`;
         // try {
@@ -160,25 +167,25 @@ const AepsTabScreen = () => {
         // } catch (error) {
         //   console.error('Error writing file:', error);
         // }
-  
+
       })
       .catch(async (error) => {
         // Handle fetch errors by alerting the user
         console.error('Error while fetching device info:', error);
-  
+
         // Log error details for debugging
         // await post({
         //   url: 'AEPS/api/Aeps/ErrorMessage',
         //   data: { Message: JSON.stringify({ message: error?.message, line: error?.line, column: error?.column }) }
         // });
-  
+
         setFingerprintData(720);  // 
-  
+
         // Show alert to user
         Alert.alert('Error', 'Error while scanning the finger. Please check if the device is connected properly.');
       });
   };
-  
+
 
   const getPidOptions = (rdServicePackage) => {
     switch (rdServicePackage) {
@@ -221,6 +228,21 @@ const AepsTabScreen = () => {
     'AadharPay': AdharPay,
 
   });
+  // const renderScene = ({ route }) => {
+  //   switch (route.key) {
+  //     case 'BalanceCheck':
+  //       return <BalanceCheck activeAepsLine={activeAepsLine} />;
+  //     case 'AepsMiniStatement':
+  //       return <AepsMinistatement activeAepsLine={activeAepsLine} />;
+  //     case 'AepsCW':
+  //       return <AepsCW activeAepsLine={activeAepsLine} />;
+  //     case 'AadharPay':
+  //       return <AdharPay activeAepsLine={activeAepsLine} />;
+  //     default:
+  //       return null;
+  //   }
+  // };
+
   const p = '<?xml version="1.0"?> <PidOptions ver="1.0"> <Opts fCount="1" fType=""+fType+"" iCount="0" pCount="0" pgCount="2" format="0"   pidVer="2.0" timeout="10000" pTimeout="20000" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" posh="UNKNOWN" env="P" /> <CustOpts><Param name="mantrakey" value="" /></CustOpts> </PidOptions>"'
 
   // captureFinger('<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0"   pidVer="2.0" timeout="10000" pTimeout="20000" wadh="E0jzJ/P8UopUHAieZn8CKqS4WPMi5ZSYXgfnlfkWjrc=" posh="UNKNOWN" env="P" /> <CustOpts><Param name="mantrakey" value="" /></CustOpts> </PidOptions>"'
@@ -231,11 +253,11 @@ const AepsTabScreen = () => {
 
   const capture = async (rdServicePackage, callback) => {
     let pidOptions = '';
-    
+
     switch (rdServicePackage) {
       case 'com.mantra.mfs110.rdservice':
         pidOptions = '<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000" pTimeout="20000" posh="UNKNOWN" env="P" /> <CustOpts><Param name="mantrakey" value="" /></CustOpts> </PidOptions>';
-        break;case 'com.mantra.rdservice':
+        break; case 'com.mantra.rdservice':
         pidOptions = '<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000" pTimeout="20000" posh="UNKNOWN" env="P" /> <CustOpts><Param name="mantrakey" value="" /></CustOpts> </PidOptions>';
         break;
       case 'com.acpl.registersdk_l1':
@@ -245,10 +267,10 @@ const AepsTabScreen = () => {
         break;
       case 'com.idemia.l1rdservice':
         //pidOptions = '<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pCount="0" pgCount="2" format="0" pidVer="2.0" timeout="10000" pTimeout="20000" posh="UNKNOWN" env="P" /> <Demo></Demo> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>';
-        pidOptions =`<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000" wadh="" posh="UNKNOWN" /><Demo></Demo><CustOpts><Param name="" value="" /></CustOpts></PidOptions>`;
+        pidOptions = `<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000" wadh="" posh="UNKNOWN" /><Demo></Demo><CustOpts><Param name="" value="" /></CustOpts></PidOptions>`;
         break; case 'com.scl.rdservice':
-       // pidOptions = '<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pType="" pCount="0"  format="0" pidVer="2.0" timeout="20000"  posh="UNKNOWN" env="P" /> <Demo></Demo> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>';
-        pidOptions =`<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000" wadh="" posh="UNKNOWN" /><Demo></Demo><CustOpts><Param name="" value="" /></CustOpts></PidOptions>`;
+        // pidOptions = '<PidOptions ver="1.0"> <Opts fCount="1" fType="2" iCount="0" pType="" pCount="0"  format="0" pidVer="2.0" timeout="20000"  posh="UNKNOWN" env="P" /> <Demo></Demo> <CustOpts><Param name="" value="" /></CustOpts> </PidOptions>';
+        pidOptions = `<PidOptions ver="1.0"><Opts env="P" fCount="1" fType="2" iCount="0" iType="" pCount="0" pType="" format="0" pidVer="2.0" timeout="20000" wadh="" posh="UNKNOWN" /><Demo></Demo><CustOpts><Param name="" value="" /></CustOpts></PidOptions>`;
         break;
       default:
         console.error('Unsupported rdServicePackage');
@@ -256,9 +278,9 @@ const AepsTabScreen = () => {
     }
 
     captureFinger(pidOptions)
-      .then(async(res) => {
+      .then(async (res) => {
         const deviceInfoString = JSON.stringify(res, null, 2);
-       // await post({ url: 'AEPS/api/Aeps/ErrorMessage', data: { Message: JSON.stringify(res) } });
+        // await post({ url: 'AEPS/api/Aeps/ErrorMessage', data: { Message: JSON.stringify(res) } });
 
         // const path = RNFS.DownloadDirectoryPath + `/deviceInfo-capture-today--Finger.json`;
 
@@ -286,7 +308,7 @@ const AepsTabScreen = () => {
           callback?.();
         }
       })
-      .catch(async(error) => {
+      .catch(async (error) => {
         // await post({ url: 'AEPS/api/Aeps/ErrorMessage', data: { Message: JSON.stringify({
         //   message: error?.message,
         //   line: error?.line,
@@ -299,50 +321,102 @@ const AepsTabScreen = () => {
 
   const [UserStatus, setUserStatus] = useState('');
 
-  useEffect(() => {
-    const CheckEkyc = async () => {
-      try {
-        const url = `${APP_URLS.checkekyc}`;
-        const response = await get({ url: url });
-        const msg = response.Message;
-        const Status = response.Status;
-        if (response.Status === true) {
 
-          CheckAeps();
-          return;
-        } else if (msg === '2FAREQUIRED') {
+  const CheckEkyc = async () => {
+  try {
+    const url1 = APP_URLS.checkekyc;
+    const url2 = `AEPS/api/Nifi/data/CheckEkyc`;
 
-         navigation.replace("TwoFAVerify");
+    const finalUrl = activeAepsLine ? url2 : url1;
+    console.log("🔗 Final URL:", finalUrl);
 
-  // setUserStatus('Success');
-          return;
-        } else if (msg === 'REQUIREDOTP') {
-          setUserStatus(msg);
-          navigation.replace("Aepsekyc");
-        } else if (msg === 'REQUIREDSCAN') {
-          setUserStatus(msg);
-          navigation.replace("Aepsekycscan");
-          return;
-        }else{
-          Alert.alert('', msg, [
-            { text: 'OK', onPress: () => navigation.goBack(),},
-          ], { cancelable: false });
-        }
-      } catch (error) {
+    let response;
+    try {
+      response = await get({ url: finalUrl });
+    } catch (axiosErr: any) {
+      // Agar status code 200 nahi hai → message yahan hoga
+      const fallbackResponse = axiosErr?.response?.data;
 
-        console.log(error);
-      } finally {
+      if (fallbackResponse?.Message) {
+        response = fallbackResponse;
+      } else {
+        throw axiosErr; // agar kuch bhi nahi mila toh generic error
       }
-    };
-    CheckEkyc();
-    if (fingerprintData) {
+    }
+
+    const msg = response?.Message;
+    const status = response?.Status;
+
+    console.log("📩 EKYC Response:", response);
+
+    // --------------------
+    // SUCCESS
+    // --------------------
+    if (status === true) {
+      CheckAeps();
       return;
     }
 
+    // --------------------
+    // REQUIRED 2FA
+    // --------------------
+    if (msg === '2FAREQUIRED') {
+      setUserStatus('Success');
+      // navigation.replace("TwoFAVerify");
+      return;
+    }
 
-  }, [])
+    // --------------------
+    // OTP REQUIRED
+    // --------------------
+    if (msg === 'REQUIREDOTP') {
+      setUserStatus(msg);
+      navigation.replace("Aepsekyc");
+      return;
+    }
+
+    // --------------------
+    // SCAN REQUIRED
+    // --------------------
+    if (msg === 'REQUIREDSCAN') {
+      setUserStatus(msg);
+      navigation.replace("Aepsekycscan");
+      return;
+    }
+
+    // --------------------
+    // UNHANDLED MESSAGES
+    // --------------------
+    Alert.alert(
+      "",
+      msg || "Unknown server error",
+      [{ text: "OK", onPress: () => navigation.goBack() }],
+      { cancelable: false }
+    );
+
+  } catch (error) {
+    console.log("❌ CheckEkyc Error:", error);
+
+    Alert.alert(
+      "Error",
+      "Something went wrong. Please try again.",
+      [{ text: "OK" }]
+    );
+  }
+};
+
+ useEffect(() => {
+  console.log('✅ useEffect triggered');
+
+  CheckEkyc();
+
+  if (fingerprintData) {
+    return;
+  }
+}, []);
+
   const [deviceName, setDeviceName] = useState('Device');
-const [bankid,setBankId] =useState('');
+  const [bankid, setBankId] = useState('');
   return (
 
     <AepsContext.Provider value={{
@@ -366,17 +440,14 @@ const [bankid,setBankId] =useState('');
     }}>
 
       <View style={styles.container}>
+
+
         {(() => {
           switch (UserStatus) {
             case 'Success':
               return (
                 <View style={styles.container}>
-                  <AppBarSecond
-                    title="AEPS / AADHAAR PAY"
-                    actionButton={undefined}
-                    onActionPress={undefined}
-                    onPressBack={undefined}
-                  />
+
                   <TabView
                     lazy
                     navigationState={{ index, routes }}
@@ -423,7 +494,7 @@ const styles = StyleSheet.create({
   tabbar: {
     elevation: 0,
     marginBottom: hScale(10),
-    height:hScale(60)
+    height: hScale(60)
   },
   indicator: {
   },

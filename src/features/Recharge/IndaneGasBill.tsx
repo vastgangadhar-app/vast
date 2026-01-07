@@ -144,7 +144,7 @@ const IndaneGasBill = () => {
 
   const {getNetworkCarrier, getMobileDeviceId, getMobileIp} =
   useDeviceInfoHook();
-const {userId} = useSelector((state: RootState) => state.userInfo);
+const {userId ,Loc_Data} = useSelector((state: RootState) => state.userInfo);
 const {latitude, longitude} = useLocationHook();
 
 const onRechargePress = useCallback(async () => {
@@ -155,8 +155,8 @@ const onRechargePress = useCallback(async () => {
     consumerNo,
     optcode,
     amount,
-    latitude,
-    longitude,
+    Loc_Data['latitude'],Loc_Data['longitude'],
+
     'city',
     'address',
     'postcode',

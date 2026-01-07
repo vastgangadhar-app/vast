@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         textAlign: 'center',
-        color: 'black', // Adjust according to your theme
+        color: 'white', // Adjust according to your theme
     },
 });
 

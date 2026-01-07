@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
 import { useSelector } from 'react-redux';
 import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
 import LinearGradient from 'react-native-linear-gradient';
@@ -12,13 +12,14 @@ import { RootState } from '../../reduxUtils/store';
 import NoDatafound from '../drawer/svgimgcomponents/Nodatafound';
 
 const RToRReport = () => {
-    const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+    const { colorConfig, IsDealer } = useSelector((state: RootState) => state.userInfo);
     const color1 = `${colorConfig.secondaryColor}20`;
+    const [selectedRetailerId, setSelectedRetailerId] = useState('');
 
     const { userId } = useSelector((state: RootState) => state.userInfo);
     const [loading, setLoading] = useState(false);
     const [transactions, setTransactions] = useState([]);
-    const { post } = useAxiosHook();
+    const { post, get } = useAxiosHook();
     const [selectedDate, setSelectedDate] = useState({
         from: new Date().toISOString().split('T')[0],
         to: new Date().toISOString().split('T')[0],
@@ -33,7 +34,20 @@ const RToRReport = () => {
             const formattedFrom = new Date(from).toISOString().split('T')[0];
             const formattedTo = new Date(to).toISOString().split('T')[0];
             const url = `${APP_URLS.RtorReport}txt_frm_date=${formattedFrom}&txt_to_date=${formattedTo}&RetailerId1=${userId}`;
+            if (IsDealer) {
+                const dealerUrl = `${APP_URLS.dealer_fund_trans_history}dlmid=${userId}&txt_frm_date=${formattedFrom}&txt_to_date=${formattedTo}&remid=${selectedRetailerId}`;
+                console.log('Dealer URL:', dealerUrl);
+                console.log('selectedRetailerId****:', selectedRetailerId);
+                const response2 = await get({ url: dealerUrl });
+                console.log('Dealer Response:', response2);
+                if (!response2) {
+                    throw new Error('Network response was not ok');
+                }
+                //setInforeport(response2);
+                setTransactions(response2);
 
+                return;
+            }
             const response = await post({ url: url });
 
             console.log(response, url, 'response');
@@ -47,7 +61,7 @@ const RToRReport = () => {
     };
 
     useEffect(() => {
-        Rtor(selectedDate.from, selectedDate.to, selectedStatus);
+        Rtor(selectedDate.from, selectedDate.to, IsDealer ? selectedStatus : '');
     }, []);
 
     const renderItem = ({ item }) => (
@@ -81,23 +95,122 @@ const RToRReport = () => {
         </View>
     );
 
+    const renderItem2 = ({ item }) => (
+        console.log(item.ProfileImages),
+        <View>
+            <View style={[styles.itemContainer, { backgroundColor: color1 }]}>
+                <View style={styles.row}>
+                    <View style={styles.leftColumn}>
+                        <TouchableOpacity >
+                            <Image
+                                resizeMode="cover"
+                                source={
+                                    item.ProfileImages
+                                        ? { uri: `http://${APP_URLS.baseWebUrl}${item.ProfileImages}` }
+                                        : require('../../features/drawer/assets/bussiness-man.png')
+                                }
+                                style={styles.image}
+                            />
+                        </TouchableOpacity>
+                        <View >
+                            <Text style={styles.label}>{'FirmName'}</Text>
+                            <Text style={styles.value}>{item.FirmName === '' ? '....' : item.FirmName}</Text>
+                        </View>
+                    </View>
+
+                    <View style={styles.rightColumn}>
+                        <Text style={styles.label}>{'Type'}</Text>
+                        <Text style={styles.value}>{item.Type}</Text>
+
+                    </View>
+                </View>
+                <View style={[styles.border2, { backgroundColor: colorConfig.secondaryColor, marginTop: hScale(4) }]} />
+
+                <View style={styles.row}>
+                    <View style={styles.leftColumn}>
+
+                        <View >
+                            <Text style={styles.label}>{'Net T/F'}</Text>
+                            <Text style={styles.value}>₹ {item.TotalBal}</Text>
+                        </View>
+                    </View>
+
+                    <View style={styles.rightColumn}>
+                        <Text style={styles.label}>{'Amount'}</Text>
+                        <Text style={styles.value}>₹ {item.Balance}</Text>
+
+                    </View>
+                </View>
+                <View style={[styles.border2, { backgroundColor: colorConfig.secondaryColor }]} />
+
+                <View style={styles.row}>
+                    <View style={styles.leftColumn}>
+                        <View >
+                            <Text style={styles.label}>{'Date'}</Text>
+                            <Text style={styles.value}>{item.Date !== null ? `${item.Date}` : 'N/A'}</Text>
+
+                        </View>
+                    </View>
+
+                    <View style={styles.rightColumn}>
+                        <Text style={styles.label}>{'Charge'}</Text>
+                        <Text style={styles.value}>₹ {item.Commission}</Text>
+
+                    </View>
+                </View>
+
+                <View style={[styles.border2, { backgroundColor: colorConfig.secondaryColor, marginBottom: hScale(4) }]} />
+
+                <View style={styles.row}>
+                    <View style={styles.column}>
+                        <Text style={styles.label}>{'Pre Bal'}</Text>
+                        <Text style={styles.value}>₹ {item.RetailerOldBal}</Text>
+                    </View>
+                    <View style={[styles.border, { backgroundColor: colorConfig.secondaryColor }]} />
+
+                    <View style={styles.column}>
+                        <Text style={styles.label}>{'Post Bal'}</Text>
+                        <Text style={styles.value}>₹ {item.RetailerCurrentBal}</Text>
+                    </View>
+                    <View style={[styles.border, { backgroundColor: colorConfig.secondaryColor }]} />
+                    <View style={styles.column}>
+                        <Text style={styles.label}>{'Old Cr'}</Text>
+                        <Text style={styles.value}>{item.RetailerOldCr !== null ? `₹ ${item.RetailerOldCr}` : 'N/A'}</Text>
+
+                    </View>
+                </View>
+            </View>
+        </View>
+    );
+
+
     return (
         <View style={styles.main}>
-            <AppBarSecond title={'R To R History'} />
-                <DateRangePicker
-                    onDateSelected={(from, to) => setSelectedDate({ from, to })}
-                    SearchPress={(from, to, status) => Rtor(from, to, status)}
-                    status={selectedStatus}
-                    setStatus={setSelectedStatus}
-                    isStShow={false}
-                />
+            <AppBarSecond title={IsDealer ? 'Fund Transfer Report' : 'R To R History'} />
+
+            <DateRangePicker
+                onDateSelected={(from, to) => setSelectedDate({ from, to })}
+                SearchPress={(from, to, status) => Rtor(from, to, status)}
+                status={selectedStatus}
+                setStatus={setSelectedStatus}
+                isStShow={false}
+                isshowRetailer={IsDealer}
+                retailerID={(id) => {
+                    Rtor(selectedDate.from, selectedDate.to, status = 'ALL')
+                    console.log(id); // You can still log it for debugging
+                    setSelectedRetailerId(id); // Store the selected retailer ID
+                }}
+
+            />
+
+
 
             <View style={styles.container}>
 
                 {loading ? <ActivityIndicator size="large" color={colorConfig.secondaryColor} /> : !Array.isArray(transactions) || transactions.length === 0 ? <NoDatafound /> :
                     <FlashList
                         data={transactions}
-                        renderItem={renderItem}
+                        renderItem={IsDealer ? renderItem2 : renderItem}
                         keyExtractor={(item, index) => index.toString()}
                     />}
             </View>
@@ -148,6 +261,70 @@ const styles = StyleSheet.create({
         alignItems: 'flex-end',
         flex: 1,
     },
+
+    /////////////////////////////
+
+    itemContainer: {
+        paddingHorizontal: wScale(5),
+        borderRadius: 5,
+        paddingVertical: hScale(5),
+        marginBottom: hScale(10)
+
+    },
+    timenumber: {
+        color: '#000',
+        fontSize: wScale(16),
+        fontWeight: 'bold'
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+
+    },
+    leftColumn: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    rightColumn: {
+        flex: 1,
+        alignItems: 'flex-end',
+
+    },
+    column: {
+        alignItems: 'center',
+
+    },
+    border: {
+        height: '100%',
+        width: wScale(1),
+    },
+    border2: {
+        height: 1,
+        width: '100%',
+        marginVertical: hScale(2)
+    },
+    label: {
+        fontSize: wScale(11),
+        color: '#666666',
+    },
+    value: {
+        fontSize: wScale(14),
+        fontWeight: 'bold',
+        color: '#333333',
+    },
+    image: {
+        height: wScale(38),
+        width: wScale(40),
+        borderRadius: wScale(10),
+        marginRight:wScale(4)
+    },
+
+
 
 });
 

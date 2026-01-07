@@ -3,183 +3,164 @@ import { View, Text, FlatList, StyleSheet, ActivityIndicator, Alert } from 'reac
 import useAxiosHook from '../../utils/network/AxiosClient';
 import { APP_URLS } from '../../utils/network/urls';
 import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
+import DateRangePicker from '../../components/DateRange';
+import DynamicButton from '../drawer/button/DynamicButton';
+import { hScale, wScale } from '../../utils/styles/dimensions';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../reduxUtils/store';
+import NoDatafound from '../drawer/svgimgcomponents/Nodatafound';
 
 const PurchaseOrderReport = () => {
+    const { colorConfig ,IsDealer} = useSelector((state: RootState) => state.userInfo);
+    const color1 = `${colorConfig.secondaryColor}20`;
+    
     const [inforeport, setInforeport] = useState([]);
     const [loading, setLoading] = useState(true);
-    const { get, post } = useAxiosHook();
+    const { post } = useAxiosHook();
+    
+    const [selectedDate, setSelectedDate] = useState({
+        from: new Date().toISOString().split('T')[0],
+        to: new Date().toISOString().split('T')[0],
+    });
+    const [selectedStatus, setSelectedStatus] = useState('ALL');
 
-    const demoData = [
-        {
-            Rechargeno: '123',
-            Responsetime: '12:30 PM',
-            Amount: 1000,
-            opt: 'Operator A',
-            Status: 'Success',
-            Response: 'OK'
-        },
-        {
-            Rechargeno: '456',
-            Responsetime: '01:00 PM',
-            Amount: 2000,
-            opt: 'Operator B',
-            Status: 'Failed',
-            Response: 'Error'
-        },
-    ];
+    useEffect(() => {
+        fetchPurchaseOrderReport(selectedDate.from, selectedDate.to, selectedStatus);
+    }, [selectedDate, selectedStatus]);
 
-    const FundRecReport = async () => {
-        const today = new Date();
-        const formattedDate = today.toISOString().split('T')[0];
-        const url = `${APP_URLS.retailerBalRecRep}fromdate=${formattedDate}&todate=${formattedDate}`;
-
+    const fetchPurchaseOrderReport = async (from, to, status) => {
         try {
-            const response = await post({
-                url: `${APP_URLS.PurchaseOrderReport}txt_frm_date=2020-02-01&txt_to_date=${formattedDate}`
-            });
+            setLoading(true);
+            const formattedFrom = new Date(from).toISOString().split('T')[0];
+            const formattedTo = new Date(to).toISOString().split('T')[0];
 
+            const url2 = `${APP_URLS.DealerPurchaseOrderReport}txt_frm_date=${formattedFrom}&txt_to_date=${formattedTo}`;
+            const url = `${APP_URLS.PurchaseOrderReport}txt_frm_date=${formattedFrom}&txt_to_date=${formattedTo}&status=${status}`;
+           
+           
+           console.log('REQ URL',IsDealer?url2: url);
+           
+            const response = await post({ url :IsDealer?url2: url});
             console.log('API Response:', response);
 
-            if (!response || !response.Message) {
-                throw new Error('Network response was not ok or data is empty');
+            if (response?.Message) {
+                setInforeport(response.Message);
+            } else {
+                throw new Error('No data found');
             }
-
-            setInforeport(response.Message);
         } catch (error) {
             console.error('Error fetching data:', error);
-            Alert.alert('Error', 'Failed to load data, showing demo data');
-            setInforeport(demoData);
+            Alert.alert('Error', 'Failed to load data');
+            setInforeport([]);
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        FundRecReport();
-    }, []);
-
     const renderItem = ({ item }) => (
-        <View style={styles.card}>
-            <View style={styles.row}>
-                <View style={styles.column}>
-                    <Text style={styles.label}>Recharge No.</Text>
-                    <Text style={styles.value}>{item.Rechargeno || '...'}</Text>
-                </View>
-                <View style={styles.column}>
-                    <Text style={styles.label}>Response Time</Text>
-                    <Text style={styles.value}>{item.Responsetime || '0 0 0'}</Text>
-                </View>
+        <View style={[styles.card, { backgroundColor: color1, borderColor: colorConfig.secondaryColor }]}>
+            <View style={styles.rowview}>
+                <Text style={styles.timetex}>Order No</Text>
+                <Text style={styles.amounttex}>{item.orderno}</Text>
             </View>
-            <View style={styles.divider} />
-            <View style={styles.row}>
-                <View style={styles.flexColumn}>
-                    <Text style={styles.label}>Amount</Text>
-                    <Text style={styles.value}>{`\u20B9 ${item.Amount}`}</Text>
-                </View>
-                <View style={[styles.flexColumn, styles.center]}>
-                    <Text style={styles.label}>Operator</Text>
-                    <Text style={styles.value}>{item.opt || '...'}</Text>
-                </View>
-                <View style={styles.flexColumn}>
-                    <Text style={styles.label}>Status</Text>
-                    <Text style={styles.value}>{item.Status || '...'}</Text>
-                </View>
+            <View style={styles.border} />
+            <View style={styles.rowview}>
+                <Text style={styles.timetex}>Amount</Text>
+                <Text style={styles.amounttex}>₹ {item.amount}</Text>
             </View>
-            <View style={styles.row}>
-                <Text style={styles.responseLabel}>Response</Text>
-                <Text style={styles.responseValue}>{item.Response}</Text>
+            <View style={styles.border} />
+            <View style={styles.rowview}>
+                <Text style={styles.timetex}>Paymode</Text>
+                <Text style={styles.amounttex}>{item.paymode}</Text>
+            </View>
+            <View style={styles.border} />
+
+               <View style={styles.rowview}>
+                <Text style={styles.timetex}>Request To </Text>
+                <Text style={styles.amounttex}>{item.Role}</Text>
+            </View>
+            <View style={styles.border} />
+            <View style={styles.rowview}>
+                <Text style={styles.timetex}>Status</Text>
+                <Text style={styles.timetex}>{item.sts === 'APPROVED' ? 'APPROVED' : item.sts === 'Pending' ? 'Pending' : 'REJECTED'}     {item.sts === 'APPROVED' ? '✅' : item.sts === 'Pending' ? '⌛' : '❌'}</Text>
             </View>
         </View>
     );
 
-    if (loading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#0000ff" />
-            </View>
-        );
-    }
+    const handleLoadMore = () => {
+
+    };
 
     return (
-        <View >
-            <AppBarSecond
-                title="Purchase Orders Report"
-                onActionPress={undefined}
-                actionButton={undefined}
-                onPressBack={undefined}
+        <View style={styles.main}>
+            <AppBarSecond title="Purchase Orders Report" />
+            <DateRangePicker
+                onDateSelected={(from, to) => setSelectedDate({ from, to })}
+                SearchPress={(from, to, status) => fetchPurchaseOrderReport(from, to, status)}
+                status={selectedStatus}
+                setStatus={setSelectedStatus}
+            isshowRetailer={false}
+                isStShow={true} 
             />
-            <FlatList
-                data={inforeport}
-                renderItem={renderItem}
-                keyExtractor={(item, index) => index.toString()}
-                contentContainerStyle={{ paddingBottom: 20 }}
-            />
+            <View style={styles.container}>
+                {loading ? (
+                    <ActivityIndicator size="large" color="#4CAF50" />
+                ) : (
+                    inforeport.length === 0 ? (
+                       <NoDatafound/>
+                    ) : (
+                        <FlatList
+                            data={inforeport}
+                            renderItem={renderItem}
+                            keyExtractor={(item, index) => index.toString()}
+                            ListFooterComponent={
+                                inforeport.length > 10 ? (
+                                    <DynamicButton onPress={handleLoadMore} title={'Load More'} />
+                                ) : null
+                            }
+                        />
+                    )
+                )}
+            </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f0f0f0',
-    },
+    main: { flex: 1 },
+    container: { flex: 1, paddingHorizontal: wScale(10), paddingVertical: hScale(20) },
     card: {
-        backgroundColor: 'white',
-        marginBottom: 10,
-        padding: 10,
-        borderRadius: 5,
+        marginBottom: hScale(10),
+        borderWidth: wScale(0.7),
+        borderRadius: 10,
         shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-        elevation: 2,
-        marginHorizontal: 10,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        paddingHorizontal: wScale(10),
+        paddingVertical: hScale(8),
     },
-    row: {
+    rowview: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 5,
-    },
-    column: {
-        flex: 1,
-    },
-    flexColumn: {
-        flex: 1,
         alignItems: 'center',
     },
-    center: {
-        borderLeftWidth: 1,
-        borderRightWidth: 1,
-        borderColor: '#ddd',
+    border: {
+        borderBottomWidth: wScale(0.7),
+        borderColor: '#000',
+        marginVertical: hScale(4),
     },
-    label: {
-        fontSize: 10,
-        color: '#666666',
-    },
-    value: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: '#333333',
-        marginTop: 2,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: '#ddd',
-        marginVertical: 5,
-    },
-    responseLabel: {
-        fontSize: 12,
+    amounttex: {
+        fontSize: wScale(15),
+        color: '#000',
         fontWeight: 'bold',
     },
-    responseValue: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        flex: 1,
+    timetex: {
+        fontSize: 14,
+        color: '#000',
+    },
+    textrit: {
         textAlign: 'right',
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
     },
 });
 

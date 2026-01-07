@@ -1,4 +1,4 @@
-package com.smartpaymoney.newarchitecture.components;
+package com.himanshusrecharge.newarchitecture.components;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;

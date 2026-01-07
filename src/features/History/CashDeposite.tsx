@@ -11,7 +11,7 @@ import { RootState } from '../../reduxUtils/store';
 import NoDatafound from '../drawer/svgimgcomponents/Nodatafound';
 
 const cashDepReport = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig ,IsDealer} = useSelector((state: RootState) => state.userInfo);
   const color1 = `${colorConfig.secondaryColor}20`;
   const [present, setPresent] = useState(10);
   const [transactions, setTransactions] = useState([]);
@@ -24,7 +24,7 @@ const cashDepReport = () => {
   const [searchnumber, setSearchnumber] = useState('');
   const [heightview, setHeightview] = useState(false);
 
-  const { get } = useAxiosHook();
+  const { get ,post} = useAxiosHook();
   const { userId } = useSelector((state) => state.userInfo);
   useEffect(() => {
     recentTransactions(selectedDate.from, selectedDate.to, selectedStatus);
@@ -47,11 +47,13 @@ const cashDepReport = () => {
       console.log(response);
 
       const transactionsData = response || [];
-      setTransactions(transactionsData);
 
       if (transactionsData.length === 0) {
         setLoading(false);
+        return
       }
+      setTransactions(transactionsData);
+
     } catch (error) {
       console.error('Error fetching transactions:', error);
       setTransactions([]);
@@ -158,6 +160,9 @@ const cashDepReport = () => {
         setStatus={setSelectedStatus}
         searchnumber={searchnumber}
         setSearchnumber={setSearchnumber}
+        isshowRetailer={IsDealer}
+
+        isStShow={true}
       />
       <View style={styles.container}>
       {loading ? (

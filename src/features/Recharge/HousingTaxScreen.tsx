@@ -20,7 +20,6 @@ import { translate } from '../../utils/languageUtils/I18n';
 import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
-import { useLocationHook } from '../../utils/hooks/useLocationHook';
 import { encrypt } from '../../utils/encryptionUtils';
 import { useNavigation } from '@react-navigation/native';
 import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
@@ -33,6 +32,7 @@ import OperatorBottomSheet from '../../components/OperatorBottomSheet';
 import Rechargeconfirm from '../../components/Rechargeconfirm';
 import { read } from 'react-native-fs';
 import RecentText from '../../components/RecentText';
+import { useLocationHook } from '../../hooks/useLocationHook';
 
 const HousingTaxScreen = () => {
   const { get, post } = useAxiosHook();
@@ -218,7 +218,7 @@ const HousingTaxScreen = () => {
   };
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
-  const { userId } = useSelector((state: RootState) => state.userInfo);
+  const { userId ,Loc_Data} = useSelector((state: RootState) => state.userInfo);
   const { latitude, longitude } = useLocationHook();
 
 
@@ -241,7 +241,6 @@ const HousingTaxScreen = () => {
   };
   const onRechargePress = useCallback(async () => {
 
-    const loc = await readLatLongFromStorage()
     setShowLoader(true);
 
     const mobileNetwork = await getNetworkCarrier();
@@ -251,8 +250,8 @@ const HousingTaxScreen = () => {
       consumerNo,
       optcode,
       amount,
-      loc?.latitude,
-      loc?.longitude,
+      Loc_Data['latitude'],Loc_Data['longitude'],
+
       'city',
       'address',
       'postcode',
@@ -289,13 +288,20 @@ const HousingTaxScreen = () => {
       const res = await post({
         url: url,
       });
-      console.log(res);
+      console.log(res,'************************');
       console.log(status);
+      if(res.status ==='False'){
+        alert(res.message);
+        setShowLoader(false);
 
+        return
+      }
       status = res.Response;
       Message = res.Message;
       await recenttransactions();
     } catch (error) {
+      setShowLoader(false);
+
       console.error("Recharge failed:", error);
       status = "Failed";
       Message = "Recharge failed, please try again";
@@ -308,14 +314,15 @@ const HousingTaxScreen = () => {
     setShowLoader(false);
 
     navigation.navigate('Rechargedetails', {
-      mobileNumber: consumerNo,
-      Amount: amount,
-      operator: selectedOpt,
-      status,
-      reqId,
-      reqTime,
-      Message
+      mobileNumber: consumerNo ?? '',  // Default to empty string if null or undefined
+      Amount: amount ?? 0,             // Default to 0 if null or undefined
+      operator: selectedOpt ?? 'N/A',  // Default to 'N/A' if null or undefined
+      status: status ?? 'Unknown',    // Default to 'Unknown' if null or undefined
+      reqId: reqId ?? '',             // Default to empty string if null or undefined
+      reqTime: reqTime ?? new Date().toISOString(),  // Default to current time if null or undefined
+      Message: Message ?? 'No message available'  // Default to 'No message available' if null or undefined
     });
+    
 
   }, [
     amount,
@@ -500,7 +507,7 @@ const HousingTaxScreen = () => {
         )}
 
 <View>
-          <FlotingInput label={paramname} value={consumerNo} keyboardType="numeric"
+          <FlotingInput label={paramname} value={consumerNo} 
             
             onChangeTextCallback={text => {
               setconsumerNo(text);
@@ -535,7 +542,9 @@ const HousingTaxScreen = () => {
         </View>
        
 
-        <FlotingInput label={'Enter Amount'} value={amount} onChangeTextCallback={text => setAmount(text)}
+        <FlotingInput label={'Enter Amount'}
+             maxLength={5}
+              value={amount} onChangeTextCallback={text => setAmount(text)}
           keyboardType="numeric" />
 
 

@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "E:\\NativeProject(24 sept 2024)\\smartpaymoney2\\android\\app\\build\\intermediates\\incremental\\mergeReleaseResources\\merged.dir\\values-large-v22\\values-large-v22.xml",
+            "outputFile": "E:\\react_native Project\\aasha_reactNative\\android\\app\\build\\intermediates\\incremental\\mergeReleaseResources\\merged.dir\\values-large-v22\\values-large-v22.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\user\\.gradle\\caches\\transforms-3\\7e5cc7bd2b6be08992dcfc48fc86cb1f\\transformed\\jetified-payu-custom-browser-7.13.2\\res\\values-large-v22\\values-large-v22.xml",
+                    "source": "C:\\Users\\ANDROID  SUPPORT\\.gradle\\caches\\transforms-3\\881bc4859b923e1d876e51843b491189\\transformed\\jetified-payu-custom-browser-7.13.2\\res\\values-large-v22\\values-large-v22.xml",
                     "from": {
                         "startLines": "2,3",
                         "startColumns": "4,4",

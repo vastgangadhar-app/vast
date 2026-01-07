@@ -9,6 +9,11 @@ import {
     Alert,
     ActivityIndicator,
     TouchableOpacity,
+    BackHandler,
+    AsyncStorage,
+    Platform,
+    KeyboardAvoidingView,
+    ToastAndroid,
 } from 'react-native';
 import { hScale, wScale } from '../../utils/styles/dimensions';
 import { APP_URLS } from '../../utils/network/urls';
@@ -26,6 +31,8 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
 import DownloadSvg from '../drawer/svgimgcomponents/DownloadSvg';
 import ShareSvg from '../drawer/svgimgcomponents/sharesvg';
+import PaymentQR from './PaymentQR';
+import { useNavigation } from '../../utils/navigation/NavigationService';
 
 const UpiQrCodes = ({ route }) => {
     const { colorConfig } = useSelector((state: RootState) => state.userInfo);
@@ -38,45 +45,103 @@ const UpiQrCodes = ({ route }) => {
     const [UtrNumber, setUtrNumber] = useState('');
     const [intervalId, setIntervalId] = useState(null);
     const [iscall, setIscall] = useState(true);
+    const [bharatPeResponse, setBharatPeResponse] = useState(null);
+
+    const navigation = useNavigation<any>();
 
     useEffect(() => {
         createqr(amnt, response.name);
-    }, [amnt]);
+    }, []);
+    useEffect(() => {
+        return () => {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        };
 
+    }, [intervalId]);
+
+
+
+    const start = (tx, type) => {
+        if (intervalId) return;
+
+        const id = setInterval(() => {
+            paymentresponse(tx, type)
+        }, 5000);
+
+        setIntervalId(id);
+    };
+    const stop = () => {
+        if (intervalId) {
+            clearInterval(intervalId);
+            setIntervalId(null);
+        }
+        navigation.navigate('HomeScreen')
+    };
     const createqr = useCallback(async (amnt, type) => {
-        let url = '';
+        let url = "";
+
         switch (type) {
-            case 'PAYTM':
+            case "PAYTM":
                 url = `${APP_URLS.PaytmQrGenerate}${amnt}`;
                 break;
-            case 'PHONE PE':
+
+            case "PHONE PE":
                 url = `${APP_URLS.PhonePeQrGenerate}${amnt}`;
                 break;
-            case 'BHARAT PE':
+
+            case "BHARAT PE":
                 url = `${APP_URLS.BharatPeQrGenerate}${amnt}`;
                 break;
-            default:
+
+            case "VASTBAZAAR":
+                url = `${APP_URLS.VastbazzarUPIQRGenerate}${amnt}`;
                 break;
+
+            default:
+                console.warn("Invalid QR Type:", type);
+                alert("Invalid QR Type Selected!");
+                return;
         }
-        console.log(type, url);
+
+        console.log("QR TYPE:", type, "URL:", url);
+
         try {
-            const Response = await post({ url: url });
-            const image = Response.image;
-            const tx = await Response.txnid;
+            const Response = await post({ url });
+
+            console.log("QR RESPONSE:", Response);
+
+            const image = Response?.image;
+            const tx = Response?.txnid;
+
+            if (!tx) {
+                alert("Transaction ID missing!");
+                return;
+            }
+
             setTxnId(tx);
-            console.log(Response);
+
+            // If QR image exists
             if (image) {
                 setCode(`data:image/png;base64,${image}`);
-                if (type !== 'BHARAT PE') {
+
+                // BharatPe does NOT auto-trigger start()
+                if (type !== "BHARAT PE") {
+                    start(tx, type);
                     paymentresponse(tx, type);
                 }
+
             } else {
-                alert(Response.message);
+                alert(Response?.message || "Failed to generate QR");
             }
+
         } catch (error) {
-            console.error('Error in createqr:', error);
+            console.error("Error in createqr:", error);
+            alert("Something went wrong while generating QR!");
         }
     }, [post]);
+
 
     const paymentresponse = useCallback(async (txnid, type) => {
         let url = '';
@@ -91,6 +156,9 @@ const UpiQrCodes = ({ route }) => {
             case 'BHARAT PE':
                 url = `${APP_URLS.getBharatPeResponse}txnid=${txnid}&Utr=${UtrNumber}`;
                 break;
+            case 'VASTBAZAAR':
+                url = `${APP_URLS.VastbazaarResponse}${txnid}`;
+                break;
             default:
                 break;
         }
@@ -98,22 +166,56 @@ const UpiQrCodes = ({ route }) => {
         try {
             const Response = await post({ url: url });
             console.log(url);
-            console.log(Response);
+            console.log(Response, '***************');
 
             if (Response.toUpperCase() === 'YES') {
+                stop();
                 setHideqr(false);
                 setCode('');
-                Alert.alert(
-                    'Payment Successful',
-                    'Your payment was completed successfully. Thank you for your transaction!',
-                    [
-                        {
-                            text: 'OK',
-                            onPress: () => { },
-                        },
-                    ],
-                    { cancelable: false }
-                );
+
+                if (Response.toUpperCase() === 'YES') {
+                    stop();
+                    setHideqr(false);
+                    setCode('');
+                    const result = {
+                        pa: "",
+                        pn: "",
+                        mc: "",
+                        mode: "",
+                        orgid: "",
+                        tid: "",
+                        tr: Txnid,
+                        am: amnt,
+                        cu: "INR",
+                        tn: "",
+                        refUrl: ""
+                    };
+
+                    await AsyncStorage.setItem(
+                        "upi_intent_params",
+                        JSON.stringify({ result })  // <-- wrap inside result
+                    );
+
+                    await AsyncStorage.setItem("upi_intent_params", JSON.stringify(result));
+                    navigation.navigate("AddMoneyPayResponse");
+
+                    //             Alert.alert(
+                    //                 'Payment Successful',
+                    //                 'Your payment was completed successfully. Thank you for your transaction!',
+                    //                 [
+                    //                     {
+                    //                         text: 'OK',
+                    //                         onPress: async () => {
+
+                    //                        await dispatch(clearLastScreen());
+                    // navigation.navigate("DashboardScreen");
+
+                    //                          },
+                    //                     },
+                    //                 ],
+                    //                 { cancelable: false }
+                    //             );
+                }
             }
             console.log(txnid);
         } catch (error) {
@@ -121,9 +223,55 @@ const UpiQrCodes = ({ route }) => {
         }
     }, [post, intervalId, UtrNumber]);
 
+    const paymentResponseForBharatPe = useCallback(async (txnid, utrNumber) => {
+
+        console.log(utrNumber, Txnid, txnid, '---1ttt');
+
+
+        let url = `${APP_URLS.getBharatPeResponse}txnid=${txnid}&Utr=${utrNumber}`;
+
+        try {
+            const response = await post({ url: url });
+            console.log(url);
+            console.log(response, '***************');
+
+            setBharatPeResponse(response)
+            if (response.toUpperCase() === 'YES') {
+                stop();
+                setHideqr(false);
+                setCode('');
+
+                const result = {
+                    "pa": "",
+                    "pn": "",
+                    "mc": "",
+                    "mode": "",
+                    "orgid": "",
+                    "tid": "",
+                    "tr": Txnid,
+                    "am": amnt,
+                    "cu": "INR",
+                    "tn": utrNumber,
+                    "refUrl": ""
+                }
+                await AsyncStorage.setItem("upi_intent_params", JSON.stringify(result));
+                navigation.navigate("AddMoneyPayResponse");
+            } else {
+                ToastAndroid.show(
+                    "Payment status is NO. Please submit again.",
+                    ToastAndroid.SHORT
+                );
+            }
+            console.log(txnid);
+        } catch (error) {
+            console.error('Error fetching BharatPe payment status:', error);
+        }
+    }, [post, intervalId]);
+
+
     const downloadQRCode = async () => {
         if (code) {
-            const downloadDest = `${RNFS.DownloadDirectoryPath}/qrcode-Nobelpay App-${Txnid}-₹${amnt}.png`;
+            const downloadDest = `${RNFS.DownloadDirectoryPath}/qrcode-${APP_URLS.AppName}-${Txnid}-₹${amnt}.png`;
             try {
                 await RNFS.writeFile(downloadDest, code.split('data:image/png;base64,')[1], 'base64');
                 Alert.alert('Download Successful', 'QR code has been downloaded successfully.');
@@ -151,99 +299,48 @@ const UpiQrCodes = ({ route }) => {
             }
         }
     };
+    useEffect(() => {
+        const backAction = () => {
+            Alert.alert(
+                "Confirmation",
+                "Do you want to cancel txn or go back?",
+                [
+                    {
+                        text: "Go Back",
+                        onPress: () => {
+                            navigation.navigate('DashboardScreen')
+                        },
+                    },
 
+
+                    {
+                        text: "Cancel",
+                        style: "cancel",
+                    },
+                ]
+            );
+
+            return true;
+        };
+
+        const backHandler = BackHandler.addEventListener(
+            "hardwareBackPress",
+            backAction
+        );
+
+        return () => backHandler.remove();
+    }, []);
     return (
         <View style={styles.container}>
-            <AppBarSecond title={'Scann'} />
-            <ScrollView contentContainerStyle={styles.scrollView}>
-                <View style={styles.contentContainer}>
+            <AppBarSecond title={'Scann & Pay'} />
 
-                    {response.name === 'PHONE PE' ? (
-                        <Phonepesvg />
-                    ) : response.name === 'BHARAT PE' ? (
-                        <BharatPeSvg size={70} />
-                    ) : response.name === 'PAYTM' ? (
-                        <PayTmSvg size={70} />
-                    ) : null}
-                    <View style={styles.qrContainer}>
+            <View style={styles.container}>
+                <PaymentQR
+                    bharatPeResponse={bharatPeResponse}   // ✅ PASS HERE
+                    QrImg={code} amnt={amnt} name={response.name} Txnid={Txnid} onBharatpayresponse={paymentResponseForBharatPe} />
 
-                        {hideqr ? (
-                            <View style={styles.qrImageContainer}>
-                                {code ? <Image
-                                    source={{ uri: code }}
-                                    style={styles.qrImage}
-                                /> : <ActivityIndicator />}
-                                <CountdownTimer
-                                    onComplete={() => {
-                                        setHideqr(false);
-                                        setCode('');
-                                        console.log('QR code has expired');
-                                    }}
-                                    initialTime={120}
+            </View>
 
-                                />
-                            </View>
-                        ) : (
-                            <Text style={styles.qrText}>QR code has expired.</Text>
-                        )}
-                    </View>
-                </View>
-
-                {response.name === 'BHARAT PE' ? (
-                    <FlotingInput
-                        label="Enter UTR Number"
-                        value={UtrNumber}
-                        onChangeText={setUtrNumber}
-                        keyboardType="numeric"
-                        onChangeTextCallback={(text) => {
-                            setUtrNumber(text);
-                        }}
-                    />
-                ) : null}
-
-                {code ? (
-                    <View>
-                        {response.name === 'BHARAT PE' && UtrNumber.length >= 12 ? (
-                            <DynamicButton
-                                title="Start Payment Response"
-                                onPress={() => paymentresponse(Txnid, 'BHARAT PE')}
-                                styleoveride={styles.option}
-                            />
-                        ) : (
-                            <DynamicButton
-                                title={iscall ? "Check Payment Response" : "Check Again Payment Response"}
-                                onPress={() => paymentresponse(Txnid, response.name)}
-                                styleoveride={styles.option}
-                            />
-                        )}
-                        <View
-                            style={[
-                                styles.btn2,
-                                { backgroundColor: colorConfig.primaryButtonColor },
-                            ]}
-                        >
-                            <TouchableOpacity onPress={downloadQRCode} style={styles.homebtn}>
-                                <DownloadSvg />
-                            </TouchableOpacity>
-                            <View style={[styles.btnborder]} />
-                            <TouchableOpacity onPress={shareQRCode} style={styles.homebtn}>
-                                <ShareSvg />
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* <DynamicButton
-                            title="Download QR Code"
-                            onPress={downloadQRCode}
-                            styleoveride={styles.option}
-                        />
-                        <DynamicButton
-                            title="Share QR Code"
-                            onPress={shareQRCode}
-                            styleoveride={styles.option}
-                        /> */}
-                    </View>
-                ) : null}
-            </ScrollView>
         </View>
     );
 };
@@ -306,22 +403,22 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
         width: '40%',
         paddingHorizontal: wScale(4),
-      },
-      btnborder: {
+    },
+    btnborder: {
         borderRightWidth: wScale(0.5),
         height: "100%",
         borderColor: "rgba(255,255,255,0.5)",
-      },
-      btntext: {
+    },
+    btntext: {
         color: "#fff",
         fontSize: wScale(22),
         fontWeight: "bold",
         textAlign: "center",
-      },
-      homebtn: {
+    },
+    homebtn: {
         flex: 1,
         alignItems: 'center'
-      }
+    }
 });
 
 export default UpiQrCodes;

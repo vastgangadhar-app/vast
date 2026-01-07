@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { Text, TouchableOpacity, View, StyleSheet, AsyncStorage } from 'react-native';
 import { reset } from '../../reduxUtils/store/userInfoSlice';
 import { useNavigation } from '@react-navigation/native';
 import { useSelector, useDispatch } from 'react-redux';
@@ -24,7 +24,13 @@ const Logout = () => {
     navigation.goBack();
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.clear();
+      console.log('All AsyncStorage data cleared');
+    } catch (error) {
+      console.error('Failed to clear AsyncStorage:', error);
+    }
     dispatch(reset());
   };
 

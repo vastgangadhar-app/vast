@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "E:\\NativeProject(24 sept 2024)\\smartpaymoney2\\android\\app\\build\\intermediates\\incremental\\mergeReleaseResources\\merged.dir\\values-v29\\values-v29.xml",
+            "outputFile": "E:\\react_native Project\\aasha_reactNative\\android\\app\\build\\intermediates\\incremental\\mergeReleaseResources\\merged.dir\\values-v29\\values-v29.xml",
             "map": [
                 {
-                    "source": "E:\\NativeProject(24 sept 2024)\\smartpaymoney2\\node_modules\\react-native-bootsplash\\android\\build\\intermediates\\packaged_res\\release\\values-v29\\values-v29.xml",
+                    "source": "E:\\react_native Project\\aasha_reactNative\\node_modules\\react-native-bootsplash\\android\\build\\intermediates\\packaged_res\\release\\values-v29\\values-v29.xml",
                     "from": {
                         "startLines": "2,5",
                         "startColumns": "4,4",

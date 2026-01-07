@@ -9,6 +9,7 @@ import {
   ToastAndroid,
   Alert,
   AsyncStorage,
+  Modal,
 } from 'react-native';
 import { colors } from '../../utils/styles/theme';
 import { SCREEN_HEIGHT, hScale, wScale } from '../../utils/styles/dimensions';
@@ -20,7 +21,6 @@ import { translate } from '../../utils/languageUtils/I18n';
 import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
 import { RootState } from '../../reduxUtils/store';
 import { encrypt } from '../../utils/encryptionUtils';
-import { useLocationHook } from '../../utils/hooks/useLocationHook';
 import { useSelector } from 'react-redux';
 import ShowLoader from '../../components/ShowLoder';
 import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
@@ -32,6 +32,9 @@ import { useNavigation } from '@react-navigation/native';
 import RecentHistory from '../../components/RecentHistoryBottomSheet';
 import OnelineDropdownSvg from '../drawer/svgimgcomponents/simpledropdown';
 import RecentText from '../../components/RecentText';
+import CloseSvg from '../drawer/svgimgcomponents/CloseSvg';
+import CalendarPicker from 'react-native-calendar-picker';
+import { useLocationHook } from '../../hooks/useLocationHook';
 
 const InsuranceScreen = () => {
   const { get, post } = useAxiosHook();
@@ -42,6 +45,8 @@ const InsuranceScreen = () => {
   const [insuranceOptList, setInsuranceOptList] = useState([]);
   const [isOperatorList, setIsOperatorList] = useState(false);
   const [selectedOpt, setselectedOpt] = useState(
+    translate('Select Your Operator'),
+  );  const [selectedOpt2, setselectedOpt2] = useState(
     translate('Select Your Operator'),
   );
   const [CustomerID, setCustomerID] = useState('');
@@ -184,25 +189,24 @@ const InsuranceScreen = () => {
     setKeyType3('default');
   };
   useEffect(() => {
-    recenttransactions();
+    const recenttransactions = async () => {
+      try {
+        const url = `${APP_URLS.recenttransaction}pageindex=1&pagesize=5&retailerid=${userId}&fromdate=${formattedDate}&todate=${formattedDate}&role=Retailer&rechargeNo=ALL&status=ALL&OperatorName=ALL&portno=ALL`
+        console.log(url);
+        const response = await get({ url: url })
+        console.log('-*************************************', response);
 
-  }, []);
-  const recenttransactions = async () => {
-    try {
-      const url = `${APP_URLS.recenttransaction}pageindex=1&pagesize=5&retailerid=${userId}&fromdate=${formattedDate}&todate=${formattedDate}&role=Retailer&rechargeNo=ALL&status=ALL&OperatorName=ALL&portno=ALL`
-      console.log(url);
-      const response = await get({ url: url })
-      console.log('-*************************************', response);
+        setHistorylist(response);
+        setReqTime(response[0]['Reqesttime']);
+        setReqId(response[0]['Request_ID'])
 
-      setHistorylist(response);
-      setReqTime(response[0]['Reqesttime']);
-      setReqId(response[0]['Request_ID'])
+      } catch (error) {
+        console.log(error);
 
-    } catch (error) {
-      console.log(error);
-
+      }
     }
-  }
+  }, []);
+
 
   const currentDate = new Date();
   const year = currentDate.getFullYear();
@@ -212,12 +216,12 @@ const InsuranceScreen = () => {
   const formattedDate = `${year}-${month}-${day}`;
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
-  const { userId } = useSelector((state: RootState) => state.userInfo);
+  const { userId  ,Loc_Data } = useSelector((state: RootState) => state.userInfo);
   const { latitude, longitude } = useLocationHook();
   const readLatLongFromStorage = async () => {
     try {
       const locationData = await AsyncStorage.getItem('locationData');
-      
+
       if (locationData !== null) {
         const { latitude, longitude } = JSON.parse(locationData);
         console.log('Latitude:', latitude, 'Longitude:', longitude);
@@ -228,13 +232,13 @@ const InsuranceScreen = () => {
       }
     } catch (error) {
       console.error('Failed to read location data from AsyncStorage:', error);
-      return null; 
+      return null;
     }
   };
   const onRechargePress = useCallback(async () => {
 
 
-    const loc = await readLatLongFromStorage()
+
     setShowLoader(true)
     const mobileNetwork = await getNetworkCarrier();
     const ip = await getMobileIp();
@@ -243,8 +247,8 @@ const InsuranceScreen = () => {
       consumerNo,
       optcode,
       amount,
-      loc?.latitude,
-      loc?.longitude,
+      Loc_Data['latitude'],Loc_Data['longitude'],
+
       'city',
       'address',
       'postcode',
@@ -283,7 +287,12 @@ const InsuranceScreen = () => {
       });
       console.log(res);
       console.log(status);
+      if(res.status ==='False'){
+        alert(res.message);
+        setShowLoader(false);
 
+        return
+      }
       status = res.Response;
       Message = res.Message;
       await recenttransactions();
@@ -300,14 +309,15 @@ const InsuranceScreen = () => {
     setShowLoader(false);
 
     navigation.navigate('Rechargedetails', {
-      mobileNumber: consumerNo,
-      Amount: amount,
-      operator: selectedOpt,
-      status,
-      reqId,
-      reqTime,
-      Message
+      mobileNumber: consumerNo ?? '',
+      Amount: amount ?? 0,
+      operator: selectedOpt ?? 'N/A',
+      status: status ?? 'Unknown',
+      reqId: reqId ?? '',
+      reqTime: reqTime ?? new Date().toISOString(),
+      Message: Message ?? 'No message available'
     });
+    
 
   }, [
     amount,
@@ -333,33 +343,53 @@ const InsuranceScreen = () => {
     }
   }
   const selectOperator = selectedOperator => {
-    console.log('Selected Operator:', selectedOperator);
-    setselectedOpt(selectedOperator);
+    console.log('Selected Operator:', selectedOperator.length);
+    setselectedOpt(selectedOperator);  
+    
     setIsOperatorList(false);
+const lic =selectedOperator
+const licWithoutSpaces = lic.replace(/\s+/g, '');
+console.log(licWithoutSpaces.toLowerCase(),licWithoutSpaces.length);
+
+setselectedOpt2(licWithoutSpaces);
+
+    console.log(selectedOperator ===lic,lic.length,'@@@@@@@@@@@@@@@@@@@@@@@@')
     // setOptimg('selectOperatorImage');
   };
 
   async function billInfo() {
     try {
-
-
-      const url = `${APP_URLS.rechargeViewBill}billnumber=${consumerNo}&Operator=${optcode}&billunit&ProcessingCycle&acno&lt&ViewBill=Y`;
+      const url = `${APP_URLS.rechargeViewBill}billnumber=${consumerNo}&Operator=${optcode}&billunit=${dob}&ProcessingCycle=${email}&acno&lt&ViewBill=Y`;
+      console.log(url);
       const res = await get({ url: url });
+  
       if (res['RESULT'] === 0) {
-        const addinfo = res['ADDINFO']
-        const billinfoo = addinfo['BillInfo'];
-        setDueDate(billinfoo["billDueDate"]);
-        setAmount(billinfoo["billAmount"]);
-        setCustomerName(billinfoo["customerName"]);
-        setCustBal(billinfoo["balance"]);
-        setAmount(billinfoo["billAmount"]);
+
+        const addinfo = res['ADDINFO'];
+        
+        if(addinfo.IsSuccess){
+          const billinfoo = addinfo['BillInfo'];
+          setDueDate(billinfoo["billDueDate"]);
+          setAmount(billinfoo["billAmount"]);
+          setCustomerName(billinfoo["customerName"]);
+          setCustBal(billinfoo["balance"]);
+          setAmount(billinfoo["billAmount"]);
+        }
+        setBottomSheetVisible(true);
+
         //setstatus(res["customerStatus"])
       } else {
-        Alert.alert(res['ADDINFO'], res['Message'], [{ text: 'OK', onPress: () => { } }]);
+        const addinfo = res['ADDINFO'];
+        const message = res['Message'] || addinfo.Message || 'An error occurred';
+        Alert.alert('Error', message, [{ text: 'OK', onPress: () => {} }]);
       }
-
-    } catch (error) { }
+  
+    } catch (error) {
+      console.error("Error during bill info fetch:", error);
+      Alert.alert('Error', 'Something went wrong while fetching the bill info.', [{ text: 'OK', onPress: () => {} }]);
+    }
   }
+  
   async function ViewbillInfoStatus(optcode) {
     console.log(optcode);
     try {
@@ -409,6 +439,31 @@ const InsuranceScreen = () => {
       billInfo()
     }
   };
+  const [dob, setDob] = useState('Select DOB');
+  const [email, setEmail] = useState('');
+  const [isModalVisible, setModalVisible] = useState(false)
+
+  const toggleModal = () => {
+    setModalVisible(!isModalVisible);
+  };
+  const formatDate = (date) => {
+    const day = String(date.getDate()).padStart(2, '0'); // Get day and pad with 0 if single digit
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Get month (0-based, so add 1) and pad
+    const year = date.getFullYear(); // Get the full year
+
+    return `${day}/${month}/${year}`; // Return formatted string
+  };
+  const onDateChange = (date) => {
+    const formattedDate = formatDate(date);
+
+    // Set modal visibility to false
+    setModalVisible(false);
+
+    // Set the formatted date to dob state
+    setDob(formattedDate);
+    console.log(formattedDate)
+
+  };
   return (
     <View style={styles.main}>
       <AppBarSecond title={'Insurance  Screen'} />
@@ -419,13 +474,7 @@ const InsuranceScreen = () => {
         )}
 
         <TouchableOpacity onPress={() => setIsOperatorList(true)}>
-          {/* <TextInput
-            style={styles.DetailButton}
-            placeholder={'Select Operator'}
-            onChangeText={text => setTextInput1(text)}
-            editable={false}
-            value={selectedOpt}
-          /> */}
+
           <FlotingInput label={selectedOpt} editable={false} />
           <View style={[styles.righticon2]}>
 
@@ -437,7 +486,7 @@ const InsuranceScreen = () => {
         {accntvisivility && (
           <View>
             <FlotingInput label={accnumhint} onChangeTextCallback={(text) => setAgencyCode(text)}
-              value={agencyCode} 
+              value={agencyCode}
 
             />
             <TouchableOpacity>
@@ -446,11 +495,29 @@ const InsuranceScreen = () => {
           </View>
         )}
 
+        {selectedOpt2.toLowerCase()== 'lifeinsurancecorporation' && <TouchableOpacity onPress={() => setModalVisible(true)}>
+          <FlotingInput
+            label="Enter Date of Birth (DD/MM/YYYY)"
+            value={dob}
+            onChangeTextCallback={formatDate}
+            keyboardType="numeric"
+            maxLength={12}
+            inputstyle={{}}
+            editable={false}
+          />
+        </TouchableOpacity>}
+        {selectedOpt2.toLowerCase() == 'lifeinsurancecorporation' && <FlotingInput
+          onChangeTextCallback={text => setEmail(text)}
+          label="Enter G-mail"
+
+          value={email}
+          editable={true} />}
+
         {accntvisivility2 && (
           <View >
 
             <FlotingInput label={accnumhint2} onChangeTextCallback={(text) => setAccnumhint2(text)}
-              value={accnumhint2} 
+              value={accnumhint2}
 
             />
             <View style={[styles.righticon2]}>
@@ -471,10 +538,10 @@ const InsuranceScreen = () => {
             onChangeText={text => setconsumerNo(text)}
           /> */}
 
-          <FlotingInput label={paramname} value={consumerNo} keyboardType="numeric"
-            
+          <FlotingInput label={paramname} value={consumerNo}
+
             onChangeTextCallback={text => {
-              setconsumerNo(text); setconsumerNo(text.replace(/\D/g, ""));
+              setconsumerNo(text);
               if (text.length >= 5) {
                 setIsinfo(true)
               } else {
@@ -505,7 +572,6 @@ const InsuranceScreen = () => {
                 // }}
                 onPress={() => {
                   billInfo();
-                  setBottomSheetVisible(true);
                 }}              >
 
                 <Text style={[styles.infobtntex,]}>Info</Text>
@@ -514,7 +580,9 @@ const InsuranceScreen = () => {
             )}
           </View>
         </View>
-        <FlotingInput label={'Enter Amount'} value={amount} onChangeTextCallback={text => setAmount(text)} keyboardType="numeric" />
+        <FlotingInput label={'Enter Amount'}
+          maxLength={5}
+          value={amount} onChangeTextCallback={text => setAmount(text)} keyboardType="numeric" />
         {/* <TextInput
           style={styles.DetailButton}
           placeholder={translate('Enter Amount')}
@@ -555,7 +623,7 @@ const InsuranceScreen = () => {
             setIsrecent(true);
           }}
             style={styles.recentviewbtn}>
-           <RecentText/>
+            <RecentText />
           </TouchableOpacity>
         </View>
 
@@ -569,7 +637,7 @@ const InsuranceScreen = () => {
           setOperatorcode={setOptCode}
           showState={false}
           // selectOperatorImage={setOptimg}
-          handleItemPress={(item)=>{handleItemPress(item)}}
+          handleItemPress={(item) => { handleItemPress(item) }}
 
         />
 
@@ -608,6 +676,33 @@ const InsuranceScreen = () => {
 
 
 
+        <Modal
+          visible={isModalVisible}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={toggleModal}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              {/* <Text style={styles.modalHeader}>Pick a Date</Text> */}
+
+              {/* CalendarPicker Component */}
+              <CalendarPicker
+                onDateChange={onDateChange}
+                selectedDayColor="#00BFFF" // Customize the selected day color
+                selectedDayTextColor="#FFF" // Customize the selected day text color
+              />
+
+              {/* Close Modal Button */}
+
+              <TouchableOpacity onPress={toggleModal}>
+                <CloseSvg color='red' size={hScale(20)} />
+
+              </TouchableOpacity>
+
+            </View>
+          </View>
+        </Modal>
       </View>
     </View>
 
@@ -636,6 +731,28 @@ const styles = StyleSheet.create({
   },
   infobtn: {
     alignItems: 'center',
+  },
+  selectedDateText: {
+    fontSize: 18,
+    marginTop: 20,
+    color: '#333',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+  },
+  modalContent: {
+    width: hScale(350),
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalHeader: {
+    fontSize: 18,
+    marginBottom: 20,
   },
   infobtntex: {
     fontSize: wScale(18),

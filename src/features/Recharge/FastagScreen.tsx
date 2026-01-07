@@ -21,7 +21,6 @@ import { translate } from '../../utils/languageUtils/I18n';
 import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
-import { useLocationHook } from '../../utils/hooks/useLocationHook';
 import { encrypt } from '../../utils/encryptionUtils';
 import AppBar from '../drawer/headerAppbar/AppBar';
 import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
@@ -35,6 +34,7 @@ import RecentHistory from '../../components/RecentHistoryBottomSheet';
 import ElectricityOperatorBottomSheet from '../../components/ElectricityOperatorBottomSheet';
 import OnelineDropdownSvg from '../drawer/svgimgcomponents/simpledropdown';
 import RecentText from '../../components/RecentText';
+import { useLocationHook } from '../../hooks/useLocationHook';
 
 const FastagScreen = () => {
   const { get, post } = useAxiosHook();
@@ -86,7 +86,7 @@ const FastagScreen = () => {
   const [showLoader2, setShowLoader2] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
   const [agencyCode, setAgencyCode] = useState('');
-    const [agencyCode2, setAgencyCode2] = useState('')
+  const [agencyCode2, setAgencyCode2] = useState('')
   const [isrecent, setIsrecent] = useState(false);
 
   const [historylist, setHistorylist] = useState([]);
@@ -164,12 +164,12 @@ const FastagScreen = () => {
   };
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
-  const { userId } = useSelector((state: RootState) => state.userInfo);
+  const { userId, Loc_Data } = useSelector((state: RootState) => state.userInfo);
   const { latitude, longitude } = useLocationHook();
 
   useEffect(() => {
     recenttransactions();
-  },[])
+  }, [])
 
   const recenttransactions = async () => {
     try {
@@ -192,7 +192,7 @@ const FastagScreen = () => {
   const readLatLongFromStorage = async () => {
     try {
       const locationData = await AsyncStorage.getItem('locationData');
-      
+
       if (locationData !== null) {
         const { latitude, longitude } = JSON.parse(locationData);
         console.log('Latitude:', latitude, 'Longitude:', longitude);
@@ -203,12 +203,12 @@ const FastagScreen = () => {
       }
     } catch (error) {
       console.error('Failed to read location data from AsyncStorage:', error);
-      return null; 
+      return null;
     }
   };
   const onRechargePress = useCallback(async () => {
 
-    const  loc = await readLatLongFromStorage()
+    const loc = await readLatLongFromStorage()
     setBottomSheetVisible(false);
     setShowLoader(true)
     const mobileNetwork = await getNetworkCarrier();
@@ -218,8 +218,8 @@ const FastagScreen = () => {
       consumerNo,
       optcode,
       amount,
-      loc?.latitude,
-      loc?.longitude,
+      Loc_Data['latitude'], Loc_Data['longitude'],
+
       'city',
       'address',
       'postcode',
@@ -249,7 +249,7 @@ const FastagScreen = () => {
     const value1 = encodeURIComponent(encryption.keyEncode);
     const value2 = encodeURIComponent(encryption.ivEncode);
 
-    const url = `${APP_URLS.rechTask}rd=${rd}&n=${n1}&ok=${ok1}&amn=${amn}&pc=${agencyCode}&bu=${agencyCode2}&acno=''&lt=''&ip=${ip1}&mc=''&em=${em}&offerprice=''&commAmount=''&Devicetoken=${devtoken}&Latitude=${Latitude}&Longitude=${Longitude}&ModelNo=${ModelNo}&City=${City}&PostalCode=${PostalCode}&InternetTYPE=${InternetTYPE}&Addresss=${Addresss}&value1=${value1}&value2=${value2}&billduedate=${dueDate}`;
+    const url = `${APP_URLS.rechTask}rd=${rd}&n=${n1}&ok=${ok1}&amn=${amn}&pc=${agencyCode}&bu=${agencyCode2}&acno&lt&ip=${ip1}&mc&em=${em}&offerprice&commAmount&Devicetoken=${devtoken}&Latitude=${Latitude}&Longitude=${Longitude}&ModelNo=${ModelNo}&City=${City}&PostalCode=${PostalCode}&InternetTYPE=${InternetTYPE}&Addresss=${Addresss}&value1=${value1}&value2=${value2}&billduedate=${dueDate}`;
     let status, Message;
 
     try {
@@ -258,9 +258,21 @@ const FastagScreen = () => {
       });
       console.log(res);
       console.log(status);
+      if(res['status'] ==='False'){
 
+        alert(res['message'])
+        // {"message": "Error In Location Info", "status": "False"}
+      //  ToastAndroid.show(res['message'],ToastAndroid.BOTTOM);
+        setShowLoader(false);
+
+        return;
+        
+        }
       status = res.Response;
       Message = res.Message;
+
+
+
       await recenttransactions();
     } catch (error) {
       console.error("Recharge failed:", error);
@@ -276,13 +288,13 @@ const FastagScreen = () => {
     setShowLoader(false);
 
     navigation.navigate('Rechargedetails', {
-      mobileNumber: consumerNo,
-      Amount: amount,
-      operator: selectedOpt,
-      status,
-      reqId,
-      reqTime,
-      Message
+      mobileNumber: consumerNo ?? '',
+      Amount: amount ?? 0,
+      operator: selectedOpt ?? 'N/A',
+      status: status ?? 'Unknown',
+      reqId: reqId ?? '',
+      reqTime: reqTime ?? new Date().toISOString(),
+      Message: Message ?? 'No message'
     });
   }, [
     amount,
@@ -332,36 +344,55 @@ const FastagScreen = () => {
   }
   async function billInfo() {
     try {
-
-   
-
-      const url = `${APP_URLS.rechargeViewBill}billnumber=${consumerNo}&Operator=${optcode}&billunit=''&ProcessingCycle=''&acno=''&lt=""&ViewBill="Y"`;
+      // Construct URL properly, ensuring all parameters are included
+      const url = `${APP_URLS.rechargeViewBill}billnumber=${consumerNo}&Operator=${optcode}&billunit=&ProcessingCycle=&acno=&lt=&ViewBill=Y`;
 
       const res = await get({ url: url });
+      console.log(res, '*********************');
       console.log(url);
-      setStatus(res['status'])
 
-      if (res['RESULT'] === 0) {
-        const addinfo = res['ADDINFO']
+      if (res && res['RESULT'] === 0) {
+        const addinfo = res['ADDINFO'];
         const billinfoo = addinfo['BillInfo'];
-        setDueDate(billinfoo["billDueDate"]);
-        setAmount(billinfoo["billAmount"]);
-        setCustomerName(billinfoo["customerName"]);
-        setCustBal(billinfoo["balance"]);
-        setAmount(billinfoo["billAmount"]);
-        //setstatus(res["customerStatus"])
-        setShowLoader2(false)
 
+        // Check if BillInfo is available
+        if (billinfoo && addinfo.IsSuccess) {
+          setDueDate(billinfoo["billDueDate"]);
+          setAmount(billinfoo["billAmount"]);
+          setCustomerName(billinfoo["customerName"]);
+          setCustBal(billinfoo["balance"]);
+          setAmount(billinfoo["billAmount"]);
+          setShowLoader2(false);
+          setBottomSheetVisible(true);
+        } else {
+
+          setShowLoader2(false);
+          Alert.alert('Error', 'Bill info is missing.', [{ text: 'OK', onPress: () => { } }]);
+        }
       } else {
-        setShowLoader2(false)
 
-        // Alert.alert(res['ADDINFO'], res['Message'], [{ text: 'OK', onPress: () => { } }]);
-        Alert.alert(res['ADDINFO']['ERRORMSG'], res['ADDINFO']['Message'], [{ text: 'OK', onPress: () => { } }]);
+        setShowLoader2(false);
+        const errorMsg = res?.['ADDINFO']?.['ERRORMSG'] || res?.['ADDINFO']?.Message;
+        const price = res?.['ADDINFO']?.['PRICE'] || 'N/A';
+        const status = res?.['ADDINFO']?.['STATUS'] || 'Failed';
+        setAmount(price);
 
+
+        Alert.alert(
+          'Error Information',
+          `Price: ${price}\nError Message: ${errorMsg}\nStatus: ${status}`,
+          [{ text: 'OK', onPress: () => { } }]
+        );
       }
 
-    } catch (error) { }
+    } catch (error) {
+
+      console.error('Error occurred in billInfo:', error);
+      setShowLoader2(false);
+      ToastAndroid.show('An error occurred. Please try again later.', ToastAndroid.LONG);
+    }
   }
+
   async function ViewbillInfoStatus() {
     console.log(optcode);
     try {
@@ -451,17 +482,16 @@ const FastagScreen = () => {
 
           </View>
         )}
-      
+
         <View>
 
           <FlotingInput label={paramname}
             onChangeTextCallback={text => {
               setconsumerNo(text);
-              setconsumerNo(text.replace(/\D/g, ""));
             }}
             value={consumerNo}
-            keyboardType="numeric"
-            // maxLength={maxlength || 12}
+            autoCapitalize="characters"
+          // maxLength={maxlength || 12}
 
           />
           <View style={[styles.righticon2,]}>
@@ -469,7 +499,6 @@ const FastagScreen = () => {
               <TouchableOpacity
                 style={styles.infobtn}
                 onPress={() => {
-                  setBottomSheetVisible(true);
                   billInfo();
 
                   setShowLoader2(true)
@@ -483,9 +512,11 @@ const FastagScreen = () => {
           </View>
         </View>
         <FlotingInput label={'Enter Amount'}
+          maxLength={5}
+
           keyboardType="numeric"
           value={amount}
-
+          maxLength={5}
           onChangeTextCallback={text => setAmount(text)} />
         <DynamicButton
 
@@ -507,7 +538,7 @@ const FastagScreen = () => {
             setIsrecent(true);
           }}
             style={styles.recentviewbtn}>
-           <RecentText/>
+            <RecentText />
           </TouchableOpacity>
 
         </View>
@@ -521,7 +552,7 @@ const FastagScreen = () => {
           setOperatorcode={setOptCode}
           showState={false}
           // selectOperatorImage={setOptimg}
-          handleItemPress={(item)=>{handleItemPress(item)}}
+          handleItemPress={(item) => { handleItemPress(item) }}
 
         />
 

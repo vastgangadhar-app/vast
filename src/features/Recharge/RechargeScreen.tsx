@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Alert,
   AsyncStorage,
+  Keyboard,
   PermissionsAndroid,
   Platform,
   ScrollView,
@@ -19,7 +20,6 @@ import { encrypt } from "../../utils/encryptionUtils";
 import { SCREEN_HEIGHT, hScale, wScale } from "../../utils/styles/dimensions";
 import { useDeviceInfoHook } from "../../utils/hooks/useDeviceInfoHook";
 import { useSelector } from "react-redux";
-import { useLocationHook } from "../../utils/hooks/useLocationHook";
 import DynamicButton from "../drawer/button/DynamicButton";
 import FlotingInput from "../drawer/securityPages/FlotingInput";
 import AppBarSecond from "../drawer/headerAppbar/AppBarSecond";
@@ -47,6 +47,8 @@ import Rechargeconfirm from "../../components/Rechargeconfirm";
 import RecentHistory from "../../components/RecentHistoryBottomSheet";
 import NoDatafound from "../drawer/svgimgcomponents/Nodatafound";
 import ClosseModalSvg2 from "../drawer/svgimgcomponents/ClosseModal2";
+import ShowLoader from "../../components/ShowLoder";
+import { useLocationHook } from "../../hooks/useLocationHook";
 
 const dropdown = `<svg xmlns="http://www.w3.org/2000/svg"  version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="26" height="26" x="0" y="0" viewBox="0 0 128 128" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g><path fill="#000000" fill-rule="evenodd" d="M20.586 47.836a2 2 0 0 0 0 2.828l39.879 39.879a5 5 0 0 0 7.07 0l39.879-39.879a2 2 0 0 0-2.828-2.828L64.707 87.714a1 1 0 0 1-1.414 0L23.414 47.836a2 2 0 0 0-2.828 0z" clip-rule="evenodd" opacity="1" data-original="#000000" class=""></path></g></svg>`;
 const RechargeScreen = () => {
@@ -60,10 +62,12 @@ const RechargeScreen = () => {
   const [autoplay, setAutoplay] = useState(false);
   const [selectedButton, setSelectedButton] = useState("Prepaid");
   const [mobileNumber, setMobileNumber] = useState("");
+    const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+
   const [Amount, setAmount] = useState("");
   const [isTimedOut, setIsTimedOut] = useState(false);
   const [isViewPlans, setViewPlans] = useState(true);
-  const { latitude, longitude,getLatLongValue, checkLocationPermissionStatus,getLocation,isLocationPermissionGranted} = useLocationHook();
+  const { latitude, longitude, getLatLongValue, checkLocationPermissionStatus, getLocation, isLocationPermissionGranted } = useLocationHook();
   const [isOperatorModalVisible, setOperatorModalVisible] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
   const [isStateModalVisible, setStateModalVisible] = useState(false);
@@ -86,7 +90,7 @@ const RechargeScreen = () => {
   const { getNetworkCarrier, getMobileDeviceId, getSimPhoneNumber, getMobileIp } =
     useDeviceInfoHook();
   const { userId } = useSelector((state: RootState) => state.userInfo);
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig ,Loc_Data} = useSelector((state: RootState) => state.userInfo);
   const color1 = `${colorConfig.secondaryColor}20`;
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [filteredData, setFilteredData] = useState<Contact[]>([]);
@@ -112,24 +116,35 @@ const RechargeScreen = () => {
     } finally {
     }
   }
+    useEffect(() => {
+    const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardVisible(true);
+    });
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, [setKeyboardVisible]);
 
   useEffect(() => {
-console.log(userId)
-    console.log(latitude, longitude,getLatLongValue(), checkLocationPermissionStatus(),getLocation(),isLocationPermissionGranted)
-console.log('===================')
+    console.log(userId)
+    console.log(latitude, longitude, getLatLongValue(), checkLocationPermissionStatus(), getLocation(), isLocationPermissionGranted)
+    console.log('===================')
 
     getopertaorlist("Prepaid");
     stateList();
     setSelectedOption("Prepaid");
     recenttransactions();
-  }, []);
+  }, [latitude, longitude]);
   const recenttransactions = async () => {
     try {
       const url = `${APP_URLS.recenttransaction}pageindex=1&pagesize=5&retailerid=${userId}&fromdate=${formattedDate}&todate=${formattedDate}&role=Retailer&rechargeNo=ALL&status=ALL&OperatorName=ALL&portno=ALL`;
       console.log(url, 'url-*/-*/-*/-*/-*/*/-*/');
       const response = await get({ url: url });
-
-
       setHistorylist(response);
       setReqTime(response[0]["Reqesttime"]);
       setReqId(response[0]["Request_ID"]);
@@ -181,97 +196,71 @@ console.log('===================')
 
 
   const getPlans = useCallback(async () => {
-
-
-    // let rationale;
-    // if (Platform.OS == 'android') {
-    //   let granted = PermissionsAndroid.RESULTS.DENIED;
-    //   if(Platform.Version >= 33){ 
-    //       granted = await PermissionsAndroid.request(
-    //         PermissionsAndroid.PERMISSIONS.READ_PHONE_NUMBERS, 
-    //         rationale ?? { 
-    //           title: 'App Permission', 
-    //           message: 'App needs access to get informations of your cellular network', 
-    //           buttonNeutral: 'Ask Me Later', 
-    //           buttonNegative: 'Cancel', 
-    //           buttonPositive: 'OK', 
-    //         }); 
-    //     }
-    //     granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE, 
-    //       rationale ?? { 
-    //         title: 'App Permission', 
-    //         message: 'App needs access to get informations of your cellular network', 
-    //         buttonNeutral: 'Ask Me Later', 
-    //         buttonNegative: 'Cancel', 
-    //         buttonPositive: 'OK', 
-    //       }); 
-
-    //   console.log('**NUM_PER', granted);
-    //   console.log('**NUM_PER2', PermissionsAndroid.RESULTS);
-    //   if (
-    //     granted === PermissionsAndroid.RESULTS.GRANTED ||
-    //     granted === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN
-    //   ) {
-    //     Dialog.show({
-    //       type: ALERT_TYPE.WARNING,
-    //       title: "Permission Required",
-    //       textBody: "Please grant the contact permission from settings.",
-    //       button: "OK",
-    //       onPressButton: () => {
-    //         Dialog.hide();
-    //         openSettings().catch(() => console.warn("cannot open settings"));
-    //       },
-    //     });
-
-    //   } else {
-    //     console.log('**NUM_NOT_GRANTED');
-    //   }
-    // }
-
-    if (operator === `Select Operator & Circle` || !circle) return;
-    setLoading(true);
-    setIsPlanLoading(true);
-
-    console.log('**OP', operator)
-    console.log('**OP1', circle)
-    const url = `${APP_URLS.getRechargePlans}optname=${operator}&circlename=${circle}&type=${'mobile'}`;
-    // const url2 =`${APP_URLS.getdthCustomerInfo}optname=${operator}&mobileno=${mobileNumber}`
     try {
-      const res = await post({ url: url });
-      console.log(res, '*----------------------*-*-*-*-*')
-
-      const bestplans = await post({ url: `${APP_URLS.bestplanOffers}optname=${operator === 'BSNL'?'operator':operator}&mobileno=${mobileNumber}` });
-      
-      
-      console.log(bestplans, '*#############################')
-console.log(`${APP_URLS.bestplanOffers}optname=${operator === 'BSNL'?'operator':operator}&mobileno=${mobileNumber}`)
-
-if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
-  console.log("Request failed or response is empty");
-} else {
-  const newKeyValue = {
-    key: "Best Plans Offers",
-    value: {
-      Response: bestplans['Response'],
-    },
-  };
-  res.unshift(newKeyValue);
-  console.log("Request successful:", bestplans);
-}
-      setRechargePlans(res || []);
+      setPlanListData([]);
+      setRechargePlans([]);
       setIndex(0);
-      setPlanListData(res?.length > 0 ? res[0].value.Response : []);
-      console.log(res, '*----------------------*-*-*-*-*')
+
+      // if (operator === 'Select Operator & Circle' || !circle) return;
+
+      setLoading(true);
+      setIsPlanLoading(true);
+
+      if (APP_URLS.AppName !== 'World Pay One') {
+        setShowLoader(false);
+      }
+
+      console.log('**OP', operator);
+      console.log('**Circle', circle);
+
+      const rechargePlansUrl = `${APP_URLS.getRechargePlans}optname=${operator}&circlename=${circle}&type=mobile`;
+      const bestPlansUrl = `${APP_URLS.bestplanOffers}optname=${operator === 'BSNL' ? 'operator' : operator}&mobileno=${mobileNumber}`;
+
+
+      console.log(rechargePlansUrl)
+      console.log(bestPlansUrl)
+
+      const [rechargePlansRes, bestPlansRes] = await Promise.all([
+        post({ url: rechargePlansUrl }),
+        post({ url: bestPlansUrl }),
+      ]);
+      Keyboard.dismiss();
+
+      setShowLoader(false);
+
+      console.log('Recharge Plans:', rechargePlansRes);
+      console.log('Best Plans:', bestPlansRes);
+
+      let finalPlans = [...(rechargePlansRes || [])];
+
+        console.log("YYYYYYYYYYYYYY",finalPlans);
+
+      if (bestPlansRes?.status !== 'Failed' && bestPlansRes?.Response?.length > 0) {
+        const bestPlansSection = { 
+          key: 'Best Plans Offers',
+          value: {
+            Response: bestPlansRes.Response,
+          },
+        };
+        finalPlans.unshift(bestPlansSection);
+          console.log('Best Plans:', finalPlans);
+      } else {
+        console.log('No Best Plans available or request failed');
+      }
+
+      setRechargePlans(finalPlans);
+      setPlanListData(finalPlans?.[0]?.value?.Response || []);
+    } catch (error) {
+      console.log('Error fetching plans:', error);
+    } finally {
       setLoading(false);
       setIsPlanLoading(false);
-    } catch (error) {
-      console.log('erroe', '*----------------------*-*-*-*-*')
     }
-  }, [operator, circle, post]);
+  }, [operator, circle, post, mobileNumber]);
+
 
   useEffect(() => {
 
-    getPlans();
   }, [operator, circle]);
 
   const getOperator = async (mo: any) => {
@@ -288,7 +277,7 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
       isTimedOutRef.current = true;
       clearInterval(intervalRef.current);
     }, 3000);
-
+console.log("gijhfgkjfgjfgjdgj")
     try {
       const url = `${APP_URLS.mobileRecCircle}${mo}`;
       const response = await post({
@@ -334,6 +323,7 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
         if (!circle) {
           setOperatorModalVisible(true);
         }
+        console.log("jgfgkj")
         getPlans();
       }
     } catch (error) {
@@ -538,25 +528,29 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
   };
 
 
-  const onRechargePress = useCallback(async () => {
-    const loc = await readLatLongFromStorage()
-    console.log(mobileNumber, operatorcode)
+const onRechargePress = useCallback(async () => {
+  console.log(
+    mobileNumber, operatorcode, Loc_Data, latitude, longitude,
+    '++++++++', Loc_Data?.latitude, Loc_Data?.longitude
+  );
 
+  setIsDetail(false);
+  setShowLoader(true);
 
+  try {
+    // Collect device and network info
     const Model = await getMobileDeviceId();
-
-    setIsDetail(false);
-    setShowLoader(true);
-    console.log(operatorcode);
     const mobileNetwork = await getNetworkCarrier();
     const ip = await getMobileIp();
-    const encryption = await encrypt([
+
+    // Encrypt sensitive details
+    const encryption = encrypt([
       userId,
       mobileNumber,
       operatorcode,
       Amount,
-      loc?.latitude,
-      loc?.longitude,
+      Loc_Data?.latitude,
+      Loc_Data?.longitude,
       "city",
       "address",
       "postcode",
@@ -564,74 +558,92 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
       ip,
       "57bea5094fd9082d",
     ]);
-    console.log(encryption.encryptedData);
-    const rd = encodeURIComponent(encryption.encryptedData[0]);
-    const n1 = encodeURIComponent(encryption.encryptedData[1]);
-    const ok1 = encodeURIComponent(encryption.encryptedData[2]);
-    const amn = Amount;
-    const ip1 = encodeURIComponent(encryption.encryptedData[10]);
-    const em = Model;
-    const devtoken = encodeURIComponent(encryption.encryptedData[6]);
 
-    const Latitude1 = encodeURIComponent(encryption.encryptedData[4]);
-    const Longitude1 = encodeURIComponent(encryption.encryptedData[5]);
-    const ModelNo = encodeURIComponent(encryption.encryptedData[11]);
-    const City = devtoken;
+    const [
+      rd, n1, ok1, , Latitude1, Longitude1,
+      devtoken, Addresss, PostalCode, InternetTYPE, ip1, ModelNo
+    ] = encryption.encryptedData.map(encodeURIComponent);
 
-    const PostalCode = encodeURIComponent(encryption.encryptedData[8]);
-    const InternetTYPE = encodeURIComponent(encryption.encryptedData[9]);
-    const Addresss = encodeURIComponent(encryption.encryptedData[7]);
+    const url = `${APP_URLS.rechTask}rd=${rd}&n=${n1}&ok=${ok1}&amn=${Amount}&pc=&bu=&acno=&lt=&ip=${ip1}&mc=&em=${Model}&offerprice=&commAmount=&Devicetoken=${devtoken}&Latitude=${Latitude1}&Longitude=${Longitude1}&ModelNo=${ModelNo}&City=${devtoken}&PostalCode=${PostalCode}&InternetTYPE=${InternetTYPE}&Addresss=${Addresss}&value1=${encodeURIComponent(encryption.keyEncode)}&value2=${encodeURIComponent(encryption.ivEncode)}&circle=${state}`;
+    
+    console.log('Recharge URL:', url);
 
-    const value1 = encodeURIComponent(encryption.keyEncode);
-    const value2 = encodeURIComponent(encryption.ivEncode);
+    let status = "Failed";
+    let Message = "Recharge failed, please try again";
 
-    const url = `${APP_URLS.rechTask}rd=${rd}&n=${n1}&ok=${ok1}&amn=${amn}&pc=""&bu=""&acno=""&lt=""&ip=${ip1}&mc=""&em=${em}&offerprice=""&commAmount=""&Devicetoken=${devtoken}&Latitude=${Latitude1}&Longitude=${Longitude1}&ModelNo=${ModelNo}&City=${City}&PostalCode=${PostalCode}&InternetTYPE=${InternetTYPE}&Addresss=${Addresss}&value1=${value1}&value2=${value2}&circle=${state}`;
-    console.log('urldddd', url);
-    let status, Message;
-    try {
-      const res = await post({
-        url: url,
-      });
-      console.log(res);
-      status = res.Response;
-      Message = res.Message;
-      await recenttransactions();
-    } catch (error) {
-      console.error("Recharge failed:", error);
-      status = "Failed";
-      Message = "Recharge failed, please try again";
+    // 🔄 Recharge API Call
+    const res = await post({ url });
+    console.log(res, 'Recharge Response');
+
+    if (res?.status === 'False') {
+      ToastAndroid.showWithGravity(
+        res.message,
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM
+      );
+    } else {
+      status = res?.Response || "Success";
+      Message = res?.Message || res?.message || "Recharge successful";
     }
 
+    // 🧹 Clear input fields
     setMobileNumber("");
     setOperator("Select Operator & Circle");
     setState("");
-
     setCircle('');
     setAmount("");
     setIsFocused(false);
-    setShowLoader(false);
+
+    // 🕒 Fetch latest transaction details
+    const url2 = `${APP_URLS.recenttransaction}pageindex=1&pagesize=5&retailerid=${userId}&fromdate=${formattedDate}&todate=${formattedDate}&role=Retailer&rechargeNo=ALL&status=ALL&OperatorName=ALL&portno=ALL`;
+   console.log("&&&&&&&&&&&",url2)
+   
+   
+    const recent = await get({ url: url2 });
+
+    const latest = recent?.[0] || {};
+
+    // 🚀 Navigate to Recharge Details Screen
     navigation.navigate("Rechargedetails", {
       Amount,
       rechType: ispost ? "Postpaid" : "Prepaid",
       operator,
       mobileNumber,
       status,
-      reqTime,
+      reqTime: latest?.Reqesttime || 'N/A',
       Message,
-      reqId,
-      idno
+      reqId: latest?.Request_ID || 'N/A',
+      idno: latest?.Idno || 'N/A',
     });
-  }, [
-    Amount,
-    getMobileIp,
-    getNetworkCarrier,
-    latitude,
-    longitude,
-    mobileNumber,
-    operatorcode,
-    post,
-    userId,
-  ]);
+
+  } catch (error) {
+    console.error("Recharge failed:", error);
+    ToastAndroid.showWithGravity(
+      "Recharge failed. Please check your network or try again.",
+      ToastAndroid.SHORT,
+      ToastAndroid.BOTTOM
+    );
+  } finally {
+    setShowLoader(false);
+  }
+
+}, [
+  Amount,
+  getMobileIp,
+  getNetworkCarrier,
+  latitude,
+  longitude,
+  mobileNumber,
+  operatorcode,
+  post,
+  userId,
+  state,
+  ispost,
+  operator,
+  navigation,
+  Loc_Data
+]);
+
 
   const keyExtractor = useCallback(
     (item: any, i: number) => `${i}-${item.recordID}`,
@@ -694,10 +706,73 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
       />
     );
   }, [contacts, filteredData]);
+
+
+
+  const [amountSearch, setAmountSearch] = useState(''); // New state for search query
+
+  // Filter function for searching by amount
+  const filteredPlans = planListData.filter((item) =>
+    item.price?.toString().includes(amountSearch)
+  );
+
+   const Recenttransactionlist = () => {
+      return (
+        historylist.length === 0 ? (
+          <View style={styles.nodataview}>
+            <NoDatafound />
+  
+          </View>
+        ) : (
+          <FlashList
+            data={historylist}
+            renderItem={({ item }: { item: any }) => {
+              return (
+                <TouchableOpacity style={[styles.transactionContainer, { backgroundColor: color3 }]}>
+                  {/* {item['Operator_name'] === 'JIO' ? (
+                    <Image source={require('.././utils/svgUtils/JIO.png')} style={styles.operatioimg} />
+                  ) : item['Operator_name'] === 'Vodafone' || item['Operator_name'] === 'Vodaidea' ? (
+                    <Image source={require('.././utils/svgUtils/VI.png')} style={styles.operatioimg} />
+                  ) : item['Operator_name'] === 'Airtel' || item['Operator_name'] === 'Airtel Pre On Post' ? (
+                    <Image source={require('.././utils/svgUtils/Airtel.png')} style={styles.operatioimg} />
+                  ) : item['Operator_name'] === 'BSNL' ? (
+                    <Image source={require('.././utils/svgUtils/BSNL.png')} style={styles.operatioimg} />
+                  ) : item['Operator_name'] === 'Jio Lite' ? (
+                    <Image source={require('.././utils/svgUtils/JIO.png')} style={styles.operatioimg} />
+                  ) : (
+                    <Image source={require('.././utils/svgUtils/exclamation-mark.png')} style={styles.operatioimg} />
+                  )} */}
+  
+                  <View style={styles.leftContainer}>
+                    <Text style={styles.dateTimeText}>{item['Reqesttime']}</Text>
+                    <Text style={styles.mobileNumberText}>{item['Recharge_number']}</Text>
+                    <Text style={styles.mobileNumberText}>{item['Operator_name']}</Text>
+                  </View>
+  
+                  <View style={styles.rightContainer}>
+                    <Text style={styles.amountText}>₹ {item['Recharge_amount']}</Text>
+                    <Text style={[
+                      styles.rechTypeText,
+                      {
+                        color: item['Status'] === 'SUCCESS' ? 'green' : item['Status'] === 'FAILED' ? 'red' :
+                          '#a89b0a'
+                      }
+                    ]}>
+                      {item['Status']}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            }}
+            keyExtractor={(item, index) => index.toString()}
+          />
+        )
+      );
+    };
   return (
     <View style={styles.main}>
       <AppBarSecond
-        title="Mobile Recharge & Bill"
+        title="Mobile Recharge"
         onActionPress={undefined}
         actionButton={undefined}
         onPressBack={undefined}
@@ -718,14 +793,16 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
           }}
         />
       </View>
-      <ScrollView keyboardShouldPersistTaps={"handled"}>
+   
         <View style={styles.container}>
           {showLoader && (
-            <ActivityIndicator
-              size={wScale(60)}
-              color={colors.black}
-              style={styles.loaderStyle}
-            />
+
+            <ShowLoader />
+            // <ActivityIndicator
+            //   size={wScale(60)}
+            //   color={colors.black}
+            //   style={styles.loaderStyle}
+            // />
           )}
           <View>
             <FlotingInput
@@ -733,6 +810,7 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
               value={mobileNumber}
               autoFocus={false}
               inputstyle={styles.inputstyle}
+              maxLength={10}
               onChangeTextCallback={(text) => {
                 if (text.length === 10) {
                   if (validateMobileNumber(text)) {
@@ -749,7 +827,7 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
                       ToastAndroid.BOTTOM
                     );
                   }
-                  console.log("mobile number", text);
+                  console.log("mobile numbergfgdhh", text);
                 }
                 setMobileNumber(text.replace(/\D/g, ""));
 
@@ -828,6 +906,7 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
               value={`${Amount}`}
               autoFocus={isAmountFocused}
               label={"Enter Amount"}
+              maxLength={4}
               onChangeTextCallback={(text) => {
                 setAmount(text);
                 if (Amount === "") {
@@ -843,7 +922,7 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
               inputstyle={undefined}
               labelinputstyle={undefined}
             />
-            <View style={[styles.righticon2]}>
+            {APP_URLS.AppName != 'World Pay One' && <View style={[styles.righticon2]}>
               {isViewPlans && (
                 <TouchableOpacity
                   style={styles.viewplanbtn}
@@ -851,6 +930,7 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
                     setIsAmountFocused(true);
                     if (mobileNumber.length === 10) {
                       setIsplanview(true);
+                      getPlans();
                     }
                   }}
                 >
@@ -864,7 +944,7 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
                   </Text>
                 </TouchableOpacity>
               )}
-            </View>
+            </View>}
           </TouchableOpacity>
           <OperatorBottomSheet
             isModalVisible={isOperatorModalVisible}
@@ -921,248 +1001,125 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
           </BottomSheet>
           <BottomSheet
             containerStyle={{ padding: 10 }}
-            isVisible={isplanview ?? false} // null safety check for isplanview
-            onBackdropPress={() => {
-              setIsplanview(false);
-            }}
+            isVisible={isplanview ?? false}
+            onBackdropPress={() => setIsplanview(false)}
           >
             <View style={styles.bottomsheetview}>
               <Tab
-                style={{ marginHorizontal: 10 }}
-                value={index ?? 0} 
+                style={[styles.tabstyle, { backgroundColor: color1 }]}
+                value={index ?? 0}
                 onChange={(e) => {
                   setIndex(e);
-                  // Check if rechargePlans[e] exists and has a valid structure
                   if (rechargePlans && rechargePlans[e]?.value?.Response) {
                     setPlanListData(rechargePlans[e].value.Response);
                   } else {
-                    setPlanListData([]); // set empty list if data not found
+                    setPlanListData([]);
                   }
                 }}
-                indicatorStyle={{
-                  height: hScale(0),
-                }}
-                containerStyle={(active) => ({
-                  justifyContent: "center",
-                })}
+                indicatorStyle={{ height: hScale(0) }}
+                containerStyle={(active) => ({ justifyContent: 'center' })}
                 titleStyle={(active) => ({
-                  color: active ? colorConfig.secondaryColor : "black",
-                  fontWeight: active ? "bold" : "normal",
+                  color: active ? colorConfig.secondaryColor : 'black',
+                  fontWeight: active ? 'bold' : 'normal',
                   paddingHorizontal: active ? wScale(0) : 0,
                 })}
                 scrollable
               >
                 {rechargePlans?.length > 0
-                  ? rechargePlans.map((plan, index) => {
-                    return <Tab.Item key={index} title={plan.key ?? "Plan"} />; // default title if plan.key is null
-                  })
+                  ? rechargePlans.map((plan, index) => (
+                    <Tab.Item key={index} title={plan.key ?? 'Plan'} />
+                  ))
                   : null}
               </Tab>
 
+              {/* Search bar */}
+              {/* <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by Amount"
+            keyboardType="numeric"
+            value={amountSearch}
+            onChangeText={setAmountSearch}
+          />
+        </View> */}
+
               <View style={[{ flex: 1 }, styles.tabContent]}>
                 <FlashList
-                  data={planListData ?? []} // Ensure planListData is an array, even if it's empty
-                  keyExtractor={(item, index) => item.price?.toString() ?? index.toString()} // Ensure unique key, fallback to index
+                  data={planListData} // Use filtered plans
+                  keyExtractor={(item, index) => item.price?.toString() ?? index.toString()}
                   estimatedItemSize={131}
-                  ListEmptyComponent={() => {
-                    return (
-                      <View>
-                        {isPlanLoading ? (
-                          <SkeletonPlaceholder
-                            speed={1200}
-                            backgroundColor={colors.grey}
-                            borderRadius={4}
-                          >
-                            <SkeletonPlaceholder.Item alignSelf="center">
-                              <SkeletonPlaceholder.Item
-                                alignSelf="center"
-                                alignItems="center"
-                                backgroundColor={color1}
-                                width={wScale(380)}
-                                height={wScale(45)}
-                                borderRadius={wScale(5)}
-                                margin={wScale(20)}
-                              />
-                              <SkeletonPlaceholder.Item
-                                margin={wScale(20)}
-                                width={wScale(380)}
-                                height={wScale(10)}
-                              />
-                              <SkeletonPlaceholder.Item
-                                margin={wScale(20)}
-                                width={wScale(380)}
-                                height={wScale(10)}
-                              />
-                            </SkeletonPlaceholder.Item>
-                          </SkeletonPlaceholder>
-                        ) : (
-                          <View
-                            style={{
-                              flexDirection: "column",
-                              marginTop: wScale(90),
-                              flex: 1,
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <NoDatafound size={wScale(200)} />
-                          </View>
-                        )}
-                      </View>
-                    );
-                  }}
-                  renderItem={({ item }) => {
-                    return (
-                      <TouchableOpacity
-                        onPress={() => {
-                          setIsplanview(false);
-                          setAmount(item.price ?? 0);
-                          setIsFocused(false);
-                        }}
-                        style={[
-                          styles.itemContainer,
-                          { backgroundColor: color3 },
-                        ]}
-                      >
-                        <View style={styles.innerContainer}>
-                          <Text style={styles.priceText}>₹ {item.price ?? "N/A"}</Text>
-                          <View>
-                            <Text style={styles.validityText}>
-                              Validity</Text>
-                            <Text style={styles.validityvalue}>
-                              {item.Validity ?? "N/A"}
-                            </Text>
-                          </View>
-
+                  ListEmptyComponent={() => (
+                    <View>
+                      {isPlanLoading ? (
+                        <SkeletonPlaceholder
+                          speed={1200}
+                          backgroundColor={colors.grey}
+                          borderRadius={4}
+                        >
+                          <SkeletonPlaceholder.Item alignSelf="center">
+                            <SkeletonPlaceholder.Item
+                              alignSelf="center"
+                              alignItems="center"
+                              backgroundColor={color1}
+                              width={wScale(380)}
+                              height={wScale(45)}
+                              borderRadius={wScale(5)}
+                              margin={wScale(20)}
+                            />
+                            <SkeletonPlaceholder.Item
+                              margin={wScale(20)}
+                              width={wScale(380)}
+                              height={wScale(10)}
+                            />
+                            <SkeletonPlaceholder.Item
+                              margin={wScale(20)}
+                              width={wScale(380)}
+                              height={wScale(10)}
+                            />
+                          </SkeletonPlaceholder.Item>
+                        </SkeletonPlaceholder>
+                      ) : (
+                        <View
+                          style={{
+                            flexDirection: 'column',
+                            marginTop: wScale(90),
+                            flex: 1,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <NoDatafound size={wScale(200)} />
                         </View>
-                        <Text style={styles.descriptionText}>
-                          {item.description ?? item.offer + item.offerDetails}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  }}
+                      )}
+                    </View>
+                  )}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setIsplanview(false);
+                        setAmount(item.price ?? 0);
+                        setIsFocused(false);
+                      }}
+                      style={[styles.itemContainer, { backgroundColor: color3 }]}
+                    >
+                      <View style={styles.innerContainer}>
+                        <Text style={styles.priceText}>₹ {item.price ?? 'N/A'}</Text>
+                        <View>
+                          <Text style={styles.validityText}>Validity</Text>
+                          <Text style={styles.validityvalue}>
+                            {item.Validity ?? 'N/A'}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text style={styles.descriptionText}>
+                        {item.description ?? item.offer + item.offerDetails}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 />
               </View>
             </View>
           </BottomSheet>
-
-
-          {/* 
-<BottomSheet
-            containerStyle={{ padding: 10 }}
-            isVisible={isplanview}
-            onBackdropPress={() => {
-              setIsplanview(false);
-            }}
-          >
-            <View style={styles.bottomsheetview}>
-              <Tab
-                style={{ marginHorizontal: 10 }}
-                value={index}
-                onChange={(e) => {
-                  setIndex(e);
-                  setPlanListData(rechargePlans[e].value.Response);
-                }}
-                indicatorStyle={{
-                  height: hScale(0),
-                }}
-                containerStyle={(active) => ({
-                  justifyContent: "center",
-                })}
-                titleStyle={(active) => ({
-                  color: active ? colorConfig.secondaryColor : "black",
-                  fontWeight: active ? "bold" : "normal",
-                  paddingHorizontal: active ? wScale(0) : 0,
-                })}
-                scrollable
-              >
-                {rechargePlans.length > 0 &&
-                  rechargePlans.map((plan, index) => {
-                    return <Tab.Item key={index} title={plan.key} />;
-                  })}
-              </Tab>
-              <View style={[{ flex: 1 }, styles.tabContent]}>
-                <FlashList
-                  data={planListData}
-                  keyExtractor={(item, index) => item.price}
-                  estimatedItemSize={131}
-                  ListEmptyComponent={() => {
-                    return (
-                      <View style={{ flexDirection: "row" }}>
-                        {isPlanLoading ? (
-                          <SkeletonPlaceholder
-                            speed={1200}
-                            backgroundColor={colors.grey}
-                            borderRadius={4}
-                          >
-                            <SkeletonPlaceholder.Item alignSelf="center">
-                              <SkeletonPlaceholder.Item
-                                alignSelf="center"
-                                alignItems="center"
-                                backgroundColor={color1}
-                                width={wScale(380)}
-                                height={wScale(45)}
-                                borderRadius={wScale(5)}
-                                margin={wScale(20)}
-                              />
-                              <SkeletonPlaceholder.Item
-                                margin={wScale(20)}
-                                width={wScale(380)}
-                                height={wScale(10)}
-                              />
-                              <SkeletonPlaceholder.Item
-                                margin={wScale(20)}
-                                width={wScale(380)}
-                                height={wScale(10)}
-                              />
-                            </SkeletonPlaceholder.Item>
-                          </SkeletonPlaceholder>
-                        ) : (
-                          <View
-                            style={{
-                              flexDirection: "column",
-                              marginTop: wScale(90),
-                              flex: 1,
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <NoDatafound size={wScale(200)} />
-
-                          </View>
-                        )}
-                      </View>
-                    );
-                  }}
-                  renderItem={({ item }) => {
-                    return (
-                      <TouchableOpacity
-                        onPress={() => {
-                          setIsplanview(false);
-                          setAmount(item.price);
-                          setIsFocused(false);
-                        }}
-                        style={[
-                          styles.itemContainer,
-                          { backgroundColor: color3 },
-                        ]}
-                      >
-                        <View style={styles.innerContainer}>
-                          <Text style={styles.priceText}>₹ {item.price}</Text>
-                          <Text style={styles.validityText}>
-                            Validity: {item.Validity}
-                          </Text>
-                        </View>
-                        <Text style={styles.descriptionText}>
-                          {item.description}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  }}
-                />
-              </View>
-            </View>
-          </BottomSheet> */}
 
           <Rechargeconfirm
             isModalVisible={isDetail}
@@ -1175,7 +1132,6 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
             lastlabel={"Transaction Amount"}
             lastvalue={Amount}
             onRechargedetails={() => {
-              console.log(operatorcode, latitude, longitude)
               onRechargePress();
             }}
             isLoading2={showLoader}
@@ -1184,20 +1140,24 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
           <DynamicButton
             title="Next"
             onPress={() => {
+                  console.log(mobileNumber, Loc_Data ,latitude,longitude ,Loc_Data['latitude'],Loc_Data['longitude'])
+
               if (mobileNumber.length === 10 && Amount) {
                 setIsDetail(true);
+                Keyboard.dismiss()
               }
             }}
-            styleoveride={undefined}
+            styleoveride={{top: APP_URLS.AppName == 'World Pay One'?  hScale(-20):0}}
           />
           <View>
+
             <RecentHistory
               isModalVisible={isrecent}
               setModalVisible={setIsrecent}
               historylistdata={historylist}
               onBackdropPress={() => setIsrecent(false)}
             />
-            <TouchableOpacity
+            <TouchableOpacity 
               onPress={() => {
                 setIsrecent(true);
               }}
@@ -1208,7 +1168,128 @@ if (bestplans.status === "Failed" || bestplans.Response.length === 0) {
 
           </View>
         </View>
-      </ScrollView>
+          { (APP_URLS.AppName == 'Pc Pay' && !isKeyboardVisible)  && <Recenttransactionlist/>}
+
+      {(APP_URLS.AppName === 'World Pay One' && rechargePlans.length > 0) &&
+
+        <View style={styles.bottomsheetview}>
+          <Tab
+            style={[styles.tabstyle, { backgroundColor: color1 }]}
+            value={index ?? 0}
+            onChange={(e) => {
+              setIndex(e);
+              if (rechargePlans && rechargePlans[e]?.value?.Response) {
+                setPlanListData(rechargePlans[e].value.Response);
+              } else {
+                setPlanListData([]);
+              }
+            }}
+            indicatorStyle={{ height: hScale(0) }}
+            containerStyle={(active) => ({ justifyContent: 'center' })}
+            titleStyle={(active) => ({
+              color: active ? colorConfig.secondaryColor : 'black',
+              fontWeight: active ? 'bold' : 'normal',
+              paddingHorizontal: active ? wScale(0) : 0,
+              fontSize:wScale(APP_URLS.AppName == 'World Pay One'?13:15)
+            })}
+            
+            scrollable
+          >
+            {rechargePlans?.length > 0
+              ? rechargePlans.map((plan, index) => (
+                <Tab.Item   key={index} title={plan.key ?? 'Plan'} />
+              ))
+              : null}
+          </Tab>
+
+          {/* Search bar */}
+          {/* <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by Amount"
+            keyboardType="numeric"
+            value={amountSearch}
+            onChangeText={setAmountSearch}
+          />
+        </View> */}
+
+          <View style={[{ flex: 1 }, styles.tabContent]}>
+            <FlashList
+              data={planListData} // Use filtered plans
+              keyExtractor={(item, index) => item.price?.toString() ?? index.toString()}
+              estimatedItemSize={131}
+              ListEmptyComponent={() => (
+                <View>
+                  {isPlanLoading ? (
+                    <SkeletonPlaceholder
+                      speed={1200}
+                      backgroundColor={colors.grey}
+                      borderRadius={4}
+                    >
+                      <SkeletonPlaceholder.Item alignSelf="center">
+                        <SkeletonPlaceholder.Item
+                          alignSelf="center"
+                          alignItems="center"
+                          backgroundColor={color1}
+                          width={wScale(380)}
+                          height={wScale(45)}
+                          borderRadius={wScale(5)}
+                          margin={wScale(20)}
+                        />
+                        <SkeletonPlaceholder.Item
+                          margin={wScale(20)}
+                          width={wScale(380)}
+                          height={wScale(10)}
+                        />
+                        <SkeletonPlaceholder.Item
+                          margin={wScale(20)}
+                          width={wScale(380)}
+                          height={wScale(10)}
+                        />
+                      </SkeletonPlaceholder.Item>
+                    </SkeletonPlaceholder>
+                  ) : (
+                    <View
+                      style={{
+                        flexDirection: 'column',
+                        marginTop: wScale(90),
+                        flex: 1,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <NoDatafound size={wScale(200)} />
+                    </View>
+                  )}
+                </View>
+              )}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => {
+                    setIsplanview(false);
+                    setAmount(item.price ?? 0);
+                    setIsFocused(false);
+                  }}
+                  style={[styles.itemContainer, { backgroundColor: color3 }]}
+                >
+                  <View style={styles.innerContainer}>
+                    <Text style={styles.priceText}>₹ {item.price ?? 'N/A'}</Text>
+                    <View>
+                      <Text style={styles.validityText}>Validity</Text>
+                      <Text style={styles.validityvalue}>
+                        {item.Validity ?? 'N/A'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.descriptionText}>
+                    {item.description ?? item.offer + item.offerDetails}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      }
     </View>
   );
 };
@@ -1220,12 +1301,12 @@ const styles = StyleSheet.create({
   },
   tabview: {
     paddingHorizontal: wScale(20),
-    paddingTop: hScale(20),
+    paddingTop: hScale(APP_URLS.AppName == 'World Pay One' ? 7 : 10),
   },
   container: {
     paddingHorizontal: wScale(20),
     flex: 1,
-    paddingTop: hScale(30),
+    paddingTop: hScale(APP_URLS.AppName == 'World Pay One' ? 11 : 30),
   },
   righticon2: {
     position: "absolute",
@@ -1276,10 +1357,17 @@ const styles = StyleSheet.create({
     width: wScale(45),
   },
   bottomsheetview: {
+    top:APP_URLS.AppName === 'World Pay One' ? -7 :10,
+    padding: APP_URLS.AppName === 'World Pay One' ? 5 :10,
     backgroundColor: "#fff",
-    height: SCREEN_HEIGHT / 1.3,
+    height: APP_URLS.AppName === 'World Pay One' ? SCREEN_HEIGHT / 2.2 : SCREEN_HEIGHT / 1.3,
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
+  },
+  tabstyle: {
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    paddingHorizontal: 10,
   },
 
   viewplanbtn: {
@@ -1309,9 +1397,9 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     borderRadius: 5,
-    marginHorizontal: wScale(8),
-    marginBottom: hScale(6),
-    paddingVertical: hScale(10),
+    marginHorizontal: APP_URLS.AppName === 'World Pay One' ? wScale(4) : wScale(8),
+    marginBottom: hScale(4),
+    paddingVertical: hScale(1),
     paddingHorizontal: wScale(8),
   },
   innerContainer: {
@@ -1320,15 +1408,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   priceText: {
-    fontSize: wScale(18),
+    fontSize: APP_URLS.AppName === 'World Pay One' ? wScale(12) : wScale(18),
     fontWeight: "bold",
     color: "#333",
   },
   validityText: {
-    fontSize: wScale(14),
+    fontSize: APP_URLS.AppName === 'World Pay One' ? wScale(10) : wScale(14),
     color: "#666",
   },
   descriptionText: {
+    fontSize: hScale(10),
     marginTop: hScale(5),
     color: "#555",
   },
@@ -1382,6 +1471,73 @@ const styles = StyleSheet.create({
     flex: 1,
     height: hScale(44),
   },
+ 
+  
+    stateTitletext: {
+      fontSize: wScale(22),
+      color: '#000',
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+    },
+    titleview: {
+      flex: 1,
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'center'
+    },
+    transactionContainer: {
+      top:hScale(10),
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: wScale(8),
+      backgroundColor: '#f5f5f5',
+      borderRadius: 10,
+      marginBottom: hScale(10),
+      paddingVertical: hScale(10),
+      marginHorizontal: wScale(10)
+    },
+    leftContainer: {
+      flex: 1,
+    },
+    dateTimeText: {
+      fontSize: wScale(14),
+      fontWeight: 'bold',
+      marginBottom: hScale(5),
+    },
+  
+    mobileNumberText: {
+      fontSize: 14,
+      color: '#555',
+    },
+    amountText: {
+      fontSize: wScale(18),
+      fontWeight: 'bold',
+      color: '#000',
+    },
+    rechTypeText: {
+      fontSize: wScale(14),
+      color: '#666',
+    },
+    rightContainer: {
+      marginLeft: wScale(15),
+      alignItems: 'flex-end',
+    },
+    nodata: {
+      width: '100%',
+      textAlign: 'center',
+      color: '#000',
+      fontSize: wScale(16)
+    },
+    nodataview: {
+      alignItems: 'center',
+      paddingBottom: hScale(20)
+    },
+    operatioimg: {
+      width: wScale(45),
+      height: wScale(45),
+      marginRight: wScale(20),
+    },
 
 });
 export default RechargeScreen;

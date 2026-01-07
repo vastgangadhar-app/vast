@@ -1,15 +1,17 @@
-import {useCallback, useEffect, useState} from 'react';
-import {PERMISSIONS, RESULTS, openSettings, requestMultiple} from 'react-native-permissions';
+import { useCallback, useEffect, useState } from 'react';
+import { PERMISSIONS, RESULTS, openSettings, requestMultiple } from 'react-native-permissions';
 import GetLocation from 'react-native-get-location';
 import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
 import AsyncStorage from '@react-native-async-storage/async-storage'; 
-import { Alert, Linking, Settings } from 'react-native';
+import { Alert, Linking, Settings, Keyboard } from 'react-native'; // Import Keyboard here
 import NetInfo from '@react-native-community/netinfo';
+import { useDispatch } from 'react-redux';
 
 export const useLocationHook = () => {
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [isLocationPermissionGranted, setIsLocationPermissionGranted] = useState(null);
+  const dispatch = useDispatch();
 
   const saveLatLongToStorage = async (lat, long) => {
     try {
@@ -20,19 +22,22 @@ export const useLocationHook = () => {
     }
   };
 
-
-
   const getLocationData = useCallback(
     async statuses => {
+      // Hide keyboard if it's open
+
       if (statuses[PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION] === RESULTS.GRANTED) {
         setIsLocationPermissionGranted(true);
         const location = await GetLocation.getCurrentPosition({
           enableHighAccuracy: true,
-          timeout: 60000,
+          timeout: 5000,
         });
         if (location) {
+          console.log(location,'!@#$%^&*()_+')
           setLatitude(location.latitude.toString());
           setLongitude(location.longitude.toString());
+          dispatch(setLatitude(location.latitude.toString()));  // Setting latitude to 40.7128
+dispatch(setLongitude(location.longitude.toString()));
           await saveLatLongToStorage(location.latitude.toString(), location.longitude.toString()); // Save to AsyncStorage
         }
       } else if (
@@ -73,6 +78,9 @@ export const useLocationHook = () => {
   }, []);
 
   const getLocation = useCallback(async () => {
+    // Dismiss the keyboard before checking permissions
+ //   Keyboard.dismiss(); 
+
     requestMultiple([
       PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION,
       PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
@@ -90,7 +98,6 @@ export const useLocationHook = () => {
         }
       })
       .catch(e => {
-  
         if (e.message === 'Location not available') {
           // Show an alert to ask user to enable GPS
           Alert.alert(
@@ -108,7 +115,6 @@ export const useLocationHook = () => {
         }
       });
   }, [getLocationData]);
-  
 
   const checkLocationPermissionStatus = useCallback(async () => {
     const status = await requestMultiple([

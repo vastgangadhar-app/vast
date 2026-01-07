@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Clipboard, TextInput, Alert } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Clipboard, TextInput, Alert, ToastAndroid, Linking } from 'react-native';
 import { hScale, wScale } from '../../utils/styles/dimensions';
 import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
 import LottieView from 'lottie-react-native';
@@ -9,31 +9,39 @@ import DynamicButton from '../drawer/button/DynamicButton';
 import PaddingSvg from '../drawer/svgimgcomponents/Paddingimg';
 import FailedSvg from '../drawer/svgimgcomponents/Failedimg';
 import { BottomSheet } from '@rneui/themed';
+import Share from "react-native-share";
 import useAxiosHook from '../../utils/network/AxiosClient';
 import { APP_URLS } from '../../utils/network/urls';
-
+import { useNavigation } from '../../utils/navigation/NavigationService';
+import ViewShot, { captureRef } from 'react-native-view-shot'
+import Refund from '../drawer/svgimgcomponents/Refund';
+import PDFGenerator from '../../components/Pdf_Print';
 const RechargeHistory = ({ route }) => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const navigation = useNavigation();
+
+  const { colorConfig, IsDealer } = useSelector((state: RootState) => state.userInfo);
   const {
     Status, Debitamount, Reqesttime, Recharge_number,
     Operator_name, Request_ID, operator_type, Circle,
     Commision, Recharge_amount, Operatorid, RemainPost,
-    RemainPre, Idno
+    RemainPre, Idno, frm_name
   } = route.params;
   const { get, post } = useAxiosHook();
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
   useEffect(() => { console.log(operator_type) }, [])
   const copyto = () => {
-    Clipboard.setString(Request_ID);
+    Clipboard.setString( APP_URLS.AppName==='Smart Pay Money' ?Recharge_number:Operatorid);
+    ToastAndroid.show('Copied to clipboard!  : ' + Operatorid, ToastAndroid.LONG);
   };
 
   const handleDisputeSubmit = async () => {
     try {
       const url = `${APP_URLS.heavyreq}optname=${Operator_name}&mobileno=${disputeReason}`
+      console.log(url)
       console.log('Dispute Reason:', disputeReason);
-      const res = await post({ url: operator_type == 'DTH' ? url : `${APP_URLS.dispute}id=${Idno}&comment=${disputeReason}` });
-
+      const res = await post({ url: operator_type == 'DTH' ? url : `${APP_URLS.dispute}id=${Idno}&comment=${disputeReason}&mobileno=${Recharge_number}&optname=${Operator_name}&amount=${Recharge_amount}` });
+console.log("******************",`${APP_URLS.dispute}id=${Idno}&comment=${disputeReason}`)
       setBottomSheetVisible(false);
       setDisputeReason('');
 
@@ -46,25 +54,61 @@ const RechargeHistory = ({ route }) => {
       Alert.alert("Error", error.message || "An error occurred while submitting the dispute.");
     }
   };
+  
+    const capRef = useRef();
+  const onShare = useCallback(async () => {
+    try {
 
+      const filename = `TXN-Reciept-${APP_URLS.AppName}.jpg`;
+
+      const uri = await captureRef(capRef, {
+        format: 'jpg',
+        quality: 0.7,
+        result: 'tmpfile',
+      });
+
+      await Share.open({
+        message: `Hi, I am sharing the transaction details using ${APP_URLS.AppName} App.`,
+        url: uri,
+        filename: filename,
+      });
+    } catch (e) {
+      console.log(e);
+      ToastAndroid.show("Transaction details not shared", ToastAndroid.SHORT);
+    }
+  }, []);
   return (
+    <View style={{ flex: 1, backgroundColor: 'white' }}>
+      <ViewShot ref={capRef} style={{ flex: 1, backgroundColor: 'white' }} options={{ format: "jpg", quality: 0.7 }}>
     <View style={styles.container}>
-      <View style={styles.topview}>
-        {Status === 'SUCCESS' ? (
-          <LottieView
-            source={require('../../utils/lottieIcons/greensuccess.json')}
-            style={styles.lotiimg}
-            autoPlay={true}
-            loop={false}
-          />
-        ) : Status === 'FAILED' ? (
-          <FailedSvg />
-        ) : (
-          <PaddingSvg />
-        )}
-        <Text style={styles.title}>Transaction {Status}</Text>
-        <Text style={styles.label}>{Reqesttime}</Text>
+    <View style={styles.topview}>
+  {Status === 'SUCCESS' ? (
+    <LottieView
+      source={require('../../utils/lottieIcons/greensuccess.json')}
+      style={styles.lotiimg}
+      autoPlay={true}
+      loop={false}
+    />
+  ) : Status === 'FAILED' ? (
+    <FailedSvg />
+  ) : Status.startsWith("P") ? (
+    <PaddingSvg />
+  ) : Status.startsWith("R") ? (
+    <Refund size={100} color={''} />
+  ) : null} 
+
+  <Text style={styles.title}>Transaction {Status}</Text>
+  <Text style={styles.label}>{Reqesttime}</Text>
+</View>
+      <View style={[styles.detailContainer, { alignItems: 'flex-end' }]}>
+        <View>
+          <Text style={styles.label}>Retailer Firm Name</Text>
+          <Text style={styles.value}>{frm_name}</Text>
+        </View>
+
       </View>
+
+
 
       <View style={[styles.detailContainer, { alignItems: 'flex-end' }]}>
         <View>
@@ -83,7 +127,7 @@ const RechargeHistory = ({ route }) => {
         <View>
           <Text style={styles.label}>Recharge Number</Text>
           <Text style={styles.number}>{Recharge_number}</Text>
-          <Text style={styles.value}>{Operator_name} / {Circle}</Text>
+        <Text style={styles.value}>{Operator_name}{!IsDealer&& '/'} {Circle}</Text>
         </View>
         <Text style={styles.value}>₹ {Debitamount}</Text>
       </View>
@@ -109,14 +153,21 @@ const RechargeHistory = ({ route }) => {
           <Text style={[styles.value, { textAlign: 'right' }]}>₹ {RemainPost}</Text>
         </View>
       </View>
+      {!IsDealer && <>
+        {Status === 'SUCCESS' && <TouchableOpacity
+          style={[styles.disputeButton, { backgroundColor: colorConfig.secondaryColor }]}
+          onPress={() => setBottomSheetVisible(true)}
+        >
+          <Text style={styles.buttonText}>Dispute</Text>
+        </TouchableOpacity>}
 
-      <TouchableOpacity
-        style={[styles.disputeButton, { backgroundColor: colorConfig.secondaryColor }]}
-        onPress={() => setBottomSheetVisible(true)}
-      >
-        <Text style={styles.buttonText}>Dispute</Text>
-      </TouchableOpacity>
-      <DynamicButton title={'done'} />
+      </>}
+      <Text style={styles.buttonText}></Text>
+
+      <PDFGenerator route={{ params:  route.params}} />
+
+
+      {/* <DynamicButton title={'Share'} onPress={() => onShare()} /> */}
 
       <BottomSheet isVisible={isBottomSheetVisible} onBackdropPress={() => setBottomSheetVisible(false)}>
         <View style={styles.bottomSheetContainer}>
@@ -126,8 +177,7 @@ const RechargeHistory = ({ route }) => {
             style={styles.input}
             value={disputeReason}
             onChangeText={setDisputeReason}
-            keyboardType={operator_type === 'DTH' ? 'numeric' : 'name-phone-pad'}
-            placeholder={operator_type == 'DTH' ? "Enter Mobile Number" : 'Type your reason here...'}
+            placeholder={operator_type == 'DTH' ?  'Type your reason here...' : "Type your reason here..."}
             multiline
           />
           <TouchableOpacity
@@ -138,7 +188,9 @@ const RechargeHistory = ({ route }) => {
           </TouchableOpacity>
         </View>
       </BottomSheet>
-    </View>
+      </View>
+      </ViewShot>
+       </View>
   );
 };
 
@@ -205,6 +257,7 @@ const styles = StyleSheet.create({
     color: '#007bff',
   },
   input: {
+    color:'black',
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 5,

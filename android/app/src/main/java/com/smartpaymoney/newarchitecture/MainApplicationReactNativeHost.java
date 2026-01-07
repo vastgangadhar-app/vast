@@ -1,4 +1,4 @@
-package com.smartpaymoney.newarchitecture;
+package com.himanshusrecharge.newarchitecture;
 
 import android.app.Application;
 import androidx.annotation.NonNull;
@@ -19,9 +19,9 @@ import com.facebook.react.fabric.CoreComponentsRegistry;
 import com.facebook.react.fabric.FabricJSIModuleProvider;
 import com.facebook.react.fabric.ReactNativeConfig;
 import com.facebook.react.uimanager.ViewManagerRegistry;
-import com.smartpaymoney.BuildConfig;
-import com.smartpaymoney.newarchitecture.components.MainComponentsRegistry;
-import com.smartpaymoney.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
+import com.himanshusrecharge.BuildConfig;
+import com.himanshusrecharge.newarchitecture.components.MainComponentsRegistry;
+import com.himanshusrecharge.newarchitecture.modules.MainApplicationTurboModuleManagerDelegate;
 import java.util.ArrayList;
 import java.util.List;
 

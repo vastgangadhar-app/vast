@@ -6,6 +6,7 @@ import { useIsFocused } from '@react-navigation/native';
 import AppBarSecond from '../../drawer/headerAppbar/AppBarSecond';
 import DynamicButton from '../../drawer/button/DynamicButton';
 import { APP_URLS } from '../../../utils/network/urls';
+import UPISeamless from './seamless/UPISeamless';
 
 const SeamlessScreen = ({ route }) => {
   const navigation = useNavigation();
@@ -190,12 +191,11 @@ console.log(txnId);
               })
             }
           /> */}
-       {/* //   <UPI />  */}
        
-       {/* <DynamicButton
-          title={'Vpa Id'}
+        <DynamicButton
+          title={'Easy Intent'}
           onPress={() => {
-            handleNavigation('UPIScreen', 
+            handleNavigation('UPI', 
               {
               merchantKey,
               salt,
@@ -214,7 +214,7 @@ console.log(txnId);
           }}
           styleoveride={undefined}
         />
-                 <Text>------------------------------------------------------------</Text> */}
+                 <Text>------------------------------------------------------------</Text> 
 
 <DynamicButton
           title={'CORE-PG'}

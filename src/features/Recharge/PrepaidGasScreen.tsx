@@ -20,7 +20,6 @@ import { translate } from '../../utils/languageUtils/I18n';
 import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
-import { useLocationHook } from '../../utils/hooks/useLocationHook';
 import { encrypt } from '../../utils/encryptionUtils';
 import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
 import FlotingInput from '../drawer/securityPages/FlotingInput';
@@ -30,6 +29,7 @@ import Rechargeconfirm from '../../components/Rechargeconfirm';
 import { useNavigation } from '@react-navigation/native';
 import ShowLoader from '../../components/ShowLoder';
 import RecentText from '../../components/RecentText';
+import { useLocationHook } from '../../hooks/useLocationHook';
 
 const PrepaidGasScreen1 = () => {
   const { get, post } = useAxiosHook();
@@ -253,7 +253,7 @@ const PrepaidGasScreen1 = () => {
 
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
-  const { userId } = useSelector((state: RootState) => state.userInfo);
+  const { userId,Loc_Data } = useSelector((state: RootState) => state.userInfo);
   const { latitude, longitude } = useLocationHook();
 
   const onRechargePress = useCallback(async () => {
@@ -268,8 +268,8 @@ const PrepaidGasScreen1 = () => {
       consumerNo,
       optcode,
       amount,
-      latitude,
-      longitude,
+      Loc_Data['latitude'],Loc_Data['longitude'],
+
       'city',
       'address',
       'postcode',
@@ -308,7 +308,12 @@ const PrepaidGasScreen1 = () => {
       });
       console.log(res);
       console.log(status);
+      if(res.status ==='False'){
+        alert(res.message);
+        setShowLoader(false);
 
+        return
+      }
       status = res.Response;
       Message = res.Message;
       await recenttransactions();
@@ -325,14 +330,15 @@ const PrepaidGasScreen1 = () => {
     setShowLoader(false);
 
     navigation.navigate('Rechargedetails', {
-      mobileNumber: mobileNumber,
-      Amount: amount,
+      mobileNumber: mobileNumber ?? '',
+      Amount: amount ?? 0,
       operator: 'Bhart Gas',
-      status,
-      reqId,
-      reqTime,
-      Message
+      status: status ?? 'Unknown',
+      reqId: reqId ?? '',
+      reqTime: reqTime ?? new Date().toISOString(),
+      Message: Message ?? 'No message available'
     });
+    
 
   }, [
     amount,
@@ -590,7 +596,7 @@ const PrepaidGasScreen1 = () => {
         )}
         <View>
 
-          <FlotingInput label={paramname} value={consumerNo} onChangeTextCallback={text => setconsumerNo(text)} keyboardType="numeric"
+          <FlotingInput label={paramname} value={consumerNo} onChangeTextCallback={text => setconsumerNo(text)} 
             maxLength={17}
           />
 
@@ -634,7 +640,9 @@ const PrepaidGasScreen1 = () => {
           keyboardType="numeric"
           onChangeText={text => setAmount(text)}
         /> */}
-        <FlotingInput label={'Enter Amount'} value={amount} keyboardType="numeric"
+        <FlotingInput label={'Enter Amount'}
+             maxLength={5}
+              value={amount} keyboardType="numeric"
           onChangeTextCallback={text => {
             setAmount(text);
           }} />

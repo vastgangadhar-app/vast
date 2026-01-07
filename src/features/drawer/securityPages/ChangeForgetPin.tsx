@@ -24,7 +24,7 @@ const ChangeForgetPin = () => {
     navigation.navigate('ForgetPin');
   };
 
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig, IsDealer } = useSelector((state: RootState) => state.userInfo);
   const ChangePinKey = `<svg fill="none" height="54" viewBox="0 0 24 24" width="44" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><linearGradient id="paint0_linear_1_436" gradientUnits="userSpaceOnUse" x1="12" x2="12" y1="6.25" y2="17.75"><stop offset="0" stop-color="${colorConfig.primaryColor}"/><stop offset="1" stop-color="${colorConfig.primaryColor}"/></linearGradient><g fill="url(#paint0_linear_1_436)"><path d="m7 10c-1.10457 0-2 .8954-2 2s.89543 2 2 2 2-.8954 2-2-.89543-2-2-2z"/><path clip-rule="evenodd" d="m7 6.25c-3.17564 0-5.75 2.57436-5.75 5.75 0 3.1756 2.57436 5.75 5.75 5.75 2.18057 0 4.0762-1.2137 5.0508-3h3.1992v2.25c0 .4142.3358.75.75.75h3.5c.4142 0 .75-.3358.75-.75v-2.25h1.75c.4142 0 .75-.3358.75-.75v-3c0-.9665-.7835-1.75-1.75-1.75h-8.9492c-.9746-1.78629-2.87023-3-5.0508-3zm-4.25 5.75c0-2.34721 1.90279-4.25 4.25-4.25 1.74161 0 3.2402 1.04769 3.8967 2.5503.1193.2731.3892.4497.6873.4497h9.416c.1381 0 .25.1119.25.25v2.25h-1.75c-.4142 0-.75.3358-.75.75v2.25h-2v-2.25c0-.4142-.3358-.75-.75-.75h-4.416c-.2981 0-.568.1766-.6873.4497-.6565 1.5026-2.15509 2.5503-3.8967 2.5503-2.34721 0-4.25-1.9028-4.25-4.25z" fill-rule="evenodd"/></g></svg>`;
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const [newsecure, setNewsecure] = useState(true);
@@ -33,14 +33,13 @@ const ChangeForgetPin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [iscurrentpass, setIscurrentpass] = useState(false);
   const [isrenewpass, setIsrenewpass] = useState(false);
-  const {post} = useAxiosHook();
+  const { post } = useAxiosHook();
   const [otpModalVisible, setOtpModalVisible] = useState(false);
   const [mobileOtp, setMobileOtp] = useState('');
   const [oldpass, setOldpass] = useState('');
   const [newpass, setNewpass] = useState('');
   const [renewpass, setRenewpass] = useState('');
-const [isotp,setisotp]= useState(false);
- 
+  const [isotp, setisotp] = useState(false);
   const BtnPress = () => {
 
     if (oldpass === '') {
@@ -54,12 +53,12 @@ const [isotp,setisotp]= useState(false);
     }
     else if (newpass.length < 4 || renewpass.length < 4) {
       ToastAndroid.showWithGravity(
-        'PIN should be at least 6 characters long!', // Message to display
-        ToastAndroid.SHORT, // Duration for which the toast is shown
+        'PIN should be at least 6 characters long!', 
+        ToastAndroid.SHORT, 
         ToastAndroid.BOTTOM // Position where the toast appears
       );
     } else if (newpass === renewpass) {
-      changePin();  
+      IsDealer ? changeDealerpin() : changePin();
     } else {
       ToastAndroid.showWithGravity(
         'Transaction PIN do not match', // Message to display
@@ -80,28 +79,56 @@ const [isotp,setisotp]= useState(false);
     setRenewsecure(!renewsecure)
   };
 
+  const changeDealerpin = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await post({ url: `${APP_URLS.DealerTransectionpinchange}oldpin=${oldpass}&newpin=${renewpass}` });
+   console.log(`${APP_URLS.DealerTransectionpinchange}oldpin=${oldpass}&newpin=${renewpass}`)
+      if (res && res.Response =='Failed') {
+        ToastAndroid.show(res.Message,ToastAndroid.LONG)
+        console.log(res,'*****************');
+      }else{
+         Dialog.show({
+                    type: ALERT_TYPE.SUCCESS,
+                    title: 'SUCCESS',
+                    textBody: res.Message || 'Your Transaction Pin Change and Send Successfully on Your Mail Id . Please Check Your Mail Id.',
+                    button: 'OK',
+                    onPressButton: () => {
+                   //   dispatch(reset())
+                     // navigation.replace('Logout');
+        navigation.navigate('Home');
+                      Dialog.hide();
+                    },
+                  });
+             //setOtpModalVisible(true);
 
+       }
+      setIsLoading(false);
+    } catch (error) {
+
+    }
+  }, [ newpass, oldpass, post, renewpass])
   const changePin = useCallback(async () => {
     setIsLoading(true);
     setOtpModalVisible(false);
 
     const encryption = encrypt([oldpass, newpass, renewpass, mobileOtp]);
     const encData = encryption.encryptedData;
-  
+
     const url = isotp
       ? `${APP_URLS.changePin}value1=${encryption.keyEncode}&value2=${encryption.ivEncode}&OldPIN=${encData[0]}&NewPIN=${encData[1]}&Otp=${encData[3]}`
       : `${APP_URLS.verifyChangePin}value1=${encryption.keyEncode}&value2=${encryption.ivEncode}&OldPIN=${encData[0]}&NewPIN=${encData[1]}`;
-  
+
     try {
       const response = await post({ url });
-  
+
       console.log('Response from server:', url, response);
-  
+
       setIsLoading(false);
-  
+
       if (isotp) {
         setOtpModalVisible(false);
-  
+
         if (response.status) {
           console.log('Success response:', response);
           Alert.alert(
@@ -132,11 +159,11 @@ const [isotp,setisotp]= useState(false);
             { cancelable: false }
           );
         }
-  
+
         setMobileOtp('');
         return;
       }
-  
+
       if (response.status === true) {
         setMobileOtp('');
         setOtpModalVisible(true);
@@ -159,7 +186,7 @@ const [isotp,setisotp]= useState(false);
     } catch (error) {
       setIsLoading(false);
       console.error('Error during changePin request:', error);
-  
+
       Alert.alert(
         'ERROR',
         'An error occurred. Please try again later.',
@@ -174,10 +201,10 @@ const [isotp,setisotp]= useState(false);
       );
     }
   }, [mobileOtp, isotp, newpass, oldpass, post, renewpass]);
-  
-  
-  
-  
+
+
+
+
 
   const handlecurrentpass = (text: string) => {
     checkButtonVisibility(text, newpass, renewpass);
@@ -207,7 +234,7 @@ const [isotp,setisotp]= useState(false);
     setIsButt(value1 >= 4 || value2 >= 4 || value3 >= 4);
   };
 
- 
+
   return (
     <View style={styles.main}>
       <AppBarSecond
@@ -225,10 +252,10 @@ const [isotp,setisotp]= useState(false);
         </View>
 
         <View>
-        {isLoading && <ActivityIndicator color={colors.black} size="large" />}
+          {isLoading && <ActivityIndicator color={colors.black} size="large" />}
           <View style={{ position: 'relative' }}>
             <FlotingInput label="Current PIN"
-            value={oldpass}
+              value={oldpass}
               secureTextEntry={secureTextEntry}
               onChangeTextCallback={(value) =>
                 handlecurrentpass(value)}
@@ -265,7 +292,7 @@ const [isotp,setisotp]= useState(false);
             )}
 
           </View>
-          <View style={{ position: 'relative',paddingBottom:hScale(10) }}>
+          <View style={{ position: 'relative', paddingBottom: hScale(10) }}>
             <FlotingInput label="Re-enter New PIN"
               secureTextEntry={renewsecure}
               value={renewpass}
@@ -290,14 +317,14 @@ const [isotp,setisotp]= useState(false);
             title="submit"
             onPress={() => {
               if (oldpass.length >= 4 && newpass.length >= 4 && renewpass.length >= 4) {
-                  BtnPress();
+                BtnPress();
               } else {
-                  console.log('PIN should be at least 6 characters long');
+                console.log('PIN should be at least 6 characters long');
               }
-          }}
+            }}
             styleoveride={{ opacity: oldpass.length <= 3 || newpass.length <= 3 || renewpass.length <= 3 ? 0.5 : 1 }}
           />
-          
+
         </View>
 
         <TouchableOpacity

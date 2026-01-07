@@ -5,9 +5,11 @@ import { useLocationHook } from '../../../utils/hooks/useLocationHook';
 import useAxiosHook from '../../../utils/network/AxiosClient';
 import { APP_URLS } from '../../../utils/network/urls';
 import DynamicButton from '../../drawer/button/DynamicButton';
+import { RootState } from '../../../reduxUtils/store';
 
 const TwoFaComponent = () => {
-  const { userId } = useSelector((state) => state.userInfo);
+
+  const { userId, activeAepsLine } = useSelector((state: RootState) => state.userInfo);
   const { latitude, longitude } = useLocationHook();
   const { post } = useAxiosHook();
 
@@ -81,7 +83,7 @@ const TwoFaComponent = () => {
           deviceIMEI: '57bea5094fd9082d',
         }
 
-      const url = `${APP_URLS.twofa}`;
+      const url = activeAepsLine ? `${APP_URLS.twofaNifi}` : `${APP_URLS.twofa}`;
       const formData = JSON.stringify(data);
       console.log(formData);
       const response = await post({
@@ -146,7 +148,7 @@ const TwoFaComponent = () => {
 
 
     const response = await post({
-      url: APP_URLS.twofa,
+      url: activeAepsLine ? APP_URLS.twofaNifi : APP_URLS.twofa,
       data: data,
       config: {
         headers: headers

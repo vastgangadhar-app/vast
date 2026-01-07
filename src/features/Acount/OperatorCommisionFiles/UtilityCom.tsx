@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { APP_URLS } from '../../../utils/network/urls';
 import useAxiosHook from '../../../utils/network/AxiosClient';
 import { RootState } from '../../../reduxUtils/store';
@@ -8,58 +8,83 @@ import { colors, FontSize } from '../../../utils/styles/theme';
 import { hScale, wScale } from '../../../utils/styles/dimensions';
 
 const UtilityCommission = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
-  const color1 = `${colorConfig.secondaryColor}20`
+  const { colorConfig, IsDealer } = useSelector((state: RootState) => state.userInfo);
+  const color1 = `${colorConfig.secondaryColor}20`;
   const { get } = useAxiosHook();
-  const [list, setList] = useState([])
+  const [list, setList] = useState([]);
+  const [loading, setLoading] = useState(true); // Added loading state
 
   useEffect(() => {
     const fetchCommissionData = async (operator) => {
       try {
         const url = `${APP_URLS.opComm}ddltype=${operator}`;
-        const response = await get({ url });
-        console.log('Prepaid');
-        console.log('Prepaid');
+        const url2 = `${APP_URLS.dealeropcomn}ddltype=${operator}`;
+        const response = await get({ url: IsDealer ? url2 : url });
+        console.log(IsDealer ? url2 : url);
 
-        setList(response);
+        // Check if response is valid and contains data
+        if (response && response.length > 0) {
+          setList(response);
+        } else {
+          setList([]); // Set list to empty array if no data is returned
+        }
       } catch (error) {
         console.error(error);
+        setList([]); // Handle error case by setting an empty array
+      } finally {
+        setLoading(false); // Set loading to false after fetching is done
       }
     };
+
     fetchCommissionData('Utility');
-  }, [])
+  }, [IsDealer]);
+
   const renderItem = ({ item }) => (
     <View style={styles.row}>
-      <Text style={[styles.cell, styles.firstCell,]}>{item.OperatorName}</Text>
-      <Text style={[styles.cell, styles.secondCell]}>{item.OperatorCode}</Text>
-      <Text style={[styles.cell, styles.third,]}>{item.Commission}</Text>
-
+      <Text style={[styles.cell, styles.firstCell]}>{item.OperatorName || 'N/A'}</Text>
+      <Text style={[styles.cell, styles.secondCell]}>{item.OperatorCode || 'N/A'}</Text>
+      <Text style={[styles.cell, styles.third]}>{item.Commission || 'N/A'}</Text>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { backgroundColor: colorConfig.secondaryColor, }]}>
-        <Text style={[styles.headerCell, styles.firstCell,]}>Operator</Text>
+      <View style={[styles.header, { backgroundColor: colorConfig.secondaryColor }]}>
+        <Text style={[styles.headerCell, styles.firstCell]}>Operator</Text>
         <Text style={[styles.headerCell, styles.secondCell]}>Operator</Text>
-        <Text style={[styles.headerCell, styles.third,]}>{' Commision By Range'}</Text>
-
+        <Text style={[styles.headerCell, styles.third]}>{'Commision By Range'}</Text>
       </View>
-      <FlatList
-        data={list}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.OperatorCode}
-      />
+
+      {/* Check if loading */}
+      {loading ? (
+        <ActivityIndicator size="large" color={colorConfig.secondaryColor} />
+      ) : (
+        // Check if the list is not empty
+        list.length > 0 ? (
+          <FlatList
+            data={list}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.OperatorCode}
+          />
+        ) : (
+          <View style={styles.noDataContainer}>
+            <Text>No data available</Text>
+          </View>
+        )
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    padding: 10,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
   headerCell: {
     fontWeight: 'bold',
@@ -68,11 +93,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xSmall,
     color: colors.white,
     textAlignVertical: 'center',
-    paddingVertical: hScale(5)
+    paddingVertical: hScale(5),
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    marginBottom: 5,
   },
   cell: {
     textAlign: 'center',
@@ -80,18 +106,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: wScale(1),
     color: colors.black75,
     paddingVertical: hScale(5),
-    
   },
   firstCell: {
     borderLeftWidth: 0,
-    flex: 2
+    flex: 2,
   },
   secondCell: {
-    flex: 1
+    flex: 1,
   },
   third: {
     borderRightWidth: 0,
-    flex: 2
+    flex: 2,
+  },
+  noDataContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
   },
 });
 

@@ -1,42 +1,85 @@
 import { BottomSheet } from "@rneui/themed";
-import React, { useState } from "react";
-import { Image, View, StyleSheet, Text } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Image, View, StyleSheet, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useSelector } from "react-redux";
 import { RootState } from "../reduxUtils/store";
 import { SCREEN_HEIGHT, hScale, wScale } from "../utils/styles/dimensions";
 import NoDatafound from "../features/drawer/svgimgcomponents/Nodatafound";
+import LottieView from "lottie-react-native";
+
 const ImageBottomSheet = ({
-imagePath,
-isModalVisible,
-setModalVisible,
-modalTitle,
-setImagePath,
+  imagePath,
+  isModalVisible,
+  setModalVisible,
+  modalTitle,
+  setImagePath,
+  isUri,
+  ReUpload
+}: {
+  imagePath: string;
+  isModalVisible: boolean;
+  setModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  modalTitle: string;
+  setImagePath: React.Dispatch<React.SetStateAction<string>>;
+  isUri: boolean;
+  ReUpload: boolean;
 }) => {
   const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const color1 = `${colorConfig.secondaryColor}20`;
+  const [isloading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (imagePath) {
+      setIsLoading(false);
+    }
+  }, [imagePath]);
+
   return (
     <BottomSheet
       isVisible={isModalVisible}
       onBackdropPress={() => setModalVisible(false)}
-      containerStyle={{ backgroundColor: 'rgba(0.5, 0.25, 0, 0.8)', }}>
+      containerStyle={{ backgroundColor: 'rgba(0.5, 0.25, 0, 0.8)' }}
+    >
       <View style={styles.bottomsheetview}>
-      <Text style={styles.headerText}>{modalTitle}</Text>
-      {imagePath ? 
-        <Image
-          source={{ uri: imagePath }}
-          onError={(e) => setImagePath('')}
-          style={{ height: SCREEN_HEIGHT / 1.2,  marginHorizontal: wScale(10) }}
-          resizeMode='contain'/>
-          : 
-          <View style={{alignItems: 'center', marginTop: wScale(90)}}>
-          <NoDatafound size={wScale(200)} />
-          <Text style={styles.headerText}>{'No Data Found'}</Text>
-          </View>
-      }
-
+        <View style={[styles.topheader, { backgroundColor: color1 }]}>
+          <TouchableOpacity onPress={() => { setModalVisible(false) }} >
+            <Text style={styles.donestyle}>
+              Done
+            </Text>
+          </TouchableOpacity>
+          <Text style={[styles.headerText]}>{`${modalTitle}`}</Text>
+          {isUri && <TouchableOpacity onPress={ReUpload}>
+            <LottieView
+                                         autoPlay={true}
+                                         loop={true}
+                                         style={styles.lotiimg}
+                                      //   source={require('../../utils/lottieIcons/upload-file.json')}
+           
+                                        source={require('../utils/lottieIcons/upload-file.json')}
+                                       />
+          </TouchableOpacity>}
+        </View>
+        {isloading ? (
+          <ActivityIndicator size={"large"} color={colorConfig.secondaryColor} />
+        ) : (
+          imagePath ? (
+            <Image
+              source={{
+                uri: imagePath
+              }}
+              onError={() => setImagePath('')}
+              style={styles.image}
+              resizeMode="contain"
+            />
+          ) : (
+            <NoDatafound />
+          )
+        )}
       </View>
     </BottomSheet>
   );
 };
+
 const styles = StyleSheet.create({
   bottomsheetview: {
     backgroundColor: "#fff",
@@ -44,58 +87,35 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 15,
     height: SCREEN_HEIGHT / 1.2
   },
-  header: {
-    alignSelf: 'center',
-    paddingBottom: hScale(5),
-    borderBottomWidth: wScale(1),
-    width: '80%',
-    alignItems: 'center',
-    paddingTop: hScale(20),
-  },
   headerText: {
-    fontSize: wScale(28),
+    fontSize: wScale(18),
     textAlign: 'center',
-    paddingTop: hScale(6),
-    color: '#000'
-  },
-  detailsContainer: {
-    marginTop: hScale(30),
-    borderRadius: 10,
-    paddingHorizontal: wScale(20),
-    marginVertical: hScale(18),
-    fontWeight: 'bold'
-  },
-  detailItem: {
-    justifyContent: 'space-between',
-    marginBottom: hScale(10),
-    borderBottomWidth: wScale(.5),
     paddingVertical: hScale(8),
-  },
-  detailItem2: {
-    borderBottomWidth: wScale(0),
-    paddingBottom: hScale(0),
-    marginBottom: hScale(20),
-
-  },
-  label: {
-    fontSize: wScale(15),
-    paddingBottom: hScale(5),
-    color: '#000'
-  },
-  value: {
-    fontSize: wScale(40),
+    color: '#000',
     fontWeight: 'bold',
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    flex: 1
+  },  lotiimg: {
+    height: hScale(44),
+    width: wScale(44),
+  },
+  topheader: {
+    flexDirection: 'row',
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: wScale(20)
+  },
+  image: {
+    height: SCREEN_HEIGHT / 1.2,
+    marginHorizontal: wScale(10),
+  },
+  donestyle: {
+    fontSize: wScale(16),
     color: '#000'
   },
-  value2: {
-    fontSize: wScale(30),
-    color: '#000'
-  },
-  lotiimg2: {
-    height: hScale(80),
-    width: wScale(80),
-    marginRight: wScale(-2)
-  },
-
 });
+
 export default ImageBottomSheet;

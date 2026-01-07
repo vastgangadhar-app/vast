@@ -11,7 +11,7 @@ import DateRangePicker from '../../components/DateRange';
 import NoDatafound from '../drawer/svgimgcomponents/Nodatafound';
 
 const DisputeReport = () => {
-    const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+    const { colorConfig ,IsDealer } = useSelector((state: RootState) => state.userInfo);
     const color1 = `${colorConfig.secondaryColor}20`
     const [inforeport, setInforeport] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -121,7 +121,8 @@ const DisputeReport = () => {
                 SearchPress={(from, to, status) => FundRecReport(from, to, status)}
                 status={selectedStatus}
                 setStatus={setSelectedStatus}
-                isStShow={false}
+                isStShow={true}
+                isshowRetailer={IsDealer}
             />
             <View style={styles.container}>
                 {loading ? <ActivityIndicator size="large" color={colorConfig.secondaryColor} />

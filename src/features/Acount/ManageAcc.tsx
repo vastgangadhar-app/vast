@@ -20,8 +20,9 @@ import DmtAddAccount from "./DmtAddAccount";
 import AddAccountSvg from "../drawer/svgimgcomponents/AddAccountSvg";
 import { DotLoader } from "../../components/DotLoader ";
 import AepsAccountSvg from "../drawer/svgimgcomponents/AepsAccountSvg";
+import DealerAddWalletAndAddAcc from "../Delerpages/DelerHomeToppage/DealerAddWallet&AddAcc";
 const ManageAccount = () => {
-    const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+    const { colorConfig ,IsDealer} = useSelector((state: RootState) => state.userInfo);
     const color1 = `${colorConfig.primaryColor}20`;
     const { get, post } = useAxiosHook()
     const [banklist, setBanklist] = useState([]);
@@ -45,128 +46,113 @@ const ManageAccount = () => {
     const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
         useDeviceInfoHook();
     const { userId } = useSelector((state: RootState) => state.userInfo);
-    const readLatLongFromStorage = async () => {
-        try {
-            const locationData = await AsyncStorage.getItem('locationData');
-            if (locationData !== null) {
-                const { latitude, longitude } = JSON.parse(locationData);
-                console.log('Latitude:', latitude, 'Longitude:', longitude);
-                return { latitude, longitude };
-            } else {
-                console.log('No location data found');
-                return null;
-            }
-        } catch (error) {
-            console.error('Failed to read location data from AsyncStorage:', error);
-            return null;
-        }
-    };
-    const UpdateRetailerBank = async (id) => {
-        setisLoading(true);
+ 
+    // const UpdateRetailerBank = async (id) => {
+    //     setisLoading(true);
 
-        const loc = await readLatLongFromStorage();
-        const ip = await getMobileIp();
-        const Model = await getMobileDeviceId();
-        const net = await getNetworkCarrier();
+    //     const loc = await readLatLongFromStorage();
+    //     const ip = await getMobileIp();
+    //     const Model = await getMobileDeviceId();
+    //     const net = await getNetworkCarrier();
 
-        const data = JSON.stringify({
-            txtid3: id,
-            txtaccholder: name,
-            txtbankaccountno: acnNumber,
-            txtifsc: ifsccode,
-            txtbankname: bank,
-            txtbranchaddress: branch,
-            IP: ip,
-            Latitude: loc?.latitude,
-            Longitude: loc?.longitude,
-            ModelNo: Model,
-            City: city,
-            PostalCode: Pincod,
-            InternetTYPE: net,
-            Address: Addresss,
-        });
+    //     const data = JSON.stringify({
+    //         txtid3: id,
+    //         txtaccholder: name,
+    //         txtbankaccountno: acnNumber,
+    //         txtifsc: ifsccode,
+    //         txtbankname: bank,
+    //         txtbranchaddress: branch,
+    //         IP: ip,
+    //         Latitude: loc?.latitude,
+    //         Longitude: loc?.longitude,
+    //         ModelNo: Model,
+    //         City: city,
+    //         PostalCode: Pincod,
+    //         InternetTYPE: net,
+    //         Address: Addresss,
+    //     });
 
-        console.log("Request Data Being Sent:", data);
-        try {
-            const url = `${APP_URLS.UpdateRetailerBank}`;
-            const response = await post({
-                url: url,
-                data: {
-                    txtid3: id,
-                    txtaccholder: name,
-                    txtbankaccountno: acnNumber,
-                    txtifsc: ifsccode,
-                    txtbankname: bank,
-                    txtbranchaddress: branch,
-                    IP: ip,
-                    Latitude: loc?.latitude,
-                    Longitude: loc?.longitude,
-                    ModelNo: Model,
-                    City: city,
-                    PostalCode: Pincod,
-                    InternetTYPE: net,
-                    Address: Addresss,
-                },
-            });
-            console.log("Response Received:", response);
-            const sts = response.Response;
-            setidno(idno);
-            setisLoading(false);
-            setLoading(false);
-            if (sts === 'Success') {
-                const idno = response.idno.toString();
-                setidno(idno);
-                Alert.alert(
-                    '',
-                    `${response.Message} \n Select the option for Upload Cancel Check Photo`,
-                    [
-                        {
-                            text: 'Camera',
-                            onPress: async () => {
-                                await launchCamera({ mediaType: 'photo', includeBase64: true, quality: 0.5 }, (response) => {
-                                    ; setbase64Img(response?.assets?.[0]?.base64);
-                                    // uploadDoCx(response?.assets?.[0]?.base64,response.idno);
-                                    //setisLoading(true)
-                                });
+    //     console.log("Request Data Being Sent:", data);
+    //     try {
+    //         const url = `${APP_URLS.UpdateRetailerBank}`;
+    //         const response = await post({
+    //             url: url,
+    //             data: {
+    //                 txtid3: id,
+    //                 txtaccholder: name,
+    //                 txtbankaccountno: acnNumber,
+    //                 txtifsc: ifsccode,
+    //                 txtbankname: bank,
+    //                 txtbranchaddress: branch,
+    //                 IP: ip,
+    //                 Latitude: loc?.latitude,
+    //                 Longitude: loc?.longitude,
+    //                 ModelNo: Model,
+    //                 City: city,
+    //                 PostalCode: Pincod,
+    //                 InternetTYPE: net,
+    //                 Address: Addresss,
+    //             },
+    //         });
+    //         console.log("Response Received:", response);
+    //         const sts = response.Response;
+    //         setidno(idno);
+    //         setisLoading(false);
+    //         setLoading(false);
+    //         if (sts === 'Success') {
+    //             const idno = response.idno.toString();
+    //             setidno(idno);
+    //             Alert.alert(
+    //                 '',
+    //                 `${response.Message} \n Select the option for Upload Cancel Check Photo`,
+    //                 [
+    //                     {
+    //                         text: 'Camera',
+    //                         onPress: async () => {
+    //                             await launchCamera({ mediaType: 'photo', includeBase64: true, quality: 0.5 }, (response) => {
+    //                                 ; setbase64Img(response?.assets?.[0]?.base64);
+    //                                 // uploadDoCx(response?.assets?.[0]?.base64,response.idno);
+    //                                 //setisLoading(true)
+    //                             });
 
-                            },
-                            style: 'default',
-                        },
-                        {
-                            text: 'Gallery',
-                            onPress: async () => {
-                                await launchImageLibrary({ selectionLimit: 1, mediaType: 'photo', includeBase64: true }, (response) => {
+    //                         },
+    //                         style: 'default',
+    //                     },
+    //                     {
+    //                         text: 'Gallery',
+    //                         onPress: async () => {
+    //                             await launchImageLibrary({ selectionLimit: 1, mediaType: 'photo', includeBase64: true }, (response) => {
 
-                                    setbase64Img(response?.assets?.[0]?.base64);
-                                    // uploadDoCx(response?.assets?.[0]?.base64,response.idno);
-                                });
+    //                                 setbase64Img(response?.assets?.[0]?.base64);
+    //                                 // uploadDoCx(response?.assets?.[0]?.base64,response.idno);
+    //                             });
 
-                            },
-                        },
-                        {
-                            text: "Cancel",
-                            onPress: () => {
-                                console.log("Cancel button clicked");
-                            },
-                            style: "cancel"
-                        }
-                    ]
-                );
-            } else {
-                Alert.alert(`${response.Message}`);
-            }
-        } catch (error) {
-            console.error("Error during UpdateRetailerBank request:", error);
+    //                         },
+    //                     },
+    //                     {
+    //                         text: "Cancel",
+    //                         onPress: () => {
+    //                             console.log("Cancel button clicked");
+    //                         },
+    //                         style: "cancel"
+    //                     }
+    //                 ]
+    //             );
+    //         } else {
+    //             Alert.alert(`${response.Message}`);
+    //         }
+    //     } catch (error) {
+    //         console.error("Error during UpdateRetailerBank request:", error);
 
-            // Enhanced error handling for user notification
-            const errorMessage = error?.response?.data?.message || "An error occurred while updating the retailer's bank details.";
+    //         // Enhanced error handling for user notification
+    //         const errorMessage = error?.response?.data?.message || "An error occurred while updating the retailer's bank details.";
 
-            // Show a user-friendly error message along with error details for debugging
-            Alert.alert("Error", `${errorMessage}\n\nDetails: ${error?.message || error?.toString()}`);
-        } finally {
-            setLoading(false);
-        }
-    };
+    //         // Show a user-friendly error message along with error details for debugging
+    //         Alert.alert("Error", `${errorMessage}\n\nDetails: ${error?.message || error?.toString()}`);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
     const uploadDoCx = async (bs64, idno) => {
         setisLoading(true);
 
@@ -224,6 +210,8 @@ const ManageAccount = () => {
         }
     };
     useEffect(() => {
+
+        if(!IsDealer){
         fetchBanks();
         const fetchBankAccounts = async () => {
             setLoading(true);
@@ -243,9 +231,13 @@ const ManageAccount = () => {
             }
         };
         fetchBankAccounts();
-        requestCameraPermission();
-    }, []);
+       // requestCameraPermission();
+        }
 
+    }, []);
+if(IsDealer){
+    return <DealerAddWalletAndAddAcc/>
+}
     const fetchBanks = async () => {
         setLoading(true);
         try {

@@ -7,9 +7,9 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../reduxUtils/store';
 
 const FlightCom = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
-  const color1 = `${colorConfig.secondaryColor}20`
- 
+  const { colorConfig, IsDealer } = useSelector((state: RootState) => state.userInfo);
+  const color1 = `${colorConfig.secondaryColor}20`;
+
   const { get } = useAxiosHook();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,9 +17,11 @@ const FlightCom = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const url2 = `${APP_URLS.dealeropcomn}ddltype=FLIGHT`;
         const url = `${APP_URLS.opComm}ddltype=FLIGHT`;
-        const response = await get({ url });
+        const response = await get({ url: IsDealer ? url2 : url });
 
+        console.log(IsDealer ? url2 : url);
         if (response && Array.isArray(response) && response.length > 0) {
           setData(response);
         } else {
@@ -35,6 +37,14 @@ const FlightCom = () => {
     fetchData();
   }, [get]);
 
+  // Function to handle null or undefined values
+  const handleNullValue = (value) => {
+    if (value === null || value === undefined || isNaN(value)) {
+      return '0.00';
+    }
+    return value.toFixed(2);
+  };
+
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
@@ -46,10 +56,10 @@ const FlightCom = () => {
   return (
     <View style={styles.container}>
       {data.length === 0 ? (
-        <NoDatafound/>
+        <NoDatafound />
       ) : (
         <View style={styles.table}>
-          <View style={[styles.headerRow,{backgroundColor:colorConfig.secondaryColor}]}>
+          <View style={[styles.headerRow, { backgroundColor: colorConfig.secondaryColor }]}>
             <Text style={[styles.cell, styles.headerCell]}>Particulars</Text>
             <Text style={[styles.cell, styles.headerCell]}>Margin (%)</Text>
             <Text style={[styles.cell, styles.headerCell]}>GST (₹)</Text>
@@ -66,9 +76,9 @@ const FlightCom = () => {
               <Text style={styles.cell}>
                 {item.IsDomestic ? 'Domestic' : 'International'}
               </Text>
-              <Text style={styles.cell}>{item.marginPercentage.toFixed(2)}</Text>
-              <Text style={styles.cell}>{item.gst.toFixed(2)}</Text>
-              <Text style={styles.cell}>{item.tds.toFixed(2)}</Text>
+              <Text style={styles.cell}>{handleNullValue(item.marginPercentage)}</Text>
+              <Text style={styles.cell}>{handleNullValue(item.gst)}</Text>
+              <Text style={styles.cell}>{handleNullValue(item.tds)}</Text>
             </View>
           ))}
         </View>
@@ -120,7 +130,6 @@ const styles = StyleSheet.create({
     color: '#fff', // White text color for header
     backgroundColor: '#2980b9', // Darker blue for header cells
   },
-
 });
 
 export default FlightCom;

@@ -23,7 +23,6 @@ import useAxiosHook from '../../utils/network/AxiosClient';
 import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
-import { useLocationHook } from '../../utils/hooks/useLocationHook';
 import { encrypt } from '../../utils/encryptionUtils';
 import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
 import ShowLoader from '../../components/ShowLoder';
@@ -38,6 +37,8 @@ import ClosseModalSvg2 from '../drawer/svgimgcomponents/ClosseModal2';
 import { useNavigation } from '@react-navigation/native';
 import { combineSlices } from '@reduxjs/toolkit';
 import RecentText from '../../components/RecentText';
+import { useLocationHook } from "../../hooks/useLocationHook";
+import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 
 const GasCylinderScreen = () => {
 
@@ -76,13 +77,21 @@ const GasCylinderScreen = () => {
   useEffect(() => {
     recenttransactions();
   }, []);
+const [OPtCode,setOPtCode]= useState('')
+  const [ops,setOps]=useState([]);
   const recenttransactions = async () => {
+
+
+    https://native.stdigipe.in/Recharge/api/data/Optcodelist?opttype=LPG Gas
     try {
       const url = `${APP_URLS.recenttransaction}pageindex=1&pagesize=5&retailerid=${userId}&fromdate=${formattedDate}&todate=${formattedDate}&role=Retailer&rechargeNo=ALL&status=ALL&OperatorName=ALL&portno=ALL`
       console.log(url);
       const response = await get({ url: url })
-      console.log('-*************************************', response);
 
+
+      const ops = await get({url:'Recharge/api/data/Optcodelist?opttype=LPG Gas'})
+      console.log('-*************************************', ops);
+setOps(ops.myprop2Items)
       setHistorylist(response);
       setReqTime(response[0]['Reqesttime']);
       setReqId(response[0]['Request_ID'])
@@ -174,7 +183,7 @@ const GasCylinderScreen = () => {
       const url = `${APP_URLS.getIndaneAgency}statename=${stateName}&District=${district}`;
 
       const res = await post({ url: url });
-      console.log('', res);
+      console.log('getIndaneAgency  **************************', res);
 
       setGasCylenderBillOpt(res['data']);
     } catch (error) { }
@@ -183,39 +192,66 @@ const GasCylinderScreen = () => {
   const [optcode, setOptCode] = useState('');
   const [custBal, setCustBal] = useState();
   async function billInfo() {
+    setShowLoader(true);
+  
+    // Get the OPtCode from selected filter
+    const optt = getOptCode(selectedFilter); // Assuming getOptCode is synchronous
+    
+    console.log("Selected OPtCode: ", optt); // Check what optt is
+  
+    if (!optt) {
+      Alert.alert("Error", "Invalid Operator selected");
+      setShowLoader(false);
+      return;
+    }
+  
     try {
-      const url = `${APP_URLS.rechargeViewBill}billnumber=${CustomerID}&Operator=${distCode}&billunit&ProcessingCycle&acno&lt&ViewBill=Y`;
-
-      //const url = `${APP_URLS.getdthCustomerInfo}optname=${distCode}&mobileno=${CustomerID}`;
+      const url = `${APP_URLS.rechargeViewBill}billnumber=${CustomerID}&Operator=${optt}&billunit=&ProcessingCycle=&acno=&lt&ViewBill=Y`;
+  
+      // Make the GET request
       const res = await get({
         url: url,
       });
-
-      console.log('res-*--*-*-*-*-*-*-*-*-***--*-*', res);
-      console.log(url, 'urllll-*--*-*-*-*-*-*-*-*-***--*-*');
-
-      if (res.RESULT == 0) {
-        setDueDate(res['rechargedueDate']);
-        setCustomerName(res['customerName']);
-        setCustBal(res['balance']);
-        //  setstatus(res['customerStatus']);
-        console.log(res['balance']);
-        setBottomSheetVisible(true);
-        // setShowLoader2(false);
-
+  
+      console.log('Response:', res);
+      console.log('URL:', url);
+  
+      // Check if the response is successful
+      if (res.RESULT === 0) {
+        if (res.ADDINFO.IsSuccess) {
+          const BillInfo = res.ADDINFO.BillInfo;
+          
+          // Show the details in an Alert
+          const alertMessage = `
+            Customer Name: ${BillInfo['customerName']}
+            Bill Amount: ${BillInfo.billAmount}
+            Due Date: ${BillInfo.billDueDate || "No Due Date Available"}
+          `;
+          setAmount(BillInfo.billAmount);
+          setCustomerName(BillInfo['customerName']);
+          setDueDate(BillInfo.billDueDate || "No Due Date Available")
+         // Alert.alert("Bill Information", alertMessage);
+          
+        } else {
+          Alert.alert("Info", res.ADDINFO.Message || "An error occurred");
+        }
       } else {
-        Alert.alert('Info', res.ADDINFO);
-        setShowLoader2(false);
-
+        Alert.alert("Error", res.ADDINFO.Message || "Error fetching bill info");
       }
+      
+      // Hide loader and show proceed sheet
+      setShowLoader(false);
+      setProceedSheetVisible(true);
+  
     } catch (error) {
       console.error('Error fetching bill info:', error);
-   
+      Alert.alert("Error", "There was an issue fetching the bill info.");
+      setShowLoader(false);
     }
-
-    console.log( 'urllll-*--*-*-*-*-*-*-*-*-***--*-*');
-
+    
+    console.log('URL Debugging Ended');
   }
+  
 
 
   async function ViewbillInfoStatus() {
@@ -257,15 +293,15 @@ const GasCylinderScreen = () => {
 
                     console.log('stateData', stateData)
                     switch (ddlStatus) {
-                      case 'HP':
+                      case 'HP Gas':
                         getHpAgency(stateData, item);
 
                         break;
-                      case 'Indian':
+                      case 'Indane Gas':
                         getIn(stateData, item);
 
                         break;
-                      case 'Bharat':
+                      case 'Bharat Gas':
                         break;
                       default:
                         break;
@@ -295,8 +331,8 @@ const GasCylinderScreen = () => {
   };
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
-  const { userId } = useSelector((state: RootState) => state.userInfo);
-  const { latitude, longitude } = useLocationHook();
+  const { userId  ,Loc_Data} = useSelector((state: RootState) => state.userInfo);
+  const { latitude, longitude, getLatLongValue, checkLocationPermissionStatus, getLocation, isLocationPermissionGranted } = useLocationHook();
   const readLatLongFromStorage = async () => {
     try {
       const locationData = await AsyncStorage.getItem('locationData');
@@ -314,9 +350,13 @@ const GasCylinderScreen = () => {
       return null; 
     }
   };
+
   const onRechargePress = useCallback(async () => {
-    const loc = await readLatLongFromStorage();
+    ;
     setShowLoader(true)
+   const ll=  getLatLongValue()
+    const optt = getOptCode(selectedFilter); 
+
     const mobileNetwork = await getNetworkCarrier();
     const ip = await getMobileIp();
     const encryption = await encrypt([
@@ -324,16 +364,31 @@ const GasCylinderScreen = () => {
       CustomerID,
       operator,
       amount,
-      loc?.latitude,
-      loc?.longitude,
+      latitude ??'0.000',
+      longitude??'0.111',
       'city',
       'address',
       'postcode',
       mobileNetwork,
       ip,
       '57bea5094fd9082d',
+      optt
     ]);
-    console.log(encryption.encryptedData);
+    console.log([
+      userId,
+      CustomerID,
+      operator,
+      amount,
+      Loc_Data['latitude'],Loc_Data['longitude'],
+
+      'city',
+      'address',
+      'postcode',
+      mobileNetwork,
+      ip,
+      '57bea5094fd9082d',
+      optt
+    ]);
 
     const rd = encodeURIComponent(encryption.encryptedData[0]);
     const n1 = encodeURIComponent(encryption.encryptedData[1]);
@@ -346,23 +401,29 @@ const GasCylinderScreen = () => {
     const Latitude = encodeURIComponent(encryption.encryptedData[4]);
     const Longitude = encodeURIComponent(encryption.encryptedData[5]);
     const ModelNo = encodeURIComponent(encryption.encryptedData[11]);
+    const OPtCode = encodeURIComponent(encryption.encryptedData[12]);
     const City = devtoken;
     const PostalCode = encodeURIComponent(encryption.encryptedData[8]);
     const InternetTYPE = encodeURIComponent(encryption.encryptedData[9]);
     const Addresss = encodeURIComponent(encryption.encryptedData[7]);
     const value1 = encodeURIComponent(encryption.keyEncode);
     const value2 = encodeURIComponent(encryption.ivEncode);
-    const url = `${APP_URLS.rechTask}rd=${rd}&n=${n1}&ok=${ok1}&amn=${amn}&pc=${distributorId}&bu=${MobileNumber}&acno&lt&ip=${ip1}&mc&em=${em}&offerprice&commAmount&Devicetoken=${devtoken}&Latitude=${Latitude}&Longitude=${Longitude}&ModelNo=${ModelNo}&City=${City}&PostalCode=${PostalCode}&InternetTYPE=${InternetTYPE}&Addresss=${Addresss}&value1=${value1}&value2=${value2}&billduedate=${dueDate}`;
+    const url = `${APP_URLS.rechTask}rd=${rd}&n=${n1}&ok=${OPtCode}&amn=${amn}&pc=${distributorId ||distCode}&bu=${MobileNumber}&acno&lt&ip=${ip1}&mc&em=${em}&offerprice&commAmount&Devicetoken=${devtoken}&Latitude=${Latitude}&Longitude=${Longitude}&ModelNo=${ModelNo}&City=${City}&PostalCode=${PostalCode}&InternetTYPE=${InternetTYPE}&Addresss=${Addresss}&value1=${value1}&value2=${value2}&billduedate=${dueDate}`;
     let status, Message;
     try {
       const res = await post({
         url: url,
       });
-      console.log(res);
+      console.log(url ,res);
       console.log(status);
+      if(res.status ==='False'){
+        alert(res.message);
+        setShowLoader(false);
 
-      status = res.Response;
-      Message = res.Message;
+        return
+      }
+      status = res.Response ||res.status;
+      Message = res.Message || res.message;
       await recenttransactions();
     } catch (error) {
       console.error("Recharge failed:", error);
@@ -370,22 +431,23 @@ const GasCylinderScreen = () => {
       Message = "Recharge failed, please try again";
     }
 
+   
+
+    navigation.navigate('Rechargedetails', {
+      mobileNumber: CustomerID ?? '',  // Default to empty string if null or undefined
+      Amount: amount ?? 0,             // Default to 0 if null or undefined
+      operator: operator ?? 'N/A',     // Default to 'N/A' if null or undefined
+      status: status ?? 'Unknown',     // Default to 'Unknown' if null or undefined
+      reqId: reqId ?? '',              // Default to empty string if null or undefined
+      reqTime: reqTime ?? new Date().toISOString(), // Default to current time if null or undefined
+      Message: Message ?? 'No message available'  // Default to 'No message available' if null or undefined
+    });
+    
     setCustomerID('');
     setCylenderBillOpt('Select Your Operator');
     setAmount('');
     setIsinfo(false)
     setShowLoader(false);
-
-    navigation.navigate('Rechargedetails', {
-      mobileNumber: CustomerID,
-      Amount: amount,
-      operator: operator,
-      status,
-      reqId,
-      reqTime,
-      Message
-    });
-
   }, [
     amount,
     getMobileIp,
@@ -397,6 +459,7 @@ const GasCylinderScreen = () => {
     post,
     userId,
   ]);
+  
   async function getHpAgency(stateName: string, district: string) {
     console.log(stateName, district);
     try {
@@ -410,7 +473,7 @@ const GasCylinderScreen = () => {
 
     }
   }
-  const [ddlStatus, setDdlStatus] = useState('HP');
+  const [ddlStatus, setDdlStatus] = useState('HP Gas');
 
   const Options = () => {
     const buttonData = [
@@ -425,15 +488,16 @@ const GasCylinderScreen = () => {
       setSelectedFilter(key);
       console.log(`Selected Filter: ${key}`);
       setDdlStatus(key);
+      setCylenderBillOpt(key)
       switch (key) {
-        case "Hp":
+        case "HP Gas":
           setSeleectedBharat(false)
           break;
-        case 'Indian':
+        case 'Indane Gas':
           setSeleectedBharat(false)
 
           break;
-        case 'Bharat':
+        case 'Bharat Gas':
           setSeleectedBharat(true)
           break;
         default:
@@ -443,30 +507,46 @@ const GasCylinderScreen = () => {
 
     return (
       <View style={styles.row}>
-        {buttonData.map((button) => (
+        {ops.map((button) => (
           <TouchableOpacity
-            key={button.key}
+            key={button.Operatorname}
             style={[
               styles.button,
-              { backgroundColor: selectedFilter === button.key ? 'green' : 'lightgreen' },
+              { backgroundColor: selectedFilter === button.Operatorname ? 'green' : 'lightgreen' },
             ]}
-            onPress={() => handlePress(button.key)}
+            onPress={() => handlePress(button.Operatorname)}
           >
-            <Text style={styles.buttonText}>{button.title}</Text>
+            <Text style={styles.buttonText}>{button.Operatorname}</Text>
           </TouchableOpacity>
         ))}
       </View>
     );
   };
-  const [selectedFilter, setSelectedFilter] = useState('Hp');
+  const [selectedFilter, setSelectedFilter] = useState('HP Gas');
 
+
+
+  const getOptCode = (operatorName) => {
+    // Looping through items in the data
+    const foundItem = ops.find(
+      (item) => item.Operatorname === operatorName
+    );
+  setOPtCode(foundItem ? foundItem.OPtCode : null)
+    // Agar match milta hai to OPtCode return karo, otherwise null
+    return foundItem ? foundItem.OPtCode : null;
+  };
+  
   return (
+
+
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <View style={styles.main}>
       <AppBarSecond title={'Gas Cylinder'} />
-      <Options />
 
+                 <Options />
 
-
+      <ScrollView> 
+        
       <View style={styles.container}>
         {showLoader && (
           <ShowLoader />
@@ -516,7 +596,7 @@ const GasCylinderScreen = () => {
         )}
         <View>
 
-          {selectedBharat === true && (<FlotingInput label={'Agenct Code'} keyboardType="numeric"
+          {selectedBharat === true && (<FlotingInput label={'Agenct Code'} 
             onChangeTextCallback={(text) => setdistributorId(text)} value={distributorId} />)}
 
           {selectedBharat === true && (<FlotingInput label={'Mobile Number'} keyboardType="numeric"
@@ -524,7 +604,7 @@ const GasCylinderScreen = () => {
             maxlength={10}
             onChangeTextCallback={(text) => setMobileNumber(text)} value={MobileNumber} />)}
           <View>
-            <FlotingInput label={'Customer Id'} value={CustomerID} keyboardType="numeric"
+            <FlotingInput label={'Customer Id'} value={CustomerID} 
               maxLength={maxlen}
               onChangeTextCallback={text => {
                 setCustomerID(text);
@@ -550,7 +630,9 @@ const GasCylinderScreen = () => {
           </View>
         </View>
 
-        <FlotingInput label={'Enter Amount'} value={amount} keyboardType="numeric"
+        <FlotingInput label={'Enter Amount'}
+             maxLength={5}
+              value={amount} keyboardType="numeric"
           onChangeTextCallback={text => {
             setAmount(text); setAmount(text.replace(/\D/g, ""));
           }} />
@@ -651,8 +733,16 @@ const GasCylinderScreen = () => {
           </View>
         </BottomSheet>
       </View>
-    </View>
 
+
+        
+      </ScrollView>
+  
+
+
+
+    </View>
+    </GestureHandlerRootView>
   );
 };
 

@@ -31,15 +31,17 @@ const MAtmStatusCheck = () => {
     try {
       const res = await post({ url: 'MICROATM/api/data/StatusCheck' });
       const { status, msg } = res;
-
+console.log(res,'statusCheck')
       if (status === 'Success') {
-        navigation.replace('Home');
+        navigation.goBack();
       } else if (status === 'REFER_BACK') {
         setVisible(false);
-        referBack();
+        referBack()
       } else {
-        Alert.alert(status, msg, [{ text: "OK", onPress: () => console.log("OK Pressed") }]);
+
+        Alert.alert(status, msg, [{ text: "OK", onPress: () => navigation.goBack() }]);
       }
+
     } catch (error) {
       if (error.response && error.response.status === 401) {
         await AsyncStorage.clear();
@@ -53,6 +55,8 @@ const MAtmStatusCheck = () => {
   const referBack = async () => {
     try {
       const res = await post({ url: 'MICROATM/api/data/FillRetailerInformation' });
+
+      console.log('referBack',res)
       setPanName(res.remname);
       setPanNum(res.pancardname);
     } catch (error) {
@@ -63,13 +67,16 @@ const MAtmStatusCheck = () => {
   const submitDetails = async () => {
     try {
       const res = await post({
-        url: 'MICROATM/api/data/UpdateRetailerDetailsnamepancard',
+        url: `MICROATM/api/data/UpdateRetailerDetailsnamepancard?remusrname=${panName}&rempanno=${panNum}`,
         data: {
           remusrname: panName,
           rempanno: panNum,
         },
       });
       const { status, msg } = res;
+
+
+      console.log(res)
       Alert.alert(status, msg, [{ text: "OK", onPress: () => console.log("OK Pressed") }]);
     } catch (error) {
       console.error('Error submitting details', error);
@@ -80,7 +87,7 @@ const MAtmStatusCheck = () => {
     <ScrollView style={styles.container}>
       <AppBarSecond title={'Micro ATM Status'} />
 
-      {visible ? (
+      {visible   ? (
         <View style={styles.statusContainer}>
           <Text style={styles.text}>Checking Micro ATM Status...</Text>
         </View>
@@ -104,7 +111,7 @@ const MAtmStatusCheck = () => {
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.cancelButton}
-              onPress={() => navigation.replace('Dashboard')}
+              onPress={() => navigation.goBack()}
             >
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>

@@ -7,14 +7,18 @@ import { RootState } from "../reduxUtils/store";
 import { SCREEN_HEIGHT, hScale, wScale } from "../utils/styles/dimensions";
 import ClosseModalSvg2 from "../features/drawer/svgimgcomponents/ClosseModal2";
 import { colors } from "../utils/styles/theme";
+import FacescanSvg from "../features/drawer/svgimgcomponents/FacescanSvg";
 
-const BankBottomSite = ({ isbank, setisbank, setBankName, bankdata,setBankId }) => {
-    const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+const BankBottomSite = ({ isbank, setisbank, setBankName, bankdata, setBankId, onPress1, setisFacialTan }) => {
+    const { colorConfig, Loc_Data } = useSelector((state: RootState) => state.userInfo);
     const color1 = `${colorConfig.secondaryColor}20`;
     const [searchQuery, setSearchQuery] = useState('');
     const filteredData = bankdata.filter(item =>
         item["bankName"].toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+
+    console.log(bankdata)
     const adminbanks = () => {
         return (
             <FlashList
@@ -23,15 +27,30 @@ const BankBottomSite = ({ isbank, setisbank, setBankName, bankdata,setBankId }) 
                     <View>
                         <TouchableOpacity style={styles.operatorview}
                             onPress={() => {
+                                onPress1(item['iINNo'])
                                 setBankId(item['iINNo'])
+                                setisFacialTan(item['isFacialTan'])
                                 setBankName(item['bankName']);
                                 setisbank(false); // Close the BottomSheet
+                                setSearchQuery('')
                             }}>
                             <Text ellipsizeMode='tail' numberOfLines={1}
                                 style={styles.operatornametext}>
                                 {item['bankName']}
                             </Text>
+                            {item['isFacialTan'] && <TouchableOpacity
+
+                                style={[styles.facestyle,
+                                ]} >
+
+                                {/* <Text style={styles.facetex}>
+                                    Face {'\n'}Auth
+                                </Text> */}
+                                <FacescanSvg />
+                            </TouchableOpacity>}
                         </TouchableOpacity>
+
+
                     </View>
                 )}
                 estimatedItemSize={30}
@@ -76,8 +95,7 @@ const styles = StyleSheet.create({
         fontSize: wScale(20),
         color: "#000",
         flex: 1,
-        borderBottomColor: "#000",
-        borderBottomWidth: wScale(0.5),
+
         paddingVertical: hScale(30),
         marginHorizontal: wScale(10)
     },
@@ -119,10 +137,35 @@ const styles = StyleSheet.create({
         fontSize: wScale(16),
     },
     operatorview: {
-        flexDirection: 'row-reverse',
+        flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: wScale(10),
+        // paddingHorizontal: wScale(10),
+        // paddingLeft:wScale(30)
+        // justifyContent:'space-around'
+        borderBottomColor: "#000",
+        borderBottomWidth: wScale(0.5),
+        marginHorizontal: wScale(10)
     },
+    facestyle: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: wScale(0.8),
+
+        borderRadius: wScale(5),
+        width: wScale(50),
+        paddingHorizontal: wScale(8),
+        height: hScale(40),
+        marginTop: hScale(8.9),
+        justifyContent: 'center',
+        backgroundColor: colors.green10,
+        borderColor: colors.green01D
+    },
+    facetex: {
+        textAlign: 'center',
+        color: '#000',
+
+    },
+
 });
 
 export default BankBottomSite;

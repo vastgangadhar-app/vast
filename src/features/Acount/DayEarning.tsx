@@ -19,7 +19,7 @@ import Upisvg from '../drawer/svgimgcomponents/Upisvg';
 import SearchIcon from '../drawer/svgimgcomponents/Searchicon';
 import DateRangePicker from '../../components/DateRange';
 const DayEarningReport = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig, IsDealer } = useSelector((state: RootState) => state.userInfo);
   const color1 = `${colorConfig.secondaryColor}20`
   const [inforeport, setInforeport] = useState([]);
   const [open, setOpen] = useState(false);
@@ -44,9 +44,12 @@ const DayEarningReport = () => {
     try {
       const formattedFrom = new Date(from).toISOString().split('T')[0];
       const formattedTo = new Date(to).toISOString().split('T')[0];
+      const url2 = `${APP_URLS.ShowActualIncome}${formattedFrom}`;
       const url = `${APP_URLS.dayErm}${formattedFrom}`;
-      const response = await get({ url: url });
+      const response = await get({ url: IsDealer ? url2 : url });
       console.log(response);
+
+      console.log( IsDealer ? url2 : url )
       if (response.Status === 'Failed') {
         setInforeport([]);
       } else {
@@ -94,11 +97,21 @@ const DayEarningReport = () => {
         colors={[colorConfig.primaryColor, colorConfig.secondaryColor]}
       >
         <DateRangePicker
+
           onDateSelected={(from, to) => setSelectedDate({ from, to })}
+
           SearchPress={(from, to, status) => DayE(from, to, status)}
+
           status={selectedStatus}
+
           setStatus={setSelectedStatus}
+
           isStShow={false}
+        
+isshowRetailer={false}
+          retailerID={(id) => {console.log(id)}}
+
+
         />
 
       </LinearGradient>

@@ -15,42 +15,39 @@ const MoneyTransferScreen = () => {
   const { get, post } = useAxiosHook();
 const [isOk,setIsOk] = useState(false);
   useEffect(() => {
-   //CheckDmtstatus();
+
+
+    
+    const CheckDmtstatus = async () => {
+      try {
+        const url = `${APP_URLS.Dmtstatus}`;
+        const response = await get({ url: url });
+        console.log(response, '******************');
+        const msg = response.Message;
+        const Response = response.Response;
+        const Name = response.Name;
+    
+        if (Response === 'Success') {
+        } else if (Response === 'BOTHNOTDONE' || Response === 'NOTOK' || Response === 'ALLNOTDONE' || Response === 'PURCHASE' || Response === 'OTPREQUIRED') {
+        
+        
+        console.log('ServicepurchaseScreen')
+          navigation.navigate('ServicepurchaseScreen', { typename: 'DMT' });
+        }
+    
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    
+    CheckDmtstatus();
   }, []);
 
   const buttonTextColor = colorScheme === 'dark' ? 'white' : 'black';
 
-  const CheckDmtstatus = async () => {
-    try {
-      const url = `${APP_URLS.Dmtstatus}`;
-      const response = await get({ url: url });
-      console.log(url);
-      console.log(response);
-      const msg = response.Message;
-      const Response = response.Response; 
-           const Name = response.Name;
-
-      // {"Message": "", "Name": "RADIANT", "Response": "Success"}
-      if (Response === 'Success') {
-       // setIsOk(Response === 'Success')
-      navigation.navigate('GetBenificiaryScreen',{Name:Name});
-      } else if (msg === 'BOTHNOTDONE' || msg === 'NOTOK' || msg === 'ALLNOTDONE' || msg === 'PURCHASE') {
-        navigation.navigate('ServicepurchaseScreen', { typename: 'DMT' });
-      } else if (msg === 'OTPREQUIRED') {
-
-
-      }
-
-
-
-
-
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   return (
+
     <DmtTabScreen/>
     // <View>
     //   <AppBarSecond title={'To Bank Account'} />

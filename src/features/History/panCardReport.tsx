@@ -11,7 +11,7 @@ import { RootState } from '../../reduxUtils/store';
 import NoDatafound from '../drawer/svgimgcomponents/Nodatafound';
 
 const PanReport = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig  ,IsDealer} = useSelector((state: RootState) => state.userInfo);
   const color1 = `${colorConfig.secondaryColor}20`;
   const [present, setPresent] = useState(10);
   const [transactions, setTransactions] = useState([]);
@@ -23,11 +23,11 @@ const PanReport = () => {
   const [selectedStatus, setSelectedStatus] = useState('ALL');
   const [searchnumber, setSearchnumber] = useState('');
   const [heightview, setHeightview] = useState(false);
-
+const [id,setID]= useState('')
   const { get } = useAxiosHook();
   const { userId } = useSelector((state) => state.userInfo);
   useEffect(() => {
-    recentTransactions(selectedDate.from, selectedDate.to, selectedStatus);
+    recentTransactions(selectedDate.from, selectedDate.to, selectedStatus,id);
   }, []);
 
   const handlePress = (item) => {
@@ -35,19 +35,21 @@ const PanReport = () => {
 
   };
 
-  const recentTransactions = async (from, to, status) => {
+  const recentTransactions = async (from, to, status,id) => {
+
     setLoading(true);
     try {
       const formattedFrom = new Date(from).toISOString().split('T')[0];
       const formattedTo = new Date(to).toISOString().split('T')[0];
-      const url = `${APP_URLS.PanReport}ddl_status=${status}&txt_frm_date=2022-12-05&txt_to_date=${formattedTo}`;
+      const url = `${APP_URLS.PanReport}ddl_status=${status}&txt_frm_date=${formattedFrom}&txt_to_date=${formattedTo}`;
+      const ur2 = `${APP_URLS.dealer_Rem_Pancard_report_new}ddl_status&txt_frm_date=${formattedFrom}&txt_to_date=${formattedTo}&allretailer=${id}`;
       console.log(url);
-
-      const response = await get({ url: url });
+console.log(IsDealer ?ur2:url)
+      const response = await get({ url: IsDealer ?ur2:url });
       console.log(response.Message);
 
       const transactionsData = response.Message || [];
-      setTransactions(transactionsData);
+      setTransactions(IsDealer? response :transactionsData);
 
       if (transactionsData.length === 0) {
         setLoading(false);
@@ -133,6 +135,13 @@ const PanReport = () => {
       setStatus={setSelectedStatus}
       searchnumber={searchnumber}
       setSearchnumber={setSearchnumber}
+      isshowRetailer={IsDealer}
+      isStShow={true}
+      retailerID={(id)=>{
+        setID(id)
+        recentTransactions(selectedDate.from, selectedDate.to, selectedStatus ,id)
+      }}
+
     />
     <View style={styles.container}>
       {loading ? (

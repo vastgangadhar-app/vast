@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Pressable,
   TouchableOpacity,
+  ToastAndroid,
 } from 'react-native';
 import { SvgUri } from 'react-native-svg';
 import { FlashList } from '@shopify/flash-list';
@@ -20,8 +21,7 @@ import { APP_URLS } from '../../../utils/network/urls';
 import useAxiosHook from '../../../utils/network/AxiosClient';
 
 const loader = [{ id: '1' }, { id: '2' }, { id: '3' }, { id: '4' }];
-const MAX_ITEMS = 4; 
-
+const MAX_ITEMS = 4;
 const IconButtons = ({
   getItem,
   isQuickAccess,
@@ -33,63 +33,56 @@ const IconButtons = ({
 }) => {
   const [Radius1, setRadius1] = useState(Number);
   const [rotation, setRotation] = useState(false);
-
+  const [showAllItems, setShowAllItems] = useState(false);
   const { post, get } = useAxiosHook();
-
-
   const navigation = useNavigation();
-
-
-
+  const [view, setview] = useState('')
   useEffect(() => {
     async function fetchData() {
       try {
-
         const response = await post({ url: APP_URLS.signUpSvg });
+        const rechargeSectionResponse = await post({
+          url: APP_URLS.getRechargeSectionImages,
+        });
+        const viewMoreData = rechargeSectionResponse.filter(item => item.name === "View More" || item.name === "Hide More");
+        setview(viewMoreData[0])
+        console.log(viewMoreData[1], '*************icon buttons*********************************')
+        setRadius1(response[0].Radius1);
         if (response && Array.isArray(response)) {
-
-          setRadius1(response[0].Radius1);
-
-
-          console.log(Radius1, 'radius*/*/*/*/*/*/');
-
         }
-
       } catch (error) {
         console.error('Error fetching data:', error);
       }
-
     }
     fetchData()
-
-  })
-
+  }, [post,setview])
   const saveItemToStorage = async (item) => {
     try {
       const savedItems = await AsyncStorage.getItem('quickAccessItems');
       let itemsArray = savedItems ? JSON.parse(savedItems) : [];
-
+      const isItemExist = itemsArray.some(existingItem => existingItem.name === item.name);
+      if (isItemExist) {
+        ToastAndroid.show(item.name + ' is already exists', ToastAndroid.SHORT)
+        return;
+      }
       itemsArray.unshift(item);
-
       if (itemsArray.length > MAX_ITEMS) {
         itemsArray.pop();
       }
-
       await AsyncStorage.setItem('quickAccessItems', JSON.stringify(itemsArray));
       getItem();
     } catch (error) {
       console.error('Error saving item to AsyncStorage:', error);
     }
   };
-
   return (
     <>
       <FlashList
         style={[
           iconButtonstyle,
-          { justifyContent: "space-between", alignSelf: "stretch" }, 
+          { justifyContent: "space-between", alignSelf: "stretch" },
         ]}
-        data={buttonData}
+        data={ buttonData }
         ListEmptyComponent={() => (
           <View style={{ flexDirection: "row", }}>
             {loader.map((item) => (
@@ -122,13 +115,26 @@ const IconButtons = ({
           <>
             <TouchableOpacity
               onPress={() => {
-                if (isQuickAccess) {
+         
+                            if (isQuickAccess) {
                   saveItemToStorage(item);
                 } else {
-                  navigation.navigate({ name: item.ScreenName });
+                  switch (item.ScreenName) {
+                    case 'HideMoreScreen':
+                      console.log(item, 'HideMoreScreen');
+                      setViewMoreStatus(!setViewMoreStatus);
+                      break;
+                    case 'ViewMoreScreen':
+                      console.log(item, 'ViewMoreScreen');
+                      setViewMoreStatus(true);
+                      break;
+                    default:
+                       navigation.navigate({ name: item.ScreenName });
+                      break;
+                  }
                 }
               }}
-              style={styles.element} 
+              style={styles.element}
             >
               <View style={styles.InputImage}>
                 <SvgUri height={wScale(50)} width={wScale(50)} uri={item.svg} onError={() => <BackArrow />} />
@@ -139,28 +145,6 @@ const IconButtons = ({
                 </Text>
               </View>
             </TouchableOpacity>
-
-            
-            {showViewMoreButton && index === buttonData.length - 1 && (
-              <Pressable
-                onPress={() => {
-                  setViewMoreStatus((prev) => !prev);
-                  setRotation(!rotation);
-                }}
-                style={styles.morebtn} 
-              >
-                <View style={[
-                  styles.imgview,
-                  {
-                    borderRadius: Radius1,
-                    transform: [{ rotate: rotation ? '180deg' : '0deg' }]
-                  }
-                ]}>
-                  <OnelineDropdownSvg size={25} />
-                </View>
-                <Text style={styles.screeitemname}>{buttonTitle}</Text>
-              </Pressable>
-            )}
           </>
         )}
       />
@@ -179,13 +163,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   element: {
-    paddingHorizontal: wScale(6),
+    paddingHorizontal: wScale(2),
     paddingVertical: wScale(8),
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: wScale(5),
-    width: '100%'
-  },
+    marginHorizontal: wScale(2),
+flex:1  },
   InputImage: {
     height: wScale(50),
     width: wScale(50),
@@ -200,14 +183,14 @@ const styles = StyleSheet.create({
     width: '100%'
   },
   imgview: {
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     height: wScale(50),
     width: wScale(50),
     shadowRadius: 3,
     elevation: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    transform: [{ rotate: '90deg' }]
+    // transform: [{ rotate: '90deg' }]
   },
   screeitemname: {
     color: "white",

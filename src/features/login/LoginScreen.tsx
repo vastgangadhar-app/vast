@@ -17,6 +17,8 @@ import {
   Button,
   Animated,
   Easing,
+  Platform,
+  Keyboard,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
@@ -30,21 +32,23 @@ import {
   Dialog,
 
 } from 'react-native-alert-notification';
+import messaging from '@react-native-firebase/messaging';
 
 import { APP_URLS } from '../../utils/network/urls';
 import {
   setAuthToken,
   setColorConfig,
+  setFcmToken,
+  setIsDealer,
   setRefreshToken,
   setUserId,
-  setUserRole,
 } from '../../reduxUtils/store/userInfoSlice';
 import useAxiosHook from '../../utils/network/AxiosClient';
-import { useLocationHook } from '../../utils/hooks/useLocationHook';
+import { useLocationHook } from '../../hooks/useLocationHook';
 import { colors } from '../../utils/styles/theme';
 import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
 import DynamicButton from '../drawer/button/DynamicButton';
-import { getBrand, getBuildId, getBuildNumber, getCarrier, getDevice, getDeviceId, getDeviceName, getIpAddress, getModel, getSerialNumber, getSystemName, getSystemVersion, getUniqueId, getVersion } from 'react-native-device-info';
+import DeviceInfo, { getBrand, getBuildId, getBuildNumber, getCarrier, getDevice, getDeviceId, getDeviceName, getIpAddress, getModel, getSerialNumber, getSystemName, getSystemVersion, getUniqueId, getVersion } from 'react-native-device-info';
 import ShowEye from '../drawer/HideShowImgBtn/ShowEye';
 import ForgotPasswordModal from '../../components/ForgotPassword';
 import { SvgUri, } from 'react-native-svg';
@@ -52,13 +56,16 @@ import SplashScreen from './SplashScreen';
 import OTPModal from '../../components/OTPModal';
 import ShowLoader from '../../components/ShowLoder';
 import CheckSvg from '../drawer/svgimgcomponents/CheckSvg';
+import { check, PERMISSIONS, request, RESULTS } from 'react-native-permissions';
+import registerNotification, { listenFCMDeviceToken, onReceiveNotification2 } from '../../utils/NotificationService';
+import { appendLog, generateUniqueId, requestStoragePermission } from '../../components/log_file_Saver';
 
 const LoginScreen = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig, Loc_Data ,} = useSelector((state: RootState) => state.userInfo);
 
   const [userEmail, setUserEmail] = useState('');
   const [userPassword, setUserPassword] = useState('');
-  const [mobileNumber, setMobileNumber] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('7414088555');
   const [uniqueId, setUniqueId] = useState('');
   const [modelNumber, setModelNumber] = useState('');
   const [androidVersion, setCurrentAndroidVersion] = useState('');
@@ -106,15 +113,16 @@ const LoginScreen = () => {
     setCurrentAndroidVersion(systemVersion)
     console.log('**DATA')
   }, [])
+  //console.log('**latitude, longitude', latitude, longitude);
 
   useEffect(() => {
     const onFocusCall = navigation.addListener('focus', async () => {
       // console.log('**DATA_PERM11_CALLED', isPhonePermissionGranted);
       console.log('**DATA_PERM77_CALLED', isLocationPermissionGranted);
-      const Model = await getMobileDeviceId();
+      const Model = getMobileDeviceId();
     })
     return onFocusCall;
-  }, [navigation]);
+  }, [navigation, latitude, longitude]);
 
   const extsvg = (svgarray) => {
     const result = {};
@@ -168,19 +176,17 @@ const LoginScreen = () => {
 
 
   useEffect(() => {
-    // A function to get credentials and additional information
+    getCredentials()
     const fetchData = async () => {
-      //  checkUpldate();
       try {
-        // Call the function to get device information
         getDeviceInfo();
 
-        // Get model and log it (you may want to remove this or make it conditional)
-        const model = await getMobileDeviceId();
+        const model = getMobileDeviceId();
         console.log(model, "Modelaaaaaaaa");
 
-        // Fetch color settings from API
         const res = await get({ url: APP_URLS.getColors });
+
+        console.log(res, '************************************************************')
         if (res) {
           dispatch(
             setColorConfig({
@@ -192,20 +198,14 @@ const LoginScreen = () => {
             }),
           );
         }
-console.log({
-  primaryColor: res.BACKGROUNDCOLOR1,
-  secondaryColor: res.BACKGROUNDCOLOR2,
-  primaryButtonColor: res.BUTTONCOLOR1,
-  secondaryButtonColor: res.BUTTONCOLOR2,
-  labelColor: res.LABLECOLOR,
-})
-        // Fetch SVGs and update state
+
         const response = await post({ url: APP_URLS.signUpSvg });
+        console.log(response, '************************************************************')
+
         if (response && Array.isArray(response)) {
           setRadius1(response[0].Radius2);
           setRadius2(response[0].Radius3);
 
-          // Assuming `extsvg` is a utility function to extract svg list
           const svgList = extsvg(response);
           setSvg(svgList);
         }
@@ -215,22 +215,23 @@ console.log({
         if (authToken) {
           navigation.navigate('Dashboard');
         }
+
+        await checkNotificationPermission()
+
       } catch (error) {
         console.error('Error fetching data:', error);
+        const response = await post({ url: APP_URLS.signUpSvg });
+        console.log(response, '************************************************************')
+
         Alert.alert('Error', 'There was an issue fetching the data. Please try again.');
       } finally {
-        // Set loading state to false when the async operations are complete
         setLoading(false);
       }
     };
 
-    // Fetch data when component mounts or authToken changes
     fetchData();
 
-    // Clean-up function (optional) if any cleanup is needed after component unmounts
     return () => {
-      // Example cleanup logic (if needed)
-      // setLoading(false); // Example: reset loading state if needed
     };
 
   }, [authToken, dispatch, get, navigation]); // Dependencies to trigger the effect
@@ -259,123 +260,284 @@ console.log({
     return code.replace(/_/g, ' ')
       .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
   };
+
+
+
+  const openSettings = () => {
+    console.log('Settings can be opened manually on iOS');
+
+    if (Platform.OS === 'android') {
+      Linking.openSettings().catch(() => console.warn('Unable to open settings'));
+    } else {
+      console.log('Settings can be opened manually on iOS');
+    }
+  };
+  const checkNotificationPermission = async () => {
+    const permissionStatus = await check(PERMISSIONS.ANDROID.POST_NOTIFICATIONS);
+
+    if (permissionStatus === RESULTS.GRANTED) {
+
+      ToastAndroid.show('Notification permission granted', ToastAndroid.LONG);
+    } else if (permissionStatus === RESULTS.DENIED) {
+      console.log('Notification permission denied');
+
+      requestNotificationPermission();
+
+    } else if (permissionStatus === RESULTS.BLOCKED) {
+      requestNotificationPermission();
+
+      console.log('Notification permission blocked');
+    } else {
+      console.log('Notification permission status unknown');
+    }
+  };
+
+  const requestNotificationPermission = async () => {
+    const permissionStatus = await request(PERMISSIONS.ANDROID.POST_NOTIFICATIONS); // Request notification permission on Android
+
+    if (permissionStatus === RESULTS.GRANTED) {
+      console.log('Notification permission granted');
+    } else {
+      Alert.alert(
+        'Notification permission not granted',
+        '',
+        [
+          {
+            text: 'Cancel',
+            onPress: () => null,
+          },
+          {
+            text: 'Open Setting',
+            onPress: () => openSettings(),
+          },
+
+        ],
+        { cancelable: false }
+      );
+      console.log('Notification permission not granted');
+    }
+  };
+
   const onPressLogin = useCallback(async (otp) => {
-    setShowOtpModal(false);
+    // openSettings()
+    //    const stg = await requestStoragePermission()
 
+    //    if(!stg){
+    // console.log(stg);
+    // return;
+    //    }
+    Keyboard.dismiss();
+    const uniqueId = generateUniqueId(5)
     setIsLoading(true);
-    const errorCodes = ['NotAllow', 'SENDOTP', 'invalid_client', 'invalid_grant'];
+    let role;
+    let msg;
+    await appendLog(`Login initiated with OTP: ${otp}`, uniqueId);
+    try {
+      await appendLog('Hiding OTP modal...', uniqueId);
+      setShowOtpModal(false);
 
-    //   let num;
-    // if(!mobileNumber){
-    //   const isPhoneStatePermission = await checkPhoneStatePermissionStatus();
-    //   setIsLoading(false);
-    //   if(!isPhoneStatePermission){
-    //      num =  await getSimPhoneNumber();
-    //     return;
-    //   }
-    //   num =  await getSimPhoneNumber();
-    // }
+      const net = await getCarrier() || 'wifi/net';
+      await appendLog(`Network type detected: ${net}`, uniqueId);
 
-    //  console.log('**MOB1', num)
-    // const phoneNumbers = await getSimPhoneNumber();
-    // let number = '';
-    // if(phoneNumbers && phoneNumbers.length > 0){
-    //   setMobileNumber(phoneNumbers[0].phoneNumber);
-    //   number = phoneNumbers[0].phoneNumber;
-    // }
+      await appendLog('Encrypting login data...', uniqueId);
+      const encryption = encrypt([
+        userEmail, userPassword, otp, mobileNumber, 'ImeiuniqueId1234',
+        'D1e2v3i4c5e6t7o8k9e0n', Loc_Data['latitude'], Loc_Data['longitude'],
+        'SM-A146B', 'Samsung', "0.0.0.0", 'Laxmangarh',
+        'City Laxmangarh', '332122', net
+      ]);
 
-    const encryption = encrypt([userEmail, userPassword, otp, mobileNumber, uniqueId, '', latitude, longitude, modelNumber, brand, ipAddress, '', '', '']);
+      console.log([
+        userEmail, userPassword, otp, mobileNumber, 'ImeiuniqueId1234',
+        'D1e2v3i4c5e6t7o8k9e0n', Loc_Data['latitude'], Loc_Data['longitude'],
+        'SM-A146B', 'Samsung', "0.0.0.0", 'Laxmangarh',
+        'City Laxmangarh', '332122', net
+      ])
+      await appendLog(`loginData Data: ${JSON.stringify([
+        userEmail, userPassword, otp, mobileNumber, 'ImeiuniqueId1234',
+        'D1e2v3i4c5e6t7o8k9e0n', "27.8031507", "75.035648",
+        'SM-A146B', 'Samsung', "0.0.0.0", 'Laxmangarh',
+        'City Laxmangarh', '332122', 'wifi'
+      ])}`, uniqueId);
 
-    const data = {
-      UserName: encryption.encryptedData[0],
-      Password: encryption.encryptedData[1],
-      'X-OTP': encryption.encryptedData[2],
-      Mobile: encryption.encryptedData[3],
-      Imei: encryption.encryptedData[4],
-      Devicetoken: encryption.encryptedData[5],
-      Latitude: encryption.encryptedData[6],
-      Longitude: encryption.encryptedData[7],
-      ModelNo: encryption.encryptedData[8],
-      brandname: encryption.encryptedData[9],
-      IPAddress: encryption.encryptedData[10],
-      Address: encryption.encryptedData[11],
-      City: encryption.encryptedData[12],
-      PostalCode: encryption.encryptedData[13],
-      InternetTYPE: encryption.encryptedData[14],
-      grant_type: 'password',
-    };
-    console.log(data)
-    const response = await post({
-      url: APP_URLS.getToken,
-      data,
-      config: {
+      await appendLog(`Encrypted Data: ${JSON.stringify(encryption.encryptedData)}`, uniqueId);
+
+
+      const loginData = {
+        UserName: encryption.encryptedData[0],
+        Password: encryption.encryptedData[1],
+        'X-OTP': encryption.encryptedData[2],
+        Mobile: encryption.encryptedData[3],
+        Imei: encryption.encryptedData[4],
+        Devicetoken: encryption.encryptedData[5],
+        Latitude: encryption.encryptedData[6],
+        Longitude: encryption.encryptedData[7],
+        ModelNo: encryption.encryptedData[8],
+        brandname: encryption.encryptedData[9],
+        IPAddress: encryption.encryptedData[10],
+        Address: encryption.encryptedData[11],
+        City: encryption.encryptedData[12],
+        PostalCode: encryption.encryptedData[13],
+        InternetTYPE: encryption.encryptedData[13],
+        grant_type: 'password',
+      };
+      console.log(loginData)
+      const config = {
         headers: {
           'content-type': 'application/x-www-form-urlencoded',
           Authorization: 'bearer',
           value1: encryption.keyEncode,
           value2: encryption.ivEncode,
         },
-      },
-    });
-    console.log('1', encryption.keyEncode, '2', encryption.ivEncode,);
-    console.log('id', encryption.encryptedData[0]);
-    console.log('password', encryption.encryptedData[1]);
+      };
+      console.log({
+        'content-type': 'application/x-www-form-urlencoded',
+        Authorization: 'bearer',
+        value1: encryption.keyEncode,
+        value2: encryption.ivEncode,
+      },)
+      await appendLog('Sending login request...', uniqueId);
+      const response = await post({ url: APP_URLS.getToken, data: loginData, config });
+      console.error('Exception in login process:', response);
 
-    console.log('response', response, '????????????????????????????')
-    setIsLoading(false);
-    
-    if (response?.access_token) {
-      dispatch(setAuthToken(response?.access_token));
-      dispatch(setUserId(response?.userId));
-      dispatch(setRefreshToken(response?.refresh_token));
-      dispatch(setUserRole(response.role))
-      saveData(response?.access_token).then();
-    
-      const userInfo = await get({ url: APP_URLS.getUserInfo });
-      const data = userInfo.data;
-      const frmanems = decryptData(data.vvvv, data.kkkk, data.frmanems)
-      const decryptedFrmanems = decryptData(data.vvvv, data.kkkk, data.frmanems);
-      const photoss = decryptData(data.vvvv, data.kkkk, data.photoss);
-      const adminfarmname = decryptData(data.vvvv, data.kkkk, data.adminfarmname);
-      await AsyncStorage.setItem('adminFarmData', JSON.stringify({
-        adminFarmName: adminfarmname,
-        frmanems: decryptedFrmanems,
-        photoss: photoss
-      }));
-      await AsyncStorage.setItem('role', response.role);
+      await appendLog(`Login response received: ${JSON.stringify(response)}`, uniqueId);
 
+      if (response?.access_token) {
+
+
+        role = response.role;
+        msg = `finally ${role} Login process completed.`
+        dispatch(setIsDealer(response.role === 'Dealer'));
+        await appendLog(`User role: ${response.role}`, uniqueId);
+
+        if (response.VideoKYC === 'VideoKYCPENDING') {
+          Alert.alert('', 'Video KYC Uploaded. Wait for admin approval.');
+          await appendLog('VideoKYC pending alert shown', uniqueId);
+          return;
+        }
+        authenticate(response)
+        dispatch(setUserId(response?.userId));
+
+        dispatch(setRefreshToken(response?.refresh_token));
+        await appendLog('User ID and tokens saved.', uniqueId);
+        const expiryDate = response[".expires"];
+        console.log('Expiry:', expiryDate);
+        userData(expiryDate);
+
+      } else if (response?.error) {
+        await appendLog(`Login error: ${JSON.stringify(response)}`, uniqueId);
+
+        const errorDescription = response?.error_description || 'An error occurred';
+        msg = errorDescription;
+        alert(errorDescription)
+        //ToastAndroid.show(errorDescription, ToastAndroid.LONG);
+        await appendLog(`Error toast shown: ${errorDescription}`, uniqueId);
+
+        if (response.error === 'SENDOTP') {
+          setShowOtpModal(true);
+          await appendLog('OTP modal re-shown due to SENDOTP error', uniqueId);
+        }
+      }
+    } catch (error) {
+      await appendLog(`Exception in login process: ${error.message}`, uniqueId);
+      console.error('Exception in login process:', error);
+      ToastAndroid.show('An error occurred, please try again later', ToastAndroid.LONG);
+    } finally {
+      const mockNotification = {
+        notification: {
+          title: role,
+          body: msg,
+        },
+      };
+      onReceiveNotification2(mockNotification);
+      await appendLog('Login process completed. Setting loading false.', uniqueId);
+
+      await appendLog(`*******************************************************`, uniqueId);
+      setIsLoading(false)
     }
-    if (response.status === 'SUCCESS') {
-      navigation.navigate({ name: 'Dashboard' });
+  }, [
+    dispatch,
+    navigation,
+    post,
+    userEmail,
+    userPassword,
+    isLocationPermissionGranted,
+    isPhonePermissionGranted,
+  ]);
+  async function authenticate(response) {
+    try {
+      let fcmToken = '';
 
-      if (response.VideoKYC === 'VideoKYCDONE') {
-        navigation.navigate({ name: 'Dashboard' });
-      
+      // Ensure FCM setup and get token
+      const isRegistered = await messaging().isDeviceRegisteredForRemoteMessages;
+      if (isRegistered) {
+        try {
+          fcmToken = await messaging().getToken();
+          if (fcmToken) {
+            console.log('FCM Token:', fcmToken);
+            dispatch(setFcmToken(fcmToken));
+          }
+        } catch (err) {
+          console.error('FCM Token Error:', err);
+        }
 
-      } else {
-        navigation.navigate({ name: 'VideoKYC' });
+        messaging().onTokenRefresh((newToken) => {
+          console.log('FCM Token Refreshed:', newToken);
+          dispatch(setFcmToken(newToken));
+        });
       }
 
-    } else if (errorCodes.includes(response.error)) {
-      const formattedError = formatErrorCode(response.error);
-      ToastAndroid.show(response.error_description, ToastAndroid.LONG);
+      const internetType = await getCarrier() || 'wifi/net';
 
-      // Alert.alert(
-      //   formattedError,
-      //   response.error_description,
-   
-      //      [{ text: 'Close', onPress: () => console.log('Close Pressed') }],
-      // );
-      if (response.error === 'SENDOTP') {
-        setShowOtpModal(true);
+      const params = new URLSearchParams({
+        Devicetoken: fcmToken,
+        Imeino: uniqueId || 'Not Found',
+        Latitude: Loc_Data?.latitude || '0.0',
+        Longitude: Loc_Data?.longitude || '0.0',
+        ModelNo: modelNumber || 'Not Found',
+        IPAddress: ipAddress || '0.0.0.0',
+        Address: 'address11',
+        City: 'City',
+        PostalCode: '123456',
+        InternetTYPE: internetType,
+        simslote1: 'SIM1',
+        simslote2: 'SIM2',
+        brandname: brand || 'Not Found'
+      });
+
+      const url = `http://native.${APP_URLS.baseWebUrl}Common/api/data/authenticate?${params.toString()}`;
+      console.log('Auth URL:', url);
+
+      const response1 = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${response?.access_token}`,
+        },
+      });
+
+      const json = await response1.json();
+      console.log('Auth Response:', json);
+
+      // Handle response
+      if (json.status === 'SUCCESS') {
+        if (json.message?.APPLOGINSTATUS === 'N') {
+          dispatch(setAuthToken(null));
+          alert('You are not allowed to login, please contact admin.');
+          return;
+        } else {
+          dispatch(setAuthToken(response?.access_token));
+        }
       }
+
+    } catch (error) {
+      console.error('Authentication Error:', error);
+      setIsLoading(false); // Make sure `setIsLoading` is defined in your component
     }
-
-
-  }, [dispatch, navigation, post, userEmail, userPassword, isLocationPermissionGranted, isPhonePermissionGranted]);
-
+  }
   const onPressSignUp = () => {
 
+    //navigation.navigate("WebSignUp")
     navigation.navigate("SignUpScreen", {
       svg, Radius2
 
@@ -425,7 +587,15 @@ console.log({
       console.error('Error fetching version or saving aepscode:', error);
     }
   };
+  const userData = async (expiryDate) => {
 
+    try {
+      await AsyncStorage.setItem('expiryDate', expiryDate);
+      console.log('Data saved successfully!');
+    } catch (error) {
+      console.log('Error saving data: ', error);
+    }
+  };
   const [fadeAnim] = useState(new Animated.Value(0));
   const [isAutofilled, setIsAutofilled] = useState(false);
   const fadeIn = () => {
@@ -531,7 +701,6 @@ console.log({
       </LinearGradient>
     );
   }
-
   if (loading) {
     return (
       <View style={{
@@ -542,8 +711,8 @@ console.log({
       }}>
         <Image source={require('../../../assets/images/app_logo.png')}
           style={[styles.imgstyle, {
-            width: wScale(180),
-            height: wScale(180),
+            width: wScale(100),
+            height: wScale(100),
           }]} resizeMode='contain' />
       </View>
     );
@@ -560,7 +729,7 @@ console.log({
             <View style={[styles.Logocontainer,]}>
               <Image source={require('../../../assets/images/app_logo.png')}
                 style={styles.imgstyle} resizeMode='contain' />
-              <Text style={{ color: colorConfig.secondaryButtonColor ? colorConfig.secondaryButtonColor : 'white', fontWeight: 'bold' }}>
+              <Text style={{ color: colorConfig.secondaryColor ? colorConfig.secondaryColor : 'white', fontWeight: 'bold' }}>
                 {APP_URLS.AppName}
               </Text>
             </View>
@@ -618,6 +787,7 @@ console.log({
             <View style={styles.forgetrow}>
               <TouchableOpacity style={[styles.rememberow,]}
                 onPress={() => {
+                  Keyboard.dismiss();
                   setRemember(!remember);
                   if (remember) {
                     saveCredentials(userEmail, userPassword);
@@ -626,6 +796,8 @@ console.log({
                 }} >
                 <TouchableOpacity
                   onPress={() => {
+                    Keyboard.dismiss();
+
                     setRemember(!remember);
                     if (remember) {
                       saveCredentials(userEmail, userPassword);
@@ -655,9 +827,11 @@ console.log({
               isLoading ? <ActivityIndicator color={colorConfig.labelColor} size="large" /> :
                 "Login"}
               onPress={() => {
+
                 if (userEmail && userPassword) {
                   onPressLogin('');
                 } else {
+                  listenFCMDeviceToken()
                   ToastAndroid.show("Please enter valid User ID and Password, you cannot leave it blank", ToastAndroid.SHORT);
                 }
               }} styleoveride={undefined}
@@ -669,7 +843,9 @@ console.log({
                 {translate('signupText')}
               </Text>
 
-              <TouchableOpacity onPress={onPressSignUp}>
+              <TouchableOpacity
+                // onLongPress={()=>registerNotification()}
+                onPress={onPressSignUp}>
                 <Text
                   style={[styles.donthave_text, { fontWeight: 'bold', }]}>
                   {translate('signUp')}
@@ -690,6 +866,7 @@ console.log({
                 onPressLogin(otp)
               }}
               inputCount={6}
+              sendID={userEmail}
             />
 
           </View>
@@ -850,5 +1027,3 @@ const styles = StyleSheet.create({
   },
 });
 export default LoginScreen;
-
-

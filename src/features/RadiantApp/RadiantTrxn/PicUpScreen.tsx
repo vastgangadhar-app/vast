@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Modal, ToastAndroid, Alert, ActivityIndicator, PermissionsAndroid } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, ToastAndroid, Alert, ActivityIndicator, PermissionsAndroid, Image, AsyncStorage, Keyboard } from 'react-native';
 import { hScale, SCREEN_HEIGHT, wScale } from '../../../utils/styles/dimensions';
 import { FlashList } from '@shopify/flash-list';
 import { FontSize } from '../../../utils/styles/theme';
@@ -13,11 +12,6 @@ import toNumber from 'lodash/toNumber';
 import CustomCalendar from '../../../components/Calender';
 import moment from 'moment';
 import useRadiantHook from '../../Financial/hook/useRadiantHook';
-import { useLocationHook } from '../../../utils/hooks/useLocationHook';
-import ScanScreen from '../ScanScreen';
-import CameraScreen from '../ScanScreen';
-import { openSettings } from 'react-native-permissions';
-import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import QrcodAddmoneysvg from '../../drawer/svgimgcomponents/QrcodAddmoneysvg';
 import AppBarSecond from '../../drawer/headerAppbar/AppBarSecond';
@@ -28,32 +22,54 @@ import LinearGradient from 'react-native-linear-gradient';
 import FlotingInput from '../../drawer/securityPages/FlotingInput';
 import Calendarsvg from '../../drawer/svgimgcomponents/Calendarsvg';
 import OnelineDropdownSvg from '../../drawer/svgimgcomponents/simpledropdown';
-
+import CheckSvg from '../../drawer/svgimgcomponents/CheckSvg';
+import { APP_URLS } from '../../../utils/network/urls';
+import useAxiosHook from '../../../utils/network/AxiosClient';
+import ShowLoader from '../../../components/ShowLoder';
+import { useLocationHook } from '../../../hooks/useLocationHook';
+import LottieView from 'lottie-react-native';
+import { useDocumentUpload } from '../../../hooks/useDocumentUpload';
+import ImagePreviewModal from '../Radiantregister/ImagePreviewModal';
+import AlertSvg from '../../drawer/svgimgcomponents/AlertSvg';
+import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
+import { useFocusEffect } from '@react-navigation/native';
+import { getModel } from 'react-native-device-info';
+import OnlinePickUpQrSheet from '../../../components/OnlinePickUpQrSheet';
+import QrcodSvg from '../../drawer/svgimgcomponents/QrcodSvg';
+import uuid from 'react-native-uuid';
+import { log } from 'console';
 const PicUpScreen = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
-  const color1 = `${colorConfig.secondaryColor}100`;
+  const { colorConfig, Loc_Data, cmsVerify, rctype, rcPrePayAnomut } = useSelector((state: RootState) => state.userInfo);
+  const color1 = `${colorConfig.secondaryColor}20`;
   const rout = useRoute();
-  const { item } = rout.params
-  const { latitude, longitude, isLocationPermissionGranted, getLocation, checkLocationPermissionStatus, getLatLongValue } = useLocationHook();
+  const { item, CodeId, Mobile, item2, selectedModes } = rout.params || {};
+  console.log(rout.params, '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@1');
 
-  const [amount, setAmount] = useState('');
+  const [isLoading2, setIsloading2] = useState(false);
+  const [amount, setAmount] = useState(rctype === 'PrePay' ? rcPrePayAnomut : "");
+  const [Ramount, setRAmount] = useState(rctype === 'PrePay' ? rcPrePayAnomut : "");
   const [sealingTagNo, setSealingTagNo] = useState('');
   const [customerGeneratedNo, setCustomerGeneratedNo] = useState('');
   const [hciSlipNo, setHciSlipNo] = useState('');
-  const [hsbcDepositSlipNo, setHsbcDepositSlipNo] = useState('');
+  const [hsbcDepositSlipNo, setHsbcDepositSlipNo] = useState(CodeId);
   const [airtenGampangila, setAirtenGampangila] = useState('');
-  const [transactionCount, setTransactionCount] = useState('');
+  const [transactionCount, setTransactionCount] = useState(CodeId ? item.ClientCode?.length : ''
+  );
   const [additionalRemarks, setAdditionalRemarks] = useState('');
-  const [modalVisible, setModalVisible] = useState(true);
+  const [modalVisible, setModalVisible] = useState(CodeId ? false : true);
   const [remark, setRemark] = useState('');
   const [received, setReceived] = useState('');
+  const [qrData, setQrData] = useState([]);
   const [remarkVisible, setRemarkVisible] = useState(false);
+  const isRelianceQR = (item.QrStatus === 'Reliance' || item.QrStatus === 'Radiant');
   const [childRemarksVisible, setChildRemarksVisible] = useState(false);
   const [clientCodeIndex, setClientCodeIndex] = useState(0);
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [mobilemodel, setMobilemodel] = useState(false);
   const [clientCodeModalVisible, setClientCodeModal] = useState(false);
-  const [slipDate, setSlipDate] = useState('');
+  const today = new Date().toISOString().split('T')[0];
+  const [slipDate, setSlipDate] = useState(item.ClientCode?.length < 2 && today);
+  const [QR_transid, setQR_transid] = useState('');
   const [TransDate, setTransDate] = useState(item?.TransDate);
   const [clientCode, setClientCode] = useState(item?.ClientCode[0]);
   const [cashPickupData, setCashPickupData] = useState([]);
@@ -62,116 +78,345 @@ const PicUpScreen = () => {
   const [mobileOtp, setMobileOtp] = useState('');
   const [showCalender, setShowCalender] = useState(false);
   const [isScan, setIsScan] = useState(false);
-
+  const [ceid, setCeid] = useState("")
+  const navigation = useNavigation();
+  const { post } = useAxiosHook()
   const { remarkList, childRemarkList,
     fetchMasterRemarkList, fetchChildRemarkList,
     setRadiantOtp, setRadiantDynamicOtp,
     otpResponse, dynamicOtpResponse, submitCashPickupResponse,
     submitCashPickupTransaction, isLoading } = useRadiantHook();
   const currencyData = [
-    // { key: '2000', val: '0' }, { key: '1000', val: '0' },
-    { key: '500', val: '0' }, { key: '200', val: '0' }, { key: '100', val: '0' },
-    { key: '50', val: '0' }, { key: '20', val: '0' }, { key: '10', val: '0' },
-    { key: '5', val: '0' }, { key: 'Coins', val: '0' }]
+    { key: 'Online', val: '0', path: require('../../../../assets/images/coinsR.jpg') },
+
+    { key: '500', val: '0', path: require('../../../../assets/images/500R.jpg') },
+    { key: '200', val: '0', path: require('../../../../assets/images/200R.jpg') },
+    { key: '100', val: '0', path: require('../../../../assets/images/100R.jpg') },
+    { key: '50', val: '0', path: require('../../../../assets/images/50R.jpg') },
+    { key: '20', val: '0', path: require('../../../../assets/images/20R.jpg') },
+    { key: '10', val: '0', path: require('../../../../assets/images/10R.jpg') },
+    { key: '5', val: '0', path: require('../../../../assets/images/5R.jpg') },
+
+    // Coins
+    { key: 'Coins', val: '0', path: require('../../../../assets/images/coinsR.jpg') },
+  ];
+
   const [denominationData, setDenominationData] = useState(currencyData)
+  const handleChangeText = useCallback((text, key) => {
+    handleDenomChange(text, key); // Call the memoized handleDenomChange
+    setOnlineAm(key === 'Online' ? text : onlineAm)
+    setDenominationData((prevData) => {
+      const updatedData = prevData.map((denom) =>
+        denom.key === key ? { ...denom, val: text } : denom
+      );
 
-  const renderAmountItem = useCallback(({ item }) => (
-    <View >
-      <FlotingInput
-        label={`${item.key} Rupee`}
-        keyboardType="numeric"
-        value={
-          item.val === '0' ? '' : item.val}
-        onChangeTextCallback={(text) => {
-          setDenominationData(denominationData.map((denom) => denom.key === item.key ?
-            { ...denom, val: text } : denom))
-        }} />
-    </View>
-  ), [denominationData])
+      let total = 0;
+      updatedData.forEach((item) => {
+        const val = Number(item.val);
+        if (!isNaN(val)) {
+          if (item.key === 'Online' || item.key === 'Coins') {
+            total += val; // direct जोड़ दो
+          } else {
+            total += val * (Number(item.key) || 1);
+          }
+        }
+      });
 
+      setTotal(total);
+      setRemain(amount - total);
+      return updatedData;
+    });
+  }, [amount, denominationData]);
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await post({ url: `${APP_URLS.RadiantBankAccount}` });
+        const parsedData = JSON.parse(response.data);
+        //  setBankData(parsedData?.Content || []);
+        console.log(parsedData, '@@@@@@@@@@@@@@@@@@@@@@@@@@@');
+        const data = parsedData.Content;
 
+        const sbiQRCodes = data
+          .filter(item => item.BankName.trim().startsWith("State Bank of India"))
+          .map(item => item.qrimage);
+        console.log(sbiQRCodes[0], '**********************************************')
+      } catch (error) {
+        console.error('API error', error);
+        ToastAndroid.show('Failed to load bank accounts', ToastAndroid.SHORT);
+      } finally {
+        //setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+  const [remaining, setRemain] = useState(null)
+  const [total, setTotal] = useState(0); // Total state
+  const renderAmountItem = useCallback(
+    ({ item }) => {
+      if (item.key === "Online" && rctype === "PrePay") {
+        return null;
+      }
+      if (item.key === "Online" && !CodeId) {
+        return null;
+      }
+
+      return (
+        <View key={`${item.key} Rupee`}>
+          <FlotingInput
+            key={item.key}
+            label={
+              item.key === "Online"
+                ? "Enter Online Amount"
+                : `${item.key} Rupee Notes`
+            }
+            keyboardType="numeric"
+            value={item.val === "0" ? "" : item.val}
+            // onChangeTextCallback={(text) => {
+            //   handleChangeText(text, item.key);
+            // }}
+            onChangeTextCallback={(text) => {
+              const digitsOnly = text.replace(/\D/g, ""); // Remove non-digit characters
+              handleChangeText(digitsOnly, item.key);
+            }}
+          />
+          <View style={[styles.righticon2]}>
+            {item.key !== "Online" ? (
+              <Image
+                source={item.path}
+                style={{
+                  width: wScale(90),
+                  height: "100%",
+                  resizeMode: "contain",
+                  marginBottom: -2,
+                }}
+              />
+            ) : (
+              <TouchableOpacity onPress={() => getqr()}
+
+                style={{
+                  alignItems: 'center',
+                  width: wScale(90), backgroundColor: onlineAm ? color1 : 'transparent', borderWidth: onlineAm ? 1 : 0, borderColor: colorConfig.secondaryColor, borderRadius: wScale(5)
+                }}>
+                {(onlineAm) &&
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={{ fontSize: wScale(10) }}>
+                      {utr.length >= 12 ? `View\nPay\nInfo` : `Show\nQR\nCode`}
+                    </Text>
+
+                    {utr.length >= 12 ?
+                      <LottieView
+                        autoPlay={true}
+                        loop={true}
+                        style={styles.lotiimg}
+                        source={require('../../../utils/lottieIcons/View-Docs.json')}
+                      // source={require('../../utils/lottieIcons/View-Docs.json')}
+                      /> :
+
+                      <QrcodSvg size={wScale(40)} color={colorConfig.primaryColor} />}
+                  </View>
+
+
+                }
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      );
+    },
+    [denominationData, CodeId] // 👈 dependency में CodeId add किया
+  );
+
+
+
+
+  const [HCIStatus, setHCIStatus] = useState('')
+  const [isotpSended, setisOtpSended] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      const checkStatusAndCall = async () => {
+        setIsloading2(true)
+        try {
+          const status = await AsyncStorage.getItem('pickup_status');
+          const pickuptype = await AsyncStorage.getItem('pickuptype');
+          const HCI = await AsyncStorage.getItem('HCIStatus');
+          console.error(HCI)
+          setHCIStatus(HCI);
+          console.log(' pickuptype:', pickuptype);
+          if (status === 'verified') {
+            setDetailsModalVisible(true);
+            setisOtpSended(true)
+          }
+
+          setIsloading2(false)
+
+        } catch (error) {
+          console.error('Error reading AsyncStorage:', error);
+        }
+      };
+
+      checkStatusAndCall();
+
+      return () => {
+      };
+    }, [])
+  );
+  useEffect(() => {
     const fetchData = async () => {
       await fetchMasterRemarkList();
+      setIsLoad(false)
     }
     fetchData();
+
+  }, [])
+
+  useEffect(() => {
+    if (rctype === 'PrePay') {
+      setAmount(rcPrePayAnomut)
+      setRAmount(rcPrePayAnomut)
+    }
+    else {
+      setAmount(null);
+      setRAmount(null)
+    }
   }, [])
   useEffect(() => {
+    if (Mobile) {
+      setRemark('Pickup Done');
+      setReceived('CASH RECEIVED');
+      setAdditionalRemarks('OK');
+    }
+  }, [Mobile]);
+  const model = getModel();
+
+  useEffect(() => {
+    console.log(model, 'mmmmmmmmmmmmmmmmmmmmmmmm');
+
+    console.log(Loc_Data['latitude'], Loc_Data['longitude'], '*****RRR************')
+
     const fetchData2 = async () => {
       await getLocation();
-      //  requestLocationPermission();
-      //     check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION)
-      // .then((result) => {
-
-
-      //   console.log(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION)
-      //   switch (result) {
-      //     case RESULTS.GRANTED:
-      //       console.log('Location access is granted');
-      //       break;
-      //     case RESULTS.DENIED:
-      //       console.log('Location access denied');
-      //       break;
-      //     case RESULTS.BLOCKED:
-      //       console.log('Location access is blocked');
-      //       break;
-      //     case RESULTS.UNAVAILABLE:
-      //       console.log('Location services are unavailable');
-      //       break;
-      //   }
-      // })
-      // .catch((error) => {
-      //   console.log('Error checking permission:', error);
-      // });
-
-      console.log(isLocationPermissionGranted, longitude, latitude)
     }
     fetchData2();
     return;
-  }, [isLocationPermissionGranted, longitude, latitude, getLocation()])
+  }, [])
   useEffect(() => {
-    if (otpResponse) {
-      console.log('----------------------------setRadiantOtp--------------');
-      console.log(otpResponse);
-      setClientOtp(otpResponse?.Content?.ADDINFO?.otp_pin || '');
-      console.log('----------------------------setRadiantOtp--------------');
-      closeMobileModal();
-    }
-  }, [otpResponse]);
-  useEffect(() => {
-    if (dynamicOtpResponse) {
-      console.log('----------------------------setRadiantOtp--------------');
-      console.log(dynamicOtpResponse);
-      setClientOtp(dynamicOtpResponse?.Content?.ADDINFO?.otp_pin || '');
-      console.log('----------------------------setRadiantOtp--------------');
-      closeMobileModal();
-    }
-  }, [dynamicOtpResponse]);
+    setOnlineAm('')
+  }, [utr, onlineAm])
+
   const submitCashPickupRequest = useCallback(async () => {
-    if (!latitude || !longitude) {
+
+    console.log(Loc_Data['latitude'], Loc_Data['longitude'])
+    if (!Loc_Data['latitude'] || !Loc_Data['longitude']) {
       return null;
     }
-    const transaction = {
+    setIsLoad(true)
+    const pickuptype = 'Online';
+
+    const newId = uuid.v4();
+    console.log("Generated ID:", newId);
+
+    let transaction = {
       "requestType": "cashPickupTransSubmit",
       "type": "Pickup",
-      "ceId": "RCE002",
+      "ceId": ceid,
       "shopId": item.ShopId,
       "transId": item.TransId,
       "noRecs": toNumber(transactionCount),
       "transParam": cashPickupData,
       "depType": item.DepTypess,
       "qrTransId": "",
-      "latitude": latitude,
-      "longitude": longitude
+      "latitude": Loc_Data['latitude'],
+      "longitude": Loc_Data['longitude'],
+      "pickuptype": 'Online',
+      "Modelnumber": model,
+      'CType': rctype,
+      'Uniqueid': newId
+
     };
+    if (pickuptype == 'Online') {
+
+      transaction = {
+        "requestType": "cashPickupTransSubmit",
+        "type": "Pickup",
+        "ceId": ceid,
+        "shopId": item.ShopId,
+        "transId": item.TransId,
+        "noRecs": toNumber(transactionCount),
+        "transParam": cashPickupData,
+        "depType": item.DepTypess,
+        "qrTransId": "",
+        "latitude": Loc_Data['latitude'],
+        "longitude": Loc_Data['longitude'],
+        "pickuptype": 'Online',
+        "ClientName": item2.Name,
+        "Clientmobile": item2.Mobile,
+        "Clientemail": item2.Email,
+        "Modelnumber": model,
+        'CType': rctype,
+        'Uniqueid': newId
+
+      };
+    }
+    if (item.qr_status === 'Radiant') {
+      transaction = {
+        "requestType": "radiantQRProcess",
+        "QR_transid": QR_transid,
+        "pickup_code": item.ShopId,
+        "erp_transid": item.TransId,
+        "qr_pic_status": qrData
+      }
+    }
     console.log(transaction)
-    await submitCashPickupTransaction(transaction);
-    // if(submitCashPickupResponse?.Content?.ADDINFO?.status === 'success'){
-    //   Alert.alert("Success", submitCashPickupResponse?.Content?.ADDINFO?.message);
-    // }
-    // else{
-    //   Alert.alert("Error", submitCashPickupResponse?.Content?.ADDINFO?.message || 'Something went wrong.');
-    // }
+
+
+
+    const res = await submitCashPickupTransaction(transaction);
+
+    console.log(res, '$$$$$$$$$$$$$$$$$$$$')
+    console.log("📌 Final Request Payload:", JSON.stringify(transaction, null, 2));
+
+    console.log("📤 Calling API with Params:", JSON.stringify(transaction, null, 2));
+    // const res = await submitCashPickupTransaction(transaction);
+
+    console.log("📥 API Response:", JSON.stringify(res, null, 2));
+    if (res?.Content?.ADDINFO?.status === 'success') {
+
+      await AsyncStorage.setItem('pickup_status', 'unverified');
+
+      if (CodeId) {
+        setDetailsModalVisible(false);
+
+        navigation.navigate('PickupSummaryScreen', {
+          CodeId: item.TransId || '',
+          status: res?.Content?.ADDINFO?.status,
+          message: res?.Content?.ADDINFO?.message
+        });
+
+      } else {
+        navigation.goBack();
+      }
+
+      return;
+    }
+
+
+    else {
+      Alert.alert(
+        "Error",
+        res?.Content?.ADDINFO?.message || 'Something went wrong.',
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              navigation.goBack();
+            }
+          }
+        ]
+      );
+    }
+    setIsLoad(false)
+
     setCashPickupData([]);
   }, [
     cashPickupData,
@@ -179,46 +424,176 @@ const PicUpScreen = () => {
     transactionCount,
     submitCashPickupTransaction,
     submitCashPickupResponse,
-    toNumber
+    toNumber,
+    Loc_Data['latitude'], Loc_Data['longitude']
   ]);
-  const handleOkPress = () => {
-    if (transactionCount < item.ClientCode.length) {
-      ToastAndroid.showWithGravity(
-        `Please enter the number of Transaction as ${item?.ClientCode.length} or above`,
-        ToastAndroid.SHORT,
-        ToastAndroid.BOTTOM
-      );
-      return;
+  useEffect(() => {
+
+    const checkCE_status = async () => {
+      try {
+        const res = await post({ url: APP_URLS.RCEID });
+        const status = res?.Content?.ADDINFO?.sts;
+        const message = res?.Content?.ADDINFO?.CEID;
+        setCeid(message);
+
+        console.log(res, '*********###********')
+        const Content = res.Content.ADDINFO.sts;
+
+        if (Content) {
+
+        } else {
+          alert('CEID not available')
+
+        }
+
+        setIsLoad(false)
+        console.log(res, '*************')
+        console.log(res, 'Response:');
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+    console.log(rout.params)
+    checkCE_status();
+  }, []);
+  const [newdenoms, setNewDenoms] = useState([])
+  const [allDenomData, setAllDenomData] = useState([]);
+
+
+  const validatePickupForm = ({
+    amount,
+    remark,
+    received,
+    denominationData,
+    CodeId,
+    currentPreviewImageRef,
+    setIsLoad
+  }) => {
+    console.log(received, remark);
+
+    // Amount validation
+    if (!amount || isNaN(Number(amount))) {
+      Alert.alert('Pickup Amount is required and must be a valid number.');
+      setIsLoad(false);
+      return false;
     }
 
-    setModalVisible(false);
-  };
+    // Remark validation
+    if (!remark || remark === 'Select') {
+      Alert.alert('Please select Remark.');
+      setIsLoad(false);
+      return false;
+    }
 
-  const handlePickupData = useCallback(() => {
-    if (!amount) {
-      Alert.alert('Pickup Amount is required');
-      return;
+    // Received validation
+    if (!received || received === 'Select') {
+      Alert.alert('Please select Received.');
+      setIsLoad(false);
+      return false;
     }
-    if (remark === 'Select') {
-      Alert.alert('Please select Remark');
-      return;
-    }
+
+    // Denomination total validation
     let total = 0;
     denominationData.forEach((item) => {
       if (isNaN(Number(item.key))) {
-        total += Number(item.val)
+        total += Number(item.val);
+      } else {
+        total += Number(item.key) * Number(item.val);
       }
-      else {
-        total += Number(item.key) * Number(item.val)
-      }
-
-    })
+    });
 
     if (total !== Number(amount)) {
+      console.log(total, amount);
       Alert.alert('Please check your denomination total and submit again');
-      return;
+      setIsLoad(false);
+      return false;
     }
 
+    // Image slip validation (only if CodeId not provided)
+    if (!CodeId) {
+      if (
+        !currentPreviewImageRef.current ||
+        !currentPreviewImageRef.current.startsWith('data:image/')
+      ) {
+        ToastAndroid.show(
+          'Please upload the slip before submitting.',
+          ToastAndroid.LONG
+        );
+        return false;
+      }
+    }
+
+    // ✅ All validations passed
+    return true;
+  };
+
+  const handlePickupData = useCallback(async () => {
+    setIsLoad(true)
+
+    console.log(received, remark,);
+    const pickuptype = 'Online';
+
+    if (!amount || isNaN(Number(amount))) {
+      Alert.alert('Pickup Amount is required and must be a valid number.');
+      setIsLoad(false)
+      setIsloading2(false); return;
+    } const isValidRemark = (value) => value && value !== 'Select';
+    if (!isValidRemark(remark)) {
+      Alert.alert('Please select Remark.');
+      setIsLoad(false)
+      setIsloading2(false)
+      return;
+    } if (!isValidRemark(received)) {
+      Alert.alert('Please select Received.');
+      setIsLoad(false)
+      setIsloading2(false)
+      return;
+    } console.log(denominationData)
+    let total = 0; denominationData.forEach((item) => {
+      if (isNaN(Number(item.key))) { total += Number(item.val); console.log(total, '###################'); }
+      else {
+        total += Number(item.key) * Number(item.val);
+        console.log(total, '******++++************',);
+      }
+    }); if (total !== Number(amount)) {
+      console.log(total, amount)
+      Alert.alert('Please check your denomination total and submit again',); setIsLoad(false)
+      setIsloading2(false)
+      return;
+    } if (!slipDate) {
+      setIsLoad(false)
+      setIsloading2(false)
+      return Alert.alert('Please select slip date')
+    }
+    if (denomData[0]?.amount > 0) {
+      if (!currentPreviewImageRef.current || !currentPreviewImageRef.current.startsWith('data:image/')) {
+        ToastAndroid.show('Please upload the slip before submitting.', ToastAndroid.LONG);
+
+        if (utr.length >= 12) {
+          setIsVisible(true)
+        } else {
+          getqr()
+        }
+        setIsloading2(false);
+
+        return
+      }
+    }
+
+    if (!CodeId) {
+      if (!currentPreviewImageRef.current || !currentPreviewImageRef.current.startsWith('data:image/')) {
+
+        ToastAndroid.show('Please upload the slip before submitting.', ToastAndroid.LONG);
+        setIsloading2(false); return;
+      }
+    }
+    if (!CodeId) {
+      setIsLoad(true)
+    }
+
+    const newId = uuid.v4();   // unique ID generate
+    console.log("Generated ID:", newId);
 
     const data = {
       "pickup_amount": parseFloat(amount),
@@ -232,149 +607,338 @@ const PicUpScreen = () => {
       "remarks": additionalRemarks,
       "slip_date": slipDate,
       "pay_slip_date": TransDate,
-      "2000s": toNumber(denominationData[0].val),
-      "1000s": toNumber(denominationData[1].val),
-      "500s": toNumber(denominationData[2].val),
-      "200s": toNumber(denominationData[3].val),
-      "100s": toNumber(denominationData[4].val),
-      "50s": toNumber(denominationData[5].val),
-      "20s": toNumber(denominationData[6].val),
-      "10s": toNumber(denominationData[7].val),
-      "5s": toNumber(denominationData[8].val),
-      "coins": toNumber(denominationData[9].val),
+      "2000s": toNumber('0'),
+      "1000s": toNumber('0'),
+      "500s": toNumber(denominationData[1].val || 0),
+      "200s": toNumber(denominationData[2].val || 0),
+      "100s": toNumber(denominationData[3].val || 0),
+      "50s": toNumber(denominationData[4].val || 0),
+      "20s": toNumber(denominationData[5]?.val || 0),
+      "10s": toNumber(denominationData[6]?.val || 0),
+      "5s": toNumber(denominationData[7]?.val || 0),
+      "coins": toNumber(denominationData[8]?.val || 0),
+      "slip": currentPreviewImageRef.current,
+
     };
 
-    console.log(data)
-    const transData = [...cashPickupData, data]
-    setCashPickupData(transData);
+    const Onlinedata = {
+      "pickup_amount": parseFloat(amount),
+      "rec_no": hsbcDepositSlipNo,
+      "pis_hcl_no": customerGeneratedNo,
+      "hcl_no": hciSlipNo,
+      "gen_slip": sealingTagNo,
+      "client_code": clientCode,
+      "master_remarks": remark,
+      "child_remarks": received,
+      "remarks": additionalRemarks,
+      "slip_date": slipDate,
+      "pay_slip_date": TransDate,
+      "2000s": toNumber('0'),
+      "1000s": toNumber('0'),
+      "500s": toNumber(denominationData[1].val || 0),
+      "200s": toNumber(denominationData[2].val || 0),
+      "100s": toNumber(denominationData[3].val || 0),
+      "50s": toNumber(denominationData[4].val || 0),
+      "20s": toNumber(denominationData[5]?.val || 0),
+      "10s": toNumber(denominationData[6]?.val || 0),
+      "5s": toNumber(denominationData[7]?.val || 0),
+      "coins": toNumber(denominationData[8]?.val || 0) + toNumber(denominationData[0]?.val),
+      "slip": '',
+      "Utrno": utr,
+      "UploadOnlinrSlip": currentPreviewImageRef.current,
+      "OnlineAmount": toNumber(onlineAm || 0),
+    };
 
-    if (toNumber(transactionCount) > 1 && transData.length < toNumber(transactionCount)) {
+
+
+    console.warn('>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+    console.warn(Onlinedata)
+    console.warn('<<<<<<<<<<<<<<<<<<<<<<<<<<<')
+
+    const deno = [
+      { denom: 'Online', notes: 0, amount: toNumber(denomData[0]?.amount) || 0 },
+      { denom: '500', notes: denomData[1]?.notes || 0, amount: toNumber(denomData[1]?.amount) || 0 },
+      { denom: '200', notes: denomData[2]?.notes || 0, amount: toNumber(denomData[2]?.amount) || 0 },
+      { denom: '100', notes: denomData[3]?.notes || 0, amount: toNumber(denomData[3]?.amount) || 0 },
+      { denom: '50', notes: denomData[4]?.notes || 0, amount: toNumber(denomData[4]?.amount) || 0 },
+      { denom: '20', notes: denomData[5]?.notes || 0, amount: toNumber(denomData[5]?.amount) || 0 },
+      { denom: '10', notes: denomData[6]?.notes || 0, amount: toNumber(denomData[6]?.amount) || 0 },
+      { denom: '5', notes: denomData[7]?.notes || 0, amount: toNumber(denomData[7]?.amount) || 0 },
+      { denom: 'Others', notes: denominationData[8]?.val || 0, amount: toNumber(denominationData[8]?.val) || 0 },
+      {
+        denom: 'Total',
+        notes: '',
+        amount: (toNumber(denomData[0]?.amount) || 0) +
+          (toNumber(denomData[1]?.amount) || 0) +
+          (toNumber(denomData[2]?.amount) || 0) +
+          (toNumber(denomData[3]?.amount) || 0) +
+          (toNumber(denomData[4]?.amount) || 0) +
+          (toNumber(denomData[5]?.amount) || 0) +
+          (toNumber(denomData[6]?.amount) || 0) +
+          (toNumber(denomData[7]?.amount) || 0) +
+          (toNumber(denominationData[8]?.val) || 0)
+      },
+    ];
+
+    console.log(deno)
+    const filled = cashPickupData.length;
+    const remaining = toNumber(transactionCount) - filled;
+
+    if (filled >= toNumber(transactionCount)) {
+      const newData = data;
+
+      const isDuplicate = cashPickupData.some(
+        (item) =>
+          JSON.stringify(item) === JSON.stringify(newData)
+      );
+
+      if (isDuplicate) {
+        setIsLoad(false);
+        setIsloading2(false);
+        navigation.navigate('CmsFinalOtpVerification', { item2, item, denomData: newdenoms, transid: CodeId, slipDate, Mobile, fromPickup: true, selectedModes, transactionCount: item.ClientCode.length });
+
+
+
+
+      }
+
+      return;
+    }
+
+
+    const final = pickuptype == 'Online' ? Onlinedata : data
+    const updatedCashData = [...cashPickupData, final];
+    setCashPickupData(updatedCashData);
+
+    console.log(updatedCashData.Utrno)
+    const updatedNewDenoms = [...newdenoms, deno];
+    setNewDenoms(updatedNewDenoms);
+
+    // ✅ Status dialog
+    if (toNumber(transactionCount) > 1 && remaining - 1 > 0) {
+      setIsLoad(false);
+      setIsloading2(false);
+      navigation.navigate('CmsFinalOtpVerification', { item2, item, denomData: updatedNewDenoms, transid: CodeId, slipDate, Mobile, fromPickup: true, selectedModes, transactionCount: item.ClientCode.length });
+
+
+      // Dialog.show({
+      //   type: ALERT_TYPE.SUCCESS,
+      //   title: `Receipt Status`,
+      //   textBody: `${filled + 1} Completed • ${remaining - 1} Pending`,
+      //   button: 'OK',
+      // });
+    }
+    // ✅ Reset fields if अभी और transactions बाकी हैं
+    if (toNumber(transactionCount) > 1 && updatedCashData.length < toNumber(transactionCount)) {
       setAmount('');
       setSealingTagNo('');
       setCustomerGeneratedNo('');
       setHciSlipNo('');
-      setHsbcDepositSlipNo('');
+      if (!CodeId) setHsbcDepositSlipNo('');
       setAirtenGampangila('');
       setAdditionalRemarks('');
       setRemark('Select');
       setReceived('Select');
       setSlipDate('');
+      setRAmount('');
       setDenominationData([...currencyData]);
       setClientCode(clientCodeIndex + 1 < item.ClientCode.length ? item.ClientCode[clientCodeIndex + 1] : item.ClientCode[0]);
       setClientCodeIndex(clientCodeIndex + 1);
+      setCurrentPreviewImage('');
+      currentPreviewImageRef.current = '';
+      setOnlineAm('')
+      setIsloading2(false);
+      setUtr('');
+      setDenomData([
+        { denom: 'Online', notes: '0', amount: '0' },
+        { denom: '500', notes: '0', amount: '0' },
+        { denom: '200', notes: '0', amount: '0' },
+        { denom: '100', notes: '0', amount: '0' },
+        { denom: '50', notes: '0', amount: '0' },
+        { denom: '20', notes: '0', amount: '0' },
+        { denom: '10', notes: '0', amount: '' },
+        { denom: '5', notes: '0', amount: '0' },
+        { denom: 'Others', notes: '0', amount: '0' },
+        { denom: 'Total', notes: '', amount: '0' },
+      ]);
+      setIsLoad(false);
+      setIsloading2(false);
+
+      return;
+    }
+
+    // ✅ अगर सारी transactions पूरी हो गईं
+    if (CodeId) {
+      setIsLoad(false);
+      setIsloading2(false);
+      navigation.navigate('CmsFinalOtpVerification', { item2, item, denomData: updatedNewDenoms, transid: CodeId, slipDate, Mobile, fromPickup: true, selectedModes, transactionCount: item.ClientCode.length });
+
+
       return;
     }
 
     setDetailsModalVisible(true);
-  }, [
-    amount,
-    hsbcDepositSlipNo,
-    customerGeneratedNo,
-    hciSlipNo,
-    sealingTagNo,
-    clientCode,
-    remark,
-    received,
-    additionalRemarks,
-    slipDate,
-    denominationData,
-    transactionCount,
-    cashPickupData,
-    setCashPickupData,
-    setAmount,
-    setSealingTagNo,
-    setCustomerGeneratedNo,
-    setHciSlipNo,
-    setHsbcDepositSlipNo,
-    setAirtenGampangila,
-    setAdditionalRemarks,
-    setRemark,
-    setReceived,
-    setSlipDate,
-    setDenominationData,
-    setDetailsModalVisible,
-  ]);
+    setIsLoad(false);
+    setIsloading2(false);
+  }, [amount, hsbcDepositSlipNo, customerGeneratedNo, hciSlipNo, sealingTagNo, clientCode, remark, received, additionalRemarks, slipDate, denominationData, transactionCount, cashPickupData, currentPreviewImageRef, utr]);
 
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
+    setIsLoad(true);
+    setIsloading2(true);
+    setisOtpSended(true);
 
-    const data = {
-      "pickup_amount": parseFloat(amount),
-      "rec_no": hsbcDepositSlipNo,
-      "pis_hcl_no": customerGeneratedNo,
-      "hcl_no": hciSlipNo,
-      "gen_slip": sealingTagNo,
-      "client_code": clientCode,
-      "master_remarks": remark,
-      "child_remarks": received,
-      "remarks": additionalRemarks,
-      "slip_date": slipDate,
-      "pay_slip_date": TransDate,
-      "2000s": toNumber(denominationData[0].val),
-      "1000s": toNumber(denominationData[1].val),
-      "500s": toNumber(denominationData[2].val),
-      "200s": toNumber(denominationData[3].val),
-      "100s": toNumber(denominationData[4].val),
-      "50s": toNumber(denominationData[5].val),
-      "20s": toNumber(denominationData[6].val),
-      "10s": toNumber(denominationData[7].val),
-      "5s": toNumber(denominationData[8].val),
-      "coins": toNumber(denominationData[9].val),
-    };
-    const transaction = {
-      "requestType": "cashPickupTransSubmit",
-      "type": "Pickup",
-      "ceId": "RCE002",
-      "shopId": item.ShopId,
-      "transId": item.TransId,
-      "noRecs": toNumber(transactionCount),
-      "transParam": cashPickupData,
-      "depType": item.DepTypess,
-      "qrTransId": "",
-      "latitude": latitude,
-      "longitude": longitude
-    };
-    console.log(transaction)
+    try {
+      console.log(item.OtpDay, '%%%%%%%%%%%%%%%');
+      console.log(["CurrentTransaction", "Daily", "Weekly-Sun"].includes(item.OtpDay));
 
-    if (["CurrentTransaction", "Daily", "Weekly-Sun"].includes(item.OtpDay)) {
-      console.log(item.TransId, '', item.ShopId, amount, item.OtpDay, '')
-      await setRadiantOtp(item.TransId, '', item.ShopId, amount, item.OtpDay, '');
-      setDetailsModalVisible(false);
+      if (["CurrentTransaction", "Daily", "Weekly-Sun"].includes(item.OtpDay)) {
+        const res = await setRadiantOtp(
+          item.TransId,
+          '',
+          item.ShopId,
+          amount,
+          item.OtpDay,
+          '',
+          CodeId ? item2.Email : ''
+        );
 
-      if (otpResponse?.Content?.ADDINFO?.status === 'success') {
+        console.log(res, '***********&&&&&******');
         setDetailsModalVisible(false);
 
-        setClientOtp(otpResponse?.Content?.ADDINFO?.otp_pin || '');
-        setOtpModalVisible(true);
-        return;
+        if (res?.Content?.ADDINFO?.status === 'success') {
+          setClientOtp(res?.Content?.ADDINFO?.otp_pin || '');
+          setOtpModalVisible(true);
+        } else {
+          setOtpModalVisible(false);
+          ToastAndroid.showWithGravity(
+            res?.Content?.ADDINFO?.message || 'Something went wrong!',
+            ToastAndroid.SHORT,
+            ToastAndroid.BOTTOM
+          );
+        }
       }
-      else {
-        setOtpModalVisible(false);
 
-        ToastAndroid.showWithGravity(
-          'Something went wrong',
-          ToastAndroid.SHORT,
-          ToastAndroid.BOTTOM
+      // ✅ Case 2: Empty OtpDay (open mobile modal)
+      else if (item.OtpDay === '') {
+        setDetailsModalVisible(false);
+        setMobilemodel(true);
+
+        // 🟢 Turn off loader only for this branch
+        setIsLoad(false);
+        setIsloading2(false);
+        return; // stop execution
+      }
+
+      // ✅ Case 3: AxisTransaction
+      else if (item.OtpDay === 'AxisTransaction') {
+        const res = await setRadiantDynamicOtp(
+          item.TransId,
+          item2.Mobile,
+          item.ShopId,
+          amount,
+          item.OtpDay,
+          '',
+          CodeId ? item2.Email : ''
         );
-      }
-      setDetailsModalVisible(false);
-      setDetailsModalVisible(false);
 
-      return;
+        if (res) {
+          if (item2.Mobile) {
+            ToastAndroid.showWithGravity(
+              `OTP has been sent to ${item2.Mobile} number`,
+              ToastAndroid.SHORT,
+              ToastAndroid.BOTTOM
+            );
+          }
+          setClientOtp(res?.Content?.ADDINFO?.otp_pin || '');
+        }
+
+        closeMobileModal();
+      }
+    } catch (err) {
+      console.error('handleSubmit error:', err);
+      ToastAndroid.showWithGravity(
+        'Something went wrong. Please try again.',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM
+      );
+    } finally {
+      setIsLoad(true);
+      setIsloading2(true);
+
+      setTimeout(() => {
+        setIsLoad(prev => prev ? false : prev);
+        setIsloading2(prev => prev ? false : prev);
+      }, 200); // slight delay to avoid immediate false reset
     }
-    setDetailsModalVisible(false);
-    setMobilemodel(true)
-    // if(item.OtpDay === ""){
-    //   setMobilemodel(true)
-    // }
-    //Verify CPIN
-  };
+  }, [item, item2, amount, CodeId]);
+
+
+
   const closeMobileModal = () => {
     setMobilemodel(false);
     setOtpModalVisible(true);
+    setIsLoad(false);
+    setIsloading2(false);
   };
-  const handleCancelPress = () => {
-    setDetailsModalVisible(false); // Close the details modal on cancel
+  const handleCancelPress = async () => {
+    setDetailsModalVisible(false);
+    const pickuptype = 'Online';
+    if (pickuptype === 'Online') {
+      navigation.goBack();
+    };
+
+
+  };
+  const [denomData, setDenomData] = useState([
+    { denom: 'Online', notes: '0', amount: '0' },
+
+    { denom: '500', notes: '0', amount: '0' },
+    { denom: '200', notes: '0', amount: '0' },
+    { denom: '100', notes: '0', amount: '0' },
+    { denom: '50', notes: '0', amount: '0' },
+    { denom: '20', notes: '0', amount: '0' },
+    { denom: '10', notes: '0', amount: '0' },
+    { denom: '5', notes: '0', amount: '0' },
+    { denom: 'Others', notes: '0', amount: '0' },
+    { denom: 'Total', notes: '', amount: '0' },
+  ]);
+  const handleDenomChange = (text, key) => {
+    const updated = denomData.map((item) => {
+      if (item.denom === key) {
+        const notes = text;
+        let amount;
+
+        if (key === 'Others') {
+          amount = item.amount; // पहले जैसा
+        } else if (key === 'Online') {
+          amount = String(Number(notes)); // 👈 direct assign
+        } else {
+          amount = String(Number(notes) * Number(key));
+        }
+
+        return { ...item, notes, amount };
+      } else if (item.denom === 'Total') {
+        return item;
+      }
+      return item;
+    });
+
+    let total = 0;
+    updated.forEach((item) => {
+      if (item.denom !== 'Total') {
+        const amt = Number(item.amount);
+        if (!isNaN(amt)) total += amt;
+      }
+    });
+
+    const finalData = updated.map((item) =>
+      item.denom === 'Total'
+        ? { ...item, amount: String(total) }
+        : item
+    );
+
+    setDenomData(finalData);
   };
 
   const handleDateChange = (date) => {
@@ -389,439 +953,764 @@ const PicUpScreen = () => {
     setShowCalender(false);
   };
 
-
   const onSuccess = (e) => {
-    console.log(e.data);
+    // {compname='Reliance Retail Limited', 
+    //   subdivcode='T7WO',
+    //  custcode='JMDRD',
+    //    pisdepslipno='5220189799', 
+    //    pisdate='18/07/2025',
+    //     bankname='Radiant Cash Management Services Ltd', amount='33272'}
+
+    let parsedData = null;
+
+    console.log(e.data)
+    const raw = e.data;
+    const isEqualFormat = /(\w+)\s*=\s*'?.+?'?/.test(raw); // ✅ define this
+
+    if (isEqualFormat) {
+      let jsonReady = raw.replace(/'/g, '"');
+      jsonReady = jsonReady.replace(/(\w+)=/g, '"$1":');
+
+      try {
+        parsedData = JSON.parse(jsonReady);
+        alert(jsonReady)
+
+      } catch (err) {
+        console.error('Failed to parse = format JSON:', err);
+      }
+    } else {
+      try {
+        parsedData = JSON.parse(raw);
+      } catch (err) {
+        console.error('Failed to parse : format JSON:', err);
+      }
+    }
+
+
+    if (!parsedData) {
+      ToastAndroid.showWithGravity(
+        'Failed to read QR',
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM
+      );
+      return;
+    }
+
+    console.log(parsedData, '^^^^^^^^ parsedData');
+
+    if (item.qr_status === 'Radiant' || item.QrStatus === 'Radiant') {
+      if (parsedData?.CC === item.qr_value || parsedData?.CC === item.QrValue) {
+        const qr_data = [...qrData, parsedData];
+        setQrData(qr_data);
+        setAmount(parsedData?.Amt || 0);
+        setCustomerGeneratedNo(parsedData?.Pis || '');
+        setHciSlipNo(parsedData?.Hcl || '');
+        setReceived(parsedData?.coll_remarks || '');
+        setQR_transid(parsedData?.QR_transid || '');
+
+        const denom = [
+          { key: '500', val: parsedData?.['500s'] || 0 },
+          { key: '200', val: parsedData?.['200s'] || 0 },
+          { key: '100', val: parsedData?.['100s'] || 0 },
+          { key: '50', val: parsedData?.['50s'] || 0 },
+          { key: '20', val: parsedData?.['20s'] || 0 },
+          { key: '10', val: parsedData?.['10s'] || 0 },
+          { key: '5', val: parsedData?.['5s'] || 0 },
+          { key: 'coins', val: parsedData?.['coins'] || 0 },
+        ];
+
+        let total = 0;
+        const amountt = parsedData?.Amt || 0;
+
+        denom.forEach((item) => {
+          if (isNaN(Number(item.key))) {
+            total += Number(item.val);
+          } else {
+            total += Number(item.key) * Number(item.val);
+          }
+        });
+
+        const remain = total - amountt;
+
+        setTotal(total);
+        setRemain(remain);
+        setDenominationData(denom);
+      } else {
+        ToastAndroid.showWithGravity('Invalid QR', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
+        return;
+      }
+    }
+
+    if (item.qr_status === 'Reliance' || item.QrStatus === 'Reliance') {
+      if (parsedData?.subdivcode === item.qr_value || parsedData?.subdivcode === item.QrValue) {
+        setAmount(
+          parsedData?.amount ||
+          parsedData?.Amt ||
+          parsedData?.pickup_amount ||
+          parsedData?.Amount ||
+          0
+        );
+
+        setCustomerGeneratedNo(parsedData?.pisdepslipno || parsedData?.Pis || '');
+        setSlipDate(parsedData?.pisdate || '');
+      } else {
+        ToastAndroid.showWithGravity('Invalid QR', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
+        return;
+      }
+    }
+
     setIsScan(false);
-    const data = JSON.parse(e.data);
-
-    console.log(data);
-    console.log(data.amount, data.pisdate, data.custcode);
-    setAmount(data.amount);
-    setSlipDate(data.pisdate);
-    setCustomerGeneratedNo(data.pisdepslipno);
-
-    return;
-    // Linking.openURL(e.data).catch((err) => console.error('An error occurred', err));
   };
 
-  // {
-  //   "compname": "Reliance Retail Limited",
-  //   "subdivcode": "2421",
-  //   "custcode": "000004052831",
-  //   "pisdepslipno": "2001701754",
-  //   "pisdate": "21/07/2022",
-  //   "bankname": "BARCLAYS BANK PLC",
-  //   "amount": "80040"
-  //   }
-  if (isScan) {
-    return <QRCodeScanner
+  const [isload, setIsLoad] = useState(false);
 
-      onRead={onSuccess}
+  const {
+    previewVisible,
+    setPreviewVisible,
+    currentPreviewImage,
+    setCurrentPreviewImage,
+    currentPreviewImageRef,
+    currentDocumentType,
+    setCurrentDocumentType,
+    handleImageSelection,
+  } = useDocumentUpload();
 
-    />
-  }
-  // useEffect(() => {
-  //   const requestCameraPermission = useCallback(async () => {
-  //     try {
-  //       const granted = await PermissionsAndroid.request(
-  //         PermissionsAndroid.PERMISSIONS.CAMERA,
-  //         {
-  //           title: 'Camera Permission',
-  //           message: 'This app needs access to your camera to take photos and videos.',
-  //           buttonPositive: 'OK',
-  //         }
-  //       );
+  const handleUpload = () => {
+    if (currentPreviewImage) {
+      setPreviewVisible(true);
+    } else {
+      handleImageSelection('slip', (base64) => {
+        currentPreviewImageRef.current = base64;
 
-  //       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-  //       } else {
-  //         Dialog.show({
-  //           type: ALERT_TYPE.WARNING,
-  //           title: 'Permission Required',
-  //           textBody: 'Please grant the camera permission from settings.',
-  //           button: 'OK',
-  //           onPressButton: () => {
-  //             Dialog.hide();
-  //             openSettings().catch(() => console.warn('Cannot open settings'));
-  //           },
-  //         });
-  //       }
-  //     } catch (err) {
-  //       console.warn(err);
-  //     }
-  //   }, []);
+        console.log('Uploaded base64 image:', base64);
+        setCurrentPreviewImage(base64);
+        setCurrentDocumentType('slip');
+        setPreviewVisible(true);
+      });
+    }
+  };
 
-  //   requestCameraPermission();
-  // }, []);
+  const handleReUpload = () => {
+    setPreviewVisible(false);
+    setTimeout(() => {
+      setCurrentPreviewImage('');
+      currentPreviewImageRef.current = '';
+
+      handleImageSelection('slip', (base64) => {
+        setCurrentPreviewImage(base64);
+        setCurrentDocumentType('slip');
+        setPreviewVisible(true);
+      });
+    }, 300);
+  };
+
+  useEffect(() => {
+    if (remaining == 0 && amount == total) {
+      Keyboard.dismiss(); // Close the keyboard when condition is met
+    }
+  }, [remaining, amount, total]); // This will trigger whenever any of these values change
+  const [IsVisible, setIsVisible] = useState(false)
+
+  const [utr, setUtr] = useState('');
+  const [onlineAm, setOnlineAm] = useState('');
+  const [Url, setUrl] = useState('')
+  const coinsItem = denominationData.find(item => item.key.trim() === 'Coins');
+  const getqr = async () => {
+    if (!onlineAm || Number(onlineAm) <= 0) {
+      ToastAndroid.show('Enter Valid Amount', ToastAndroid.SHORT);
+      return;
+    }
+
+    if (utr.length > 12) {
+
+
+      setIsVisible(true);
+      return
+    }
+    setIsLoad(true)
+    try {
+      const res = await post({ url: APP_URLS.RadiantCashGenrateQR + onlineAm });
+      console.log(res);
+
+      const Content = res.Content;
+
+      if (Content.ADDINFO.newUpiLink) {
+        setUrl(Content.ADDINFO.newUpiLink);
+        setIsVisible(true);
+      } else {
+        ToastAndroid.show('Something went wrong' + res || 'Something went wrong', ToastAndroid.SHORT);
+
+      }
+
+      setIsLoad(false)
+
+    } catch (err) {
+      console.error(err);
+      setIsloading2(false)
+
+      ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
+    }
+  };
 
   return (
-    <View style={styles.main}>
-      <AppBarSecond title={'Cash Pickup'} />
-      {/* <View style={styles.appBar}>
-        <View style={[styles.righticon2]}>
+    <>
+      {isScan ? (
+        <QRCodeScanner onRead={onSuccess} />
+      ) : (
+        <View style={styles.main}>
 
-          <TouchableOpacity
-            onPress={() => {
-              setIsScan(true)
-            }}
+
+
+          <OnlinePickUpQrSheet
+            currentPreviewImageRef={currentPreviewImageRef.current}
+            isVisible={IsVisible}
+            setIsVisible={setIsVisible}
+            url={Url}
+            utr={utr}
+            setUtr={setUtr}
+            am={onlineAm}
+            onUpload={handleUpload} />
+          <AppBarSecond title={'Cash Pickup Information'}
+          // onPressBack={() => {
+          //   navigation.navigate('CashPickup',
+          //   );}}
+          />
+
+          {isload && <ShowLoader />}
+
+          <LinearGradient colors={[colorConfig.primaryColor, colorConfig.secondaryColor,]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
           >
-            <QrcodAddmoneysvg />
+            <View style={[styles.contentContainer,]}>
+              <View style={styles.itemContainer}>
 
-          </TouchableOpacity>
-        </View>
-      </View> */}
-      {/* <CameraScreen onQRCodeScan={(data) => console.log(data)} /> */}
-      <LinearGradient colors={[colorConfig.primaryColor, colorConfig.secondaryColor,]}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-      >
-        <View style={[styles.contentContainer,]}>
-          <View style={styles.itemContainer}>
-            <Text style={styles.cashPickupText}> {item.CustName}</Text>
-            <RadintPickupSvg size={20} color='#fff' />
-          </View>
-          <View style={styles.itemContainer}>
-            <View style={styles.numberview}>
-              <Text style={styles.clientCodeText}>Number Of Receipts :</Text>
-              <Text style={styles.pickupCount}>{transactionCount}</Text>
-            </View>
-            <Text style={styles.pickuptext}>{item.Type}</Text>
-          </View>
-        </View>
-      </LinearGradient>
+                <View>
+                  <Text style={styles.cashPickupText}> {item.CustName}</Text>
 
-      <ScrollView keyboardShouldPersistTaps={'handled'}>
 
-        <View style={styles.container}>
-          {item?.Captions?.PickupAmount && <FlotingInput
-            keyboardType='numeric'
-            label={item?.Captions?.PickupAmount}
-            value={amount}
-            onChangeTextCallback={setAmount}
-          />}
-          {item?.Captions?.GenSlip && <FlotingInput
+                  <TouchableOpacity
 
-            label={item?.Captions?.GenSlip}
-            value={sealingTagNo}
-            onChangeTextCallback={setSealingTagNo}
-          />}
-          {item?.Captions?.PisHclNo &&
-            <FlotingInput
-              label={item?.Captions?.PisHclNo}
-              value={customerGeneratedNo}
-              onChangeTextCallback={setCustomerGeneratedNo}
-            />}
-          {item?.Captions?.HclNo && <FlotingInput
-            keyboardType="default"
-            label={item?.Captions?.HclNo}
-            value={hciSlipNo}
-            onChangeTextCallback={setHciSlipNo}
-          />}
-          {item?.Captions?.RecNo &&
-            <FlotingInput
-              label={item?.Captions?.RecNo}
-              value={hsbcDepositSlipNo}
-              onChangeTextCallback={setHsbcDepositSlipNo}
-            />}
+                  />
+                  <View style={styles.numberview}>
+                    <Text style={styles.clientCodeText}>No Of Slips:</Text>
+                    <Text style={styles.pickupCount}>
+                      {`${transactionCount.toString().padStart(2, '0')}`}
+                    </Text>
+                    <Text style={[styles.clientCodeText, { color: '#66BB6A' }]}>  Submited Slips:</Text>
+                    <Text style={[styles.pickupCount, { color: '#66BB6A' }]}>
+                      {`${cashPickupData.length.toString().padStart(2, '0')}`}
+                    </Text>
+                  </View>
+                </View>
 
-          {item?.Captions?.PisDate &&
-            <TouchableOpacity onPress={() => setShowCalender(true)}>
-              <FlotingInput
-                editable={false}
-                label={item?.Captions?.PisDate}
-                value={slipDate}
-                onChangeTextCallback={setSlipDate}
-              />
-              <View style={[styles.righticon2]}>
-                <Calendarsvg />
+
+                <View style={styles.mrgtop}>
+                  <RadintPickupSvg size={20} color='#fff' />
+                  <Text style={[styles.pickuptext, { marginTop: hScale(3) }]}>{item.Type}</Text>
+
+                </View>
               </View>
-            </TouchableOpacity>
-          }
 
-          {/* <FlotingInput
-            
-             
 
-             label='AIRTEN-GAMPANGILA'
-            value={airtenGampangila}
-            onChangeText={setAirtenGampangila}
-          /> */}
-
-          <FlotingInput
-            editable={item.ClientCode?.length > 1}
-            onPressIn={() => {
-              if (item.ClientCode?.length > 1) {
-                setClientCodeModal(true)
-              }
-            }}
-            label={'ClientCode'}
-            value={clientCode}
-          />
-          <Text style={styles.denomiamount}>Denomination Amount</Text>
-          <FlashList
-            data={denominationData}
-            extraData={denominationData}
-            renderItem={renderAmountItem}
-            keyExtractor={(item) => item.key + item.val}
-            estimatedItemSize={9}
-          />
-          <TouchableOpacity onPress={() => setRemarkVisible(true)}>
-
-            <FlotingInput
-              editable={false}
-              label={'Select Remark'}
-              value={remark}
-              onChangeTextCallback={(text) => {
-                setRemark(text)
-              }}
-            />
-
-            <View style={[styles.righticon2]}>
-              <OnelineDropdownSvg />
             </View>
-          </TouchableOpacity>
+          </LinearGradient>
 
-          {remark !== '' && (
-            <View>
-              <TouchableOpacity onPress={() => setChildRemarksVisible(true)}>
+          <View style={[styles.header, {
+            backgroundColor:
+              (amount > 0 && amount === Ramount) ? color1 : '#fff',
+            borderWidth: (amount > 0 && amount === Ramount) ? 0 : 5,
+            borderColor: `${colorConfig.secondaryColor}80`,
+
+
+          }]}>
+            {(amount > 0 && amount === Ramount) ? null : (<View style={{}}>
+              {item?.Captions?.PickupAmount && <View >
+                <FlotingInput
+                  // editable={!isRelianceQR}
+                  keyboardType='numeric'
+                  label={item?.Captions?.PickupAmount}
+                  value={rctype === 'PrePay' ? amount : amount}
+                  onChangeTextCallback={(t) => {
+
+                    setAmount(t);
+
+                    console.error(t > 0)
+                    if (t > 0) {
+                      setRemark('Pickup Done');
+                      setReceived('CASH RECEIVED');
+                      setAdditionalRemarks('Successfully PickUp Done')
+                    }
+                  }}
+                  editable={rctype !== 'PrePay'}
+                />
+
+                <View style={[styles.righticon2]}>
+
+                  <TouchableOpacity
+                    onPress={() => {
+                      setIsScan(true)
+                    }}
+                  >
+                    <QrcodAddmoneysvg />
+
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+
+              }
+              <View>
+                <FlotingInput
+                  // editable={!isRelianceQR}
+                  keyboardType='numeric'
+                  label={'Enter Re-Amount'}
+                  value={rctype === 'PrePay' ? Ramount : Ramount}
+                  onChangeTextCallback={setRAmount}
+                  editable={rctype !== 'PrePay'}
+
+
+                />
+                {Ramount > 0 && amount !== Ramount ?
+                  <View style={styles.righticon2}>
+                    <AlertSvg />
+                    <Text style={styles.miss}>Mismatch</Text>
+                  </View> : null}
+              </View>
+            </View>
+            )}
+
+            {amount > 0 && amount === Ramount &&
+
+              <View style={[styles.titletotal, { backgroundColor: colorConfig.secondaryColor }]}>
+                <View style={styles.headerAmountView}>
+                  <Text style={styles.headerLabel}>Pickup Amount</Text>
+                  <Text style={styles.headerValue}>{amount}</Text>
+                </View>
+                <View style={styles.boder} />
+                <View style={styles.headerAmountView}>
+                  <Text style={styles.headerLabel}>Submitted Amount</Text>
+                  <Text style={styles.headerValue}>{total}</Text>
+                </View>
+                <View style={styles.boder} />
+
+                <View style={styles.headerAmountView}>
+                  <Text style={styles.headerLabel}>
+                    Remain Amount
+                  </Text>
+                  <Text style={styles.headerValue}>
+                    {remaining == null ? amount : remaining}
+                  </Text>
+                </View>
+                {(remaining === 0 && amount == total) && <View style={[styles.check, { backgroundColor: 'green' }]}>
+                  <CheckSvg size={15} />
+                </View>}
+              </View>}
+
+          </View>
+          <ScrollView keyboardShouldPersistTaps={'handled'}>
+            <View style={styles.container}>
+
+              {item?.Captions?.GenSlip && sealingTagNo &&
+                <FlotingInput
+                  autoCapitalize={"characters"}
+
+                  label={item?.Captions?.GenSlip}
+                  value={sealingTagNo}
+
+                  onChangeTextCallback={setSealingTagNo}
+                />}
+              {item?.Captions?.PisHclNo && customerGeneratedNo &&
+                <FlotingInput
+                  label={item?.Captions?.PisHclNo}
+                  // editable={!isRelianceQR}
+                  value={customerGeneratedNo}
+                  autoCapitalize={"characters"}
+
+                  onChangeTextCallback={setCustomerGeneratedNo}
+                />}
+              {item?.Captions?.HclNo && hciSlipNo && <FlotingInput
+                keyboardType="default"
+                label={item?.Captions?.HclNo}
+                value={hciSlipNo}
+                // editable={!isRelianceQR}
+                autoCapitalize={"characters"}
+
+                onChangeTextCallback={setHciSlipNo}
+              />}
+              {item?.Captions?.RecNo &&
+                <FlotingInput
+                  label={item?.Captions?.RecNo}
+                  value={hsbcDepositSlipNo}
+                  onChangeTextCallback={setHsbcDepositSlipNo}
+                  autoCapitalize={"characters"}
+                  editable={CodeId ? false : true}
+
+                />}
+
+              {item?.Captions?.PisDate &&
+                <TouchableOpacity onPress={() => setShowCalender(!isRelianceQR)}>
+                  <FlotingInput
+                    editable={false}
+                    label={item?.Captions?.PisDate}
+                    value={slipDate}
+                    onChangeTextCallback={setSlipDate}
+                  />
+                  <View style={[styles.righticon2]}>
+                    <Calendarsvg />
+                  </View>
+                </TouchableOpacity>
+              }
+
+
+              <FlotingInput
+                editable={item.ClientCode?.length > 1}
+                onPressIn={() => {
+                  if (item.ClientCode?.length > 1) {
+                    setClientCodeModal(true)
+                  }
+                }}
+                label={'ClientCode'}
+                value={clientCode}
+              />
+              <Text style={styles.denomiamount}>Denomination Amount</Text>
+              <Text style={styles.denomiPer}>as per india currency</Text>
+              <View>
+                <View>
+
+                </View>
+
+
+                <FlashList
+                  data={denominationData}
+                  extraData={{ denominationData, CodeId, utr }}
+                  nestedScrollEnabled={true}
+                  renderItem={renderAmountItem}
+                  keyExtractor={(item) => `${item.key} + ${item.val}`}
+                  estimatedItemSize={9}
+                />
+              </View>
+
+              <TouchableOpacity onPress={() => setRemarkVisible(true)}>
+
                 <FlotingInput
                   editable={false}
-                  label='Select Child Remark'
-                  value={received}
+                  label={'Select Remark ✱'}
+                  value={remark}
                   onChangeTextCallback={(text) => {
                     setRemark(text)
                   }}
                 />
 
-                <TouchableOpacity onPress={() => setChildRemarksVisible(true)}
-                  style={[styles.righticon2]}
-                >
+                <View style={[styles.righticon2]}>
                   <OnelineDropdownSvg />
-                </TouchableOpacity>
+                </View>
               </TouchableOpacity>
 
-              <FlotingInput
-                label='Additional Remarks'
-                multiline={true}
-                value={additionalRemarks}
-                onChangeTextCallback={(text) => {
-                  setAdditionalRemarks(text)
+              {remark !== '' && (
+                <View>
+                  <TouchableOpacity onPress={() => setChildRemarksVisible(true)}>
+                    <FlotingInput
+                      editable={false}
+                      label='Select Child Remark ✱'
+                      value={received}
+                      onChangeTextCallback={(text) => {
+                        setRemark(text)
+                      }}
+                    />
+
+                    <TouchableOpacity onPress={() => setChildRemarksVisible(true)}
+                      style={[styles.righticon2]}
+                    >
+                      <OnelineDropdownSvg />
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+
+                  <FlotingInput
+                    label='Additional Remarks ✱'
+                    value={additionalRemarks}
+                    onChangeTextCallback={(text) => {
+                      setAdditionalRemarks(text)
+                    }}
+                  />
+                </View>
+              )}
+              <BottomSheet
+                isVisible={remarkVisible}
+                onBackdropPress={() => setRemarkVisible(false)}
+              >
+                <View style={styles.centeredView}>
+                  <View style={styles.receivedModalContent}>
+                    <ScrollView>
+
+                      {remarkList?.map((reason, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={styles.reasonTextContainer}
+                          onPress={async () => {
+                            setIsLoad(true)
+
+                            await fetchChildRemarkList(reason);
+                            setIsLoad(false)
+
+                            setRemark(reason);
+                            setRemarkVisible(false);
+                          }}>
+                          <Text style={styles.reasonText}>{reason}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+
+                  </View>
+                </View>
+              </BottomSheet>
+              <BottomSheet
+                isVisible={clientCodeModalVisible}
+                onBackdropPress={() => setClientCodeModal(false)}
+              >
+                <View style={styles.centeredView}>
+
+                  <View style={styles.receivedModalContent}>
+                    <ScrollView>
+
+                      {item.ClientCode?.map((code, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={styles.reasonTextContainer}
+                          onPress={() => {
+                            setClientCode(code)
+                            setClientCodeModal(false);
+                          }}>
+                          <Text style={styles.reasonText}>{code}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+
+                  </View>
+                </View>
+              </BottomSheet>
+              <Modal
+                transparent={true}
+                animationType="slide"
+                visible={childRemarksVisible}
+                onRequestClose={() => setChildRemarksVisible(false)} >
+
+                <View style={styles.centeredView}>
+                  <View style={styles.receivedModalContent}>
+                    <ScrollView>
+                      {childRemarkList?.map((childRemark, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={styles.reasonTextContainer}
+                          onPress={async () => {
+                            setReceived(childRemark);
+                            setChildRemarksVisible(false);
+                          }}>
+                          <Text style={styles.reasonText}>{childRemark}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+
+                  </View>
+                </View>
+              </Modal>
+
+              <Modal
+                transparent={true}
+                animationType="slide"
+                visible={detailsModalVisible}
+              >
+                <View style={styles.modalContainer}>
+                  <View style={styles.detailmodalContent}>
+                    <Text style={styles.modalTitle}>{`Radiant Sandesh`}</Text>
+                    <Text style={styles.modalLabel}>
+                      {transactionCount > 1
+                        ? `${cashPickupData.length} of ${transactionCount} receipts submitted. Are you sure you want to submit?`
+                        : 'Are you sure you want to submit?'}
+                    </Text>
+                    <View style={styles.modalButtons}>
+                      <TouchableOpacity style={[styles.modalButton, { borderColor: `${colorConfig.secondaryColor}80`, borderWidth: 1 }]} onPress={handleCancelPress}>
+                        <Text style={[styles.modalButtonText,]}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[styles.modalButton, { backgroundColor: colorConfig.secondaryColor, }]}
+                        onPress={handleSubmit}>
+                        <Text style={[styles.modalButtonText, { color: '#fff' }]}>Confirm And Submit</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </Modal>
+              {(!CodeId || onlineAm) && <TouchableOpacity onPress={handleUpload} >
+                <FlotingInput
+                  editable={false}
+                  label={onlineAm ? 'Upload Payment Proof' : 'Pickup Slip Upload'}
+                />
+
+                <View style={[styles.righticon2]}>
+                  <LottieView
+                    autoPlay={true}
+                    loop={true}
+                    style={styles.lotiimg}
+                    source={
+                      currentPreviewImage ?
+                        require('../../../utils/lottieIcons/View-Docs.json')
+                        : require('../../../utils/lottieIcons/upload-file.json')}
+                  />
+                </View>
+
+              </TouchableOpacity>}
+
+              {isLoading2 && <ShowLoader />}
+              <DynamicButton
+
+                onPress={async () => {
+                  setIsloading2(true);
+
+                  handlePickupData();
+                  console.error(item.OtpDay)
+                  if (isotpSended) {
+
+                    handleSubmit();
+                  }
+
+
+                }}
+                title={isLoading2 ? <ActivityIndicator size={'large'}
+                  color={colorConfig.labelColor} /> : 'Submit'}
+                styleoveride={undefined} />
+              <ImagePreviewModal
+                visible={previewVisible}
+                imageUri={currentPreviewImageRef.current}
+                onClose={() => setPreviewVisible(false)}
+                reUpload={handleReUpload}
+                saveClose={() => {
+                  setCurrentPreviewImage('');
+                  setPreviewVisible(false)
                 }}
               />
-            </View>
-          )}
-          <BottomSheet
-            isVisible={remarkVisible}
-            onBackdropPress={() => setRemarkVisible(false)}
-          >
-            <View style={styles.centeredView}>
-              <View style={styles.receivedModalContent}>
-                <ScrollView>
 
-                  {remarkList?.map((reason, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={styles.reasonTextContainer}
-                      onPress={async () => {
-                        await fetchChildRemarkList(reason);
-                        setRemark(reason);
-                        setRemarkVisible(false);
-                      }}>
-                      <Text style={styles.reasonText}>{reason}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+              <VerifyMobileNumber
+                isCpin={item.OtpDay === ""}
+                handleSubmit={async (text) => {
+                  if (item.OtpDay === "") {
+                    console.log('**CALLED1234')
+                    if (text === item.PinNo) {
+                      submitCashPickupRequest();
+                      setMobilemodel(false);
+                    }
+                    else {
+                      console.log('**CALLED12342')
+                      ToastAndroid.showWithGravity(
+                        'Invalid Pin',
+                        ToastAndroid.SHORT,
+                        ToastAndroid.BOTTOM
+                      );
 
-              </View>
-            </View>
-          </BottomSheet>
-          <BottomSheet
-            isVisible={clientCodeModalVisible}
-            onBackdropPress={() => setClientCodeModal(false)}
-          >
-            <View style={styles.centeredView}>
+                    }
+                    return;
+                  }
+                  if (item.OtpDay === 'AxisTransaction') {
+                    setIsLoad(true)
 
-              <View style={styles.receivedModalContent}>
-                <ScrollView>
+                    console.log('**CALLED123224')
+                    const res = await setRadiantDynamicOtp(item.TransId, text, item.ShopId, amount, item.OtpDay, '', CodeId ? item2.Email : '');
 
-                  {item.ClientCode?.map((code, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={styles.reasonTextContainer}
-                      onPress={() => {
-                        setClientCode(code)
-                        setClientCodeModal(false);
-                      }}>
-                      <Text style={styles.reasonText}>{code}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+                    if (res) {
+                      console.log('**CALLED122234')
+                      setClientOtp(res?.Content?.ADDINFO?.otp_pin || '');
+                    }
+                    closeMobileModal();
+                    setIsLoad(false)
+                    return;
+                  }
 
-              </View>
-            </View>
-          </BottomSheet>
-          <Modal
-            transparent={true}
-            animationType="slide"
-            visible={childRemarksVisible}
-            onRequestClose={() => setChildRemarksVisible(false)} >
-
-            <View style={styles.centeredView}>
-              <View style={styles.receivedModalContent}>
-                <ScrollView>
-                  {childRemarkList?.map((childRemark, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={styles.reasonTextContainer}
-                      onPress={async () => {
-                        setReceived(childRemark);
-                        setChildRemarksVisible(false);
-                      }}>
-                      <Text style={styles.reasonText}>{childRemark}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-
-              </View>
-            </View>
-          </Modal>
-
-          <Modal
-            transparent={true}
-            animationType="slide"
-            visible={detailsModalVisible}
-          >
-            <View style={styles.modalContainer}>
-              <View style={styles.detailmodalContent}>
-                <Text style={styles.modalTitle}>{`Radiant Sandesh`}</Text>
-                <Text style={styles.modalLabel}>{'Are you sure you want to submit?'}</Text>
-                <View style={styles.modalButtons}>
-                  <TouchableOpacity style={styles.modalButton} onPress={handleCancelPress}>
-                    <Text style={styles.modalButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.modalButton} onPress={handleSubmit}>
-                    <Text style={styles.modalButtonText}>Confirm</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
-          <DynamicButton title={'Submit'} onPress={() => handlePickupData()} />
-          <VerifyMobileNumber isCpin={item.OtpDay === ""} handleSubmit={async (text) => {
-
-
-
-            if (item.OtpDay === "") {
-              if (text === item.PinNo) {
-                submitCashPickupRequest();
-                setMobilemodel(false);
-              }
-              else {
-                ToastAndroid.showWithGravity(
-                  'Invalid Pin',
-                  ToastAndroid.SHORT,
-                  ToastAndroid.BOTTOM
-                );
-
-              }
-              return;
-            }
-            if (item.OtpDay === 'AxisTransaction') {
-              await setRadiantDynamicOtp(item.TransId, text, item.ShopId, amount, item.OtpDay, '');
-
-              if (dynamicOtpResponse) {
-
-                setClientOtp(dynamicOtpResponse?.Content?.ADDINFO?.otp_pin || '');
-              }
-              closeMobileModal();
-              return;
-            }
-
-
-            // if(otpResponse){
-            //  setClientOtp(otpResponse?.Content?.ADDINFO?.otp_pin || '');
-            // }
-            // closeMobileModal();
-          }} visible={mobilemodel} onClose={() => setMobilemodel(false)}
-          />
-          <OTPModal
-            setShowOtpModal={setOtpModalVisible}
-            disabled={mobileOtp.length !== 4}
-            showOtpModal={otpModalVisible}
-            //setMobileOtp={setMailOtp}
-            setMobileOtp={setMobileOtp}
-            verifyOtp={() => {
-              //Verify OTP
-
-              if (clientOtp === mobileOtp) {
-                submitCashPickupRequest();
-                setOtpModalVisible(false);
-                return;
-              }
-              ToastAndroid.showWithGravity(
-                'Invalid OTP',
-                ToastAndroid.SHORT,
-                ToastAndroid.BOTTOM
-              );
-            }
-
-            }
-          />
-          <Modal
-            transparent={true}
-            animationType="slide"
-            visible={modalVisible}
-          >
-            <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <View>
-
-                  <Text style={styles.modalTitle}>Radiant CMS</Text>
-                  <Text style={styles.modalText}>Enter No of Transactions</Text>
-                </View>
-
-                <FlotingInput
-                  label="total receipts"
-                  placeholderTextColor="#000"
-                  numberOfLines={1}
-                  value={transactionCount}
-                  onChangeTextCallback={(count) => {
-                    setTransactionCount(count)
-                  }}
-                  keyboardType="numeric"
-                />
-                <View style={styles.modalButtons}>
-                  <TouchableOpacity style={styles.modalButton} onPress={handleOkPress}>
-                    <Text style={styles.modalButtonText}>OK</Text>
-                  </TouchableOpacity>
-
-                </View>
-              </View>
-            </View>
-          </Modal>
-
-
-          <BottomSheet
-            onBackdropPress={() => setShowCalender(false)}
-            isVisible={showCalender}
-          >
-            <View style={styles.bottomSheetContent}>
-              <CustomCalendar
-                onDateSelected={handleDateChange}
-                maxDate={moment().toDate()}
+                }} visible={mobilemodel} onClose={() => setMobilemodel(false)}
               />
+
+              <OTPModal
+                email={item2?.Email || ''}
+                setShowOtpModal={setOtpModalVisible}
+                disabled={mobileOtp.length !== 4}
+                showOtpModal={otpModalVisible}
+                setMobileOtp={setMobileOtp}
+                verifyOtp={() => {
+
+
+                  if (clientOtp === mobileOtp) {
+                    Keyboard.dismiss();  // Close the keyboard
+
+                    submitCashPickupRequest();
+                    setOtpModalVisible(false);
+                    return;
+                  }
+
+                  ToastAndroid.showWithGravity(
+                    'Invalid OTP',
+                    ToastAndroid.SHORT,
+                    ToastAndroid.BOTTOM
+                  );
+                }}
+              />
+              <Modal
+                transparent={true}
+                animationType="slide"
+                visible={modalVisible}
+
+              >
+                <View style={styles.modalContainer}>
+                  <View style={styles.modalContent}>
+                    <View>
+
+                      <Text style={styles.modalTitle}>Radiant CMS Slip Count</Text>
+                      <Text style={styles.modalText}>Enter the number of slips for which you want to fill the details</Text>
+                    </View>
+
+                    <FlotingInput
+                      label="total receipts"
+                      placeholderTextColor="#000"
+                      numberOfLines={1}
+                      maxLength={1}
+                      value={transactionCount}
+                      onChangeTextCallback={(count) => {
+                        console.warn(modalVisible, transactionCount, count);
+
+                        if (count) {
+                          console.warn(modalVisible, transactionCount, count);
+
+
+                          setModalVisible(false);
+
+                        }
+                        setTransactionCount(count);
+
+                      }}
+                      keyboardType="numeric"
+                      autoFocus={modalVisible} inputstyle={undefined} labelinputstyle={undefined} />
+
+                  </View>
+                </View>
+              </Modal>
+
+
+              <BottomSheet
+                onBackdropPress={() => setShowCalender(false)}
+                isVisible={showCalender}
+              >
+                <View style={styles.bottomSheetContent}>
+                  <CustomCalendar
+                    onDateSelected={handleDateChange}
+                    maxDate={moment().toDate()}
+                  />
+                </View>
+              </BottomSheet>
+
             </View>
-          </BottomSheet>
-          {isLoading &&
-            <ActivityIndicator color={colorConfig.primaryColor}
-              size="large" style={{
-                marginTop: wScale(50),
-                position: 'absolute', top: 0, left: 0, bottom: 0, right: 0
-              }} />}
-        </View>
-      </ScrollView>
-    </View>
+          </ScrollView >
+        </View >)}
+    </>
   );
+
+
 };
 
 const styles = StyleSheet.create({
@@ -831,7 +1720,7 @@ const styles = StyleSheet.create({
   },
   container: {
     paddingHorizontal: wScale(15),
-    paddingTop: hScale(20),
+    paddingTop: hScale(10),
     flex: 1,
     paddingBottom: hScale(20)
   },
@@ -856,28 +1745,41 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: FontSize.large,
     fontWeight: 'bold',
+    paddingBottom: hScale(0),
+    textAlign: 'center',
+    textTransform: 'uppercase'
+  },
+  denomiPer: {
+    color: '#000',
+    fontSize: FontSize.regular,
     paddingBottom: hScale(10),
-    textAlign: 'center'
+    textAlign: 'center',
+    textTransform: 'capitalize',
+    letterSpacing: 2
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
   },
   modalContent: {
-    width: '85%',
-    height: hScale(220),
+    width: '65%',
+    height: hScale(180),
     backgroundColor: '#fff',
     borderRadius: 5,
     padding: wScale(20),
     justifyContent: 'space-between',
+    paddingBottom: 0
+
   },
   detailmodalContent: {
     width: '85%',
     backgroundColor: '#fff',
     borderRadius: 5,
-    padding: wScale(20),
+    paddingHorizontal: wScale(20),
+    paddingVertical: wScale(24),
+
     justifyContent: 'space-between',
   },
   modalTitle: {
@@ -885,10 +1787,13 @@ const styles = StyleSheet.create({
     fontSize: FontSize.large,
     fontWeight: 'bold',
     marginBottom: hScale(10),
+    textAlign: 'center'
   },
   modalText: {
     color: '#000',
     marginBottom: hScale(10),
+    textAlign: 'justify'
+
   },
   righticon2: {
     position: "absolute",
@@ -909,12 +1814,13 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     padding: wScale(10),
-    borderRadius: 5,
     marginHorizontal: wScale(5),
     alignItems: 'center',
   },
   modalButtonText: {
     color: '#000',
+    fontSize: wScale(14),
+    fontWeight: 'bold'
   },
   reasonTextContainer: {
     padding: wScale(10),
@@ -950,23 +1856,25 @@ const styles = StyleSheet.create({
     fontSize: FontSize.medium,
     marginVertical: hScale(5),
   },
-  rightin: {
-    alignItems: 'flex-end',
-  },
+
   itemContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   pickupCount: {
-    color: 'yellow',
-    fontSize: FontSize.large,
-    marginLeft: wScale(10),
+    color: '#eab676',
+    fontSize: FontSize.xSmall,
+    marginLeft: wScale(1),
     fontWeight: 'bold'
   },
+  mrgtop: {
+    alignItems: 'center'
+  },
   clientCodeText: {
-    color: 'yellow',
+    color: '#eab676',
     fontSize: wScale(14),
+    marginLeft: wScale(3)
   },
   numberview: {
     flexDirection: 'row',
@@ -974,6 +1882,72 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: wScale(-3)
   },
-});
+  header: {
+    paddingHorizontal: wScale(10),
+    paddingVertical: hScale(10),
+    paddingBottom: hScale(0),
+    backgroundColor: '#fff',
+    borderTopWidth: 0,
+    borderRadius: 10,
+    borderTopRightRadius: 0,
+    borderTopLeftRadius: 0
+  },
+  titletotal: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: hScale(10),
+    paddingHorizontal: wScale(5),
+    borderRadius: 100,
+    paddingVertical: hScale(5)
 
+  },
+  check: {
+    height: wScale(25),
+    width: wScale(25),
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: wScale(10)
+  },
+  title: {
+    fontSize: wScale(20),
+    fontWeight: 'bold',
+    color: '#000'
+  },
+  lotiimg: {
+    height: hScale(44),
+    width: wScale(44),
+  },
+  headerAmountView: {
+    flex: 1,
+    justifyContent: 'center',
+
+  },
+
+  headerLabel: {
+    fontSize: wScale(10),
+    textAlign: 'center',
+    color: '#fff'
+  },
+  headerValue: {
+    fontSize: wScale(16),
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#fff'
+  },
+  boder: {
+    height: '100%',
+    width: wScale(1),
+    backgroundColor: '#fff'
+  },
+  miss: {
+    color: 'red',
+    fontSize: wScale(9),
+    width: wScale(60),
+    textAlign: 'right',
+    marginTop: hScale(-4)
+  }
+
+});
 export default PicUpScreen;

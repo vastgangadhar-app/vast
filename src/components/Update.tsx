@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Animated, TouchableOpacity,Text,View, Image, Easing, Linking} from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { wScale } from "../utils/styles/dimensions";
+import { APP_URLS } from "../utils/network/urls";
 
 const Update =(isVer)=>{
     const [fadeAnim] = useState(new Animated.Value(0));

@@ -2,14 +2,15 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Modal } from 'react-native';
 import ClosseModalSvg from '../features/drawer/svgimgcomponents/ClosseModal';
+import { useSelector } from 'react-redux';
+import { RootState } from '../reduxUtils/store';
+import { hScale, wScale } from '../utils/styles/dimensions';
 
 const VerifyMobileNumber = ({ visible, onClose, isCpin = false, handleSubmit }) => {
     const [mobileNumber, setMobileNumber] = useState('');
+    const { colorConfig, } = useSelector((state: RootState) => state.userInfo);
 
-    // const handleSubmit = () => {
-    //     console.log("Mobile Number Submitted:", mobileNumber);
-    //     onClose();
-    // };
+
 
     return (
         <View style={styles.container}>
@@ -17,27 +18,26 @@ const VerifyMobileNumber = ({ visible, onClose, isCpin = false, handleSubmit }) 
                 transparent={true}
                 animationType="slide"
                 visible={visible}
-                onRequestClose={onClose} 
+                onRequestClose={onClose}
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
                         <View style={styles.header}>
                             <Text style={styles.modalTitle}> {isCpin ? 'Verify CPIN' : 'Verify Mobile Number'}</Text>
                             <TouchableOpacity onPress={onClose}>
-                                {/* <Text style={styles.cancelText}>Cancel</Text> */}
                                 <ClosseModalSvg />
                             </TouchableOpacity>
                         </View>
                         <TextInput
                             style={styles.input}
                             placeholder={isCpin ? 'Enter your Cpin' : "Enter your mobile number"}
-                            placeholderTextColor="#aaa"
+                            placeholderTextColor="#000"
                             value={mobileNumber}
                             onChangeText={setMobileNumber}
                             keyboardType="phone-pad"
                         />
                         <View style={styles.modalButtons}>
-                            <TouchableOpacity style={styles.button} onPress={() => handleSubmit(mobileNumber)}>
+                            <TouchableOpacity style={[styles.button, { backgroundColor: colorConfig.secondaryColor }]} onPress={() => handleSubmit(mobileNumber)}>
                                 <Text style={styles.buttonText}>Submit</Text>
                             </TouchableOpacity>
                         </View>
@@ -62,10 +62,10 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContent: {
-        width: '85%',
+        width: wScale(330), // Approx 85% of typical screen width
         backgroundColor: '#fff',
-        borderRadius: 10,
-        padding: 20,
+        borderRadius: wScale(10),
+        padding: wScale(20),
         alignItems: 'center',
     },
     header: {
@@ -73,24 +73,28 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         width: '100%',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: hScale(20),
     },
     modalTitle: {
-        fontSize: 20,
+        fontSize: hScale(20),
         fontWeight: 'bold',
+        color: '#000',
     },
     cancelText: {
         color: '#e45a55',
         fontWeight: 'bold',
+        fontSize: hScale(16),
     },
     input: {
         width: '100%',
-        height: 40,
-        borderColor: '#ccc',
+        height: hScale(40),
+        borderColor: '#000',
         borderWidth: 1,
-        borderRadius: 5,
-        marginBottom: 20,
-        paddingHorizontal: 10,
+        borderRadius: wScale(5),
+        marginBottom: hScale(20),
+        paddingHorizontal: wScale(10),
+        color: '#000',
+        fontSize: hScale(16),
     },
     modalButtons: {
         flexDirection: 'row',
@@ -99,16 +103,18 @@ const styles = StyleSheet.create({
     },
     button: {
         flex: 1,
-        marginHorizontal: 5,
-        padding: 10,
-        borderRadius: 5,
+        marginHorizontal: wScale(5),
+        padding: wScale(10),
+        borderRadius: wScale(5),
         backgroundColor: '#e45a55',
         alignItems: 'center',
     },
     buttonText: {
         color: '#fff',
         fontWeight: 'bold',
+        fontSize: hScale(16),
     },
 });
+
 
 export default VerifyMobileNumber;

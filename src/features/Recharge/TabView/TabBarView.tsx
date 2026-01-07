@@ -4,6 +4,8 @@ import { State } from 'react-native-gesture-handler';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../reduxUtils/store';
 import { hScale, wScale } from '../../../utils/styles/dimensions';
+import CheckBalSvg from '../../drawer/svgimgcomponents/CheckBlreporSvg';
+import CheckSvg from '../../drawer/svgimgcomponents/CheckSvg';
 
 const TabBar = ({ onPress1, onPress2, Selected, Unselected, tabButtonstyle,tabTextstyle }) => {
   const { colorConfig } = useSelector((State: RootState) => State.userInfo)
@@ -34,7 +36,8 @@ const TabBar = ({ onPress1, onPress2, Selected, Unselected, tabButtonstyle,tabTe
             selectedTab === 1 && styles.rightbutn2,
           ]}>
           {selectedTab === 1 && (
-            <Text style={[styles.selectedButtonText, {}]}>✓</Text>
+            // <Text style={[styles.selectedButtonText, {}]}>✓</Text>
+            <CheckSvg size={10} />
           )}
         </View>
       </TouchableOpacity>
@@ -51,7 +54,9 @@ const TabBar = ({ onPress1, onPress2, Selected, Unselected, tabButtonstyle,tabTe
             selectedTab === 2 && styles.rightbutn2,
           ]}>
           {selectedTab === 2 && (
-            <Text style={[styles.selectedButtonText, {}]}>✓</Text>
+            // <Text style={[styles.selectedButtonText, {}]}>✓</Text>
+            <CheckSvg size={10} />
+
           )}
         </View>
       </TouchableOpacity>

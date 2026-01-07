@@ -15,7 +15,6 @@ import { colors } from '../../utils/styles/theme';
 import useAxiosHook from '../../utils/network/AxiosClient';
 import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
 import { useSelector } from 'react-redux';
-import { useLocationHook } from '../../utils/hooks/useLocationHook';
 import { encrypt } from '../../utils/encryptionUtils';
 import { SCREEN_HEIGHT, hScale, wScale } from '../../utils/styles/dimensions';
 import { RootState } from '../../reduxUtils/store';
@@ -30,6 +29,7 @@ import { useNavigation } from '@react-navigation/native';
 import RecentHistory from '../../components/RecentHistoryBottomSheet';
 import ShowLoader from '../../components/ShowLoder';
 import RecentText from '../../components/RecentText';
+import { useLocationHook } from '../../hooks/useLocationHook';
 const ElectricityScreen = () => {
   const { colorConfig } = useSelector((state: RootState) => state.userInfo)
   const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
@@ -52,8 +52,6 @@ const ElectricityScreen = () => {
   const [maxlen, setMaxLen] = useState(10);
   const [isInfo, setIsinfo] = useState(false);
   const [isOp, setIsop] = useState(false);
-  const [stateid, setStateId] = useState('');
-  const [setState, setsetState] = useState(translate('Select Your State'));
   const [operatorList, setoperatorList] = useState([]);
   const [isvisible, setIsvisible] = useState(false);
   const [datatatype, setdatatype] = useState('');
@@ -138,10 +136,14 @@ const ElectricityScreen = () => {
 
 
   async function billInfo() {
+
+    ViewbillInfoStatus()
     try {
       // const url = `${APP_URLS.rechargeViewBill}billnumber=210324010714&Operator=EAV&billunit=Jaipur Vidyut Vitran Nigam - RAJASTHAN&ProcessingCycle&acno&lt&ViewBill=Y`
-
       const url = `${APP_URLS.rechargeViewBill}billnumber=${consumerNo}&Operator=${optcode}&billunit=${agencyCode}&ProcessingCycle&acno&lt&ViewBill=Y`;
+      console.log(url)
+
+      
       const res = await get({ url: url });
       console.log(res, '==============**---*====')
       if (res['RESULT'] === 0) {
@@ -201,7 +203,9 @@ const ElectricityScreen = () => {
         Operatorcode: optcode,
       };
       const url = `${APP_URLS.viewbillstatuscheck}${optcode}`;
-      const res = await post({ url: url, data, config: config });
+
+      console.log(url)
+      const res = await post({ url: url, data});
       const billSts = res['RESULT'];
       if (billSts === 'Y') {
         // setIsinfo(true);
@@ -231,7 +235,7 @@ const ElectricityScreen = () => {
   }
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
-  const { userId } = useSelector((state: RootState) => state.userInfo);
+  const { userId ,Loc_Data} = useSelector((state: RootState) => state.userInfo);
   const { latitude, longitude } = useLocationHook();
 
   const readLatLongFromStorage = async () => {
@@ -251,11 +255,9 @@ const ElectricityScreen = () => {
       return null;
     }
   };
-
-
   const onRechargePress = useCallback(async () => {
 
-    const loc = await readLatLongFromStorage()
+    
     setBottomSheetVisible(false);
     setShowLoader(true);
     const mobileNetwork = await getNetworkCarrier();
@@ -265,8 +267,8 @@ const ElectricityScreen = () => {
       consumerNo,
       optcode,
       amount,
-      loc?.latitude,
-      loc?.longitude,
+      Loc_Data['latitude'],Loc_Data['longitude'],
+
       'city',
       'address',
       'postcode',
@@ -306,7 +308,12 @@ const ElectricityScreen = () => {
       });
       console.log(res, '*-*-*-*');
       console.log(status, '*-*-*-*');
+      if(res.status ==='False'){
+        alert(res.message);
+        setShowLoader(false);
 
+        return
+      }
       status = res.Response;
       Message = res.Message;
       await recenttransactions();
@@ -325,14 +332,15 @@ const ElectricityScreen = () => {
     setShowLoader(false);
 
     navigation.navigate('Rechargedetails', {
-      mobileNumber: consumerNo,
-      Amount: amount,
-      operator: opt,
-      status,
-      reqId,
-      reqTime,
-      Message
+      mobileNumber: consumerNo ?? '',  // Default to an empty string if null or undefined
+      Amount: amount ?? 0,             // Default to 0 if null or undefined
+      operator: opt ?? 'N/A',          // Default to 'N/A' if null or undefined
+      status: status ?? 'Unknown',     // Default to 'Unknown' if null or undefined
+      reqId: reqId ?? '',              // Default to an empty string if null or undefined
+      reqTime: reqTime ?? new Date().toISOString(),  // Default to current time if null or undefined
+      Message: Message ?? 'No message available'  // Default to 'No message available' if null or undefined
     });
+    
   }, [
     amount,
     getMobileIp,
@@ -344,8 +352,6 @@ const ElectricityScreen = () => {
     post,
     userId,
   ]);
-
-
   async function GetOptlist(state_id: any) {
     await setoperatorList([]);
     await setopt(translate('Select Your Operator'));
@@ -367,7 +373,6 @@ const ElectricityScreen = () => {
       throw error;
     }
   }
-
   const handleItemPress = item => {
     console.log(item, 'iiiiiiiiiiiiiiiiiiiiiiii')
     setAccntvisivility(false);
@@ -423,7 +428,6 @@ const ElectricityScreen = () => {
     }
 
   };
-
   return (
     <View style={styles.main}>
       <AppBarSecond
@@ -470,8 +474,11 @@ const ElectricityScreen = () => {
           <View>
 
             <FlotingInput label={accnumhint} value={agencyCode}
-              onChangeTextCallback={text => setAgencyCode(text)}
-            />
+            onChangeTextCallback={text => setAgencyCode(text)} 
+            inputstyle={undefined} 
+            autoCapitalize='characters'
+
+            labelinputstyle={undefined}            />
 
           </View>
         )}
@@ -481,6 +488,8 @@ const ElectricityScreen = () => {
 
             <FlotingInput label={accnumhint2}
               value={agencyCode2}
+              autoCapitalize='characters'
+
               onChangeTextCallback={text => setAgencyCode2(text)} />
             <View style={styles.righticon2}>
               <TouchableOpacity style={styles.infobtntex}>
@@ -507,6 +516,7 @@ const ElectricityScreen = () => {
 
         <View>
           <FlotingInput label={paramname}
+        autoCapitalize='characters'
 
             onChangeTextCallback={text => {
               setconsumerNo(text)
@@ -519,7 +529,6 @@ const ElectricityScreen = () => {
             }
             }
             value={consumerNo}
-            keyboardType="numeric"
           />
 
 
@@ -541,6 +550,8 @@ const ElectricityScreen = () => {
 
 
         <FlotingInput label={'Enter Amount'}
+             maxLength={5}
+             
           keyboardType="numeric"
           value={amount || billAmount || ''}
           onChangeTextCallback={text => setAmount(text)}
@@ -623,7 +634,7 @@ const styles = StyleSheet.create({
   },
   circletext: {
     position: "absolute",
-    top: hScale(30),
+    top: hScale(38),
     paddingLeft: wScale(15),
     fontSize: wScale(12),
   },

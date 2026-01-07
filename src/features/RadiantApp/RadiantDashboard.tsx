@@ -3,17 +3,27 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native
 import { useNavigation } from '@react-navigation/native';
 import { hScale, wScale } from '../../utils/styles/dimensions';
 import RadintTransactSvg from '../drawer/svgimgcomponents/RadintTransactSvg';
-import RadintPrintSvg from '../drawer/svgimgcomponents/RadintPrintSvg ';
 import RadintCancleSvg from '../drawer/svgimgcomponents/RadintCancleSvg';
 import RadintReceiptSvg from '../drawer/svgimgcomponents/RadintReceiptSvg';
 import RadintEditSvg from '../drawer/svgimgcomponents/RadintEditSvg';
 import RadintPinSvg from '../drawer/svgimgcomponents/RadintPinSvg';
 import NextErrowSvg from '../drawer/svgimgcomponents/NextErrowSvg';
 import { useLocationHook } from '../../utils/hooks/useLocationHook';
+import useAxiosHook from '../../utils/network/AxiosClient';
+import { APP_URLS } from '../../utils/network/urls';
 
 const RadiantDashboard = () => {
   const navigation = useNavigation();
-  const { latitude, longitude, isLocationPermissionGranted, getLocation, checkLocationPermissionStatus, getLatLongValue } = useLocationHook();
+  const {
+    latitude,
+    longitude,
+    isLocationPermissionGranted,
+    getLocation,
+    checkLocationPermissionStatus,
+    getLatLongValue,
+  } = useLocationHook();
+
+  const { post } = useAxiosHook();
 
   const gridItems = [
     { id: '1', title: 'Transactions', screen: 'RadiantTransactionScreen', color: '#e45a55', icon: <RadintTransactSvg /> },
@@ -21,13 +31,10 @@ const RadiantDashboard = () => {
     { id: '3', title: 'Cancel Receipt', screen: 'CancelReceiptScreen', color: '#5dbbff', icon: <RadintCancleSvg /> },
     { id: '4', title: 'EOD Receipt', screen: 'EODReceiptScreen', color: '#ad6fda', icon: <RadintReceiptSvg /> },
   ];
+
   const handleGridItemPress = (screen) => {
     navigation.navigate(screen);
   };
-useEffect(()=>{
-console.log(latitude, longitude, isLocationPermissionGranted,)
-},[])
-
 
 
 
@@ -38,7 +45,7 @@ console.log(latitude, longitude, isLocationPermissionGranted,)
       onPress={() => handleGridItemPress(item.screen)}
     >
       {item.icon}
-      <View style={styles.nextrow}>
+      <View style={styles.nextRow}>
         <Text style={styles.gridItemText}>{item.title}</Text>
         <NextErrowSvg />
       </View>
@@ -49,25 +56,21 @@ console.log(latitude, longitude, isLocationPermissionGranted,)
     <View style={styles.container}>
       <Text style={styles.header}>Radiant Dashboard</Text>
 
-
-
-      <View>
-        <FlatList
-          data={gridItems}
-          renderItem={renderGridItem}
-          keyExtractor={item => item.id}
-          numColumns={2}
-          scrollEnabled={false}
-        />
-      </View>
+      <FlatList
+        data={gridItems}
+        renderItem={renderGridItem}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        scrollEnabled={false}
+      />
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button}>
           <RadintEditSvg />
           <Text style={styles.buttonText}>Edit Receipt</Text>
         </TouchableOpacity>
-     
-        <TouchableOpacity style={[styles.button, {}]}>
+
+        <TouchableOpacity style={styles.button}>
           <RadintPinSvg />
           <Text style={styles.buttonText}>Customer Pin Change</Text>
         </TouchableOpacity>
@@ -87,7 +90,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#ab7d53',
     marginVertical: hScale(10),
-    paddingHorizontal: wScale(10)
+    paddingHorizontal: wScale(10),
   },
   gridItem: {
     height: hScale(232),
@@ -95,8 +98,9 @@ const styles = StyleSheet.create({
     elevation: 5,
     alignItems: 'center',
     justifyContent: 'center',
+    margin: wScale(5), // Added margin for spacing
   },
-  nextrow: {
+  nextRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: hScale(8),
@@ -106,26 +110,27 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
     paddingBottom: hScale(2),
-    paddingRight: wScale(5)
+    paddingRight: wScale(5),
   },
   buttonContainer: {
+    marginTop: hScale(20), // Added margin to separate the buttons from the grid
   },
   button: {
     paddingVertical: hScale(10),
     backgroundColor: '#56a6e4',
     alignItems: 'center',
-    borderRadius: wScale(0),
+    borderRadius: wScale(8), // Added radius for rounded corners
     elevation: 3,
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: hScale(15)
+    marginBottom: hScale(15),
   },
   buttonText: {
     color: '#fff',
-    fontSize: wScale(25),
+    fontSize: wScale(18), 
     fontWeight: '400',
-    paddingLeft: wScale(10)
+    paddingLeft: wScale(10),
   },
 });
 

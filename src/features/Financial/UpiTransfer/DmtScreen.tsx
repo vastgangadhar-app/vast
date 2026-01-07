@@ -65,11 +65,12 @@ const UpiDmtScreen = ({ route }) => {
 
     }
   }
-  const { latitude, longitude } = useLocationHook();
+  const { userId ,Loc_Data} = useSelector((state: RootState) => state.userInfo);
+
+  const { latitude, longitude } = Loc_Data;
 
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
-  const { userId } = useSelector((state: RootState) => state.userInfo);
   const { colorConfig } = useSelector((state: RootState) => state.userInfo);
 
   const mobileNetwork = getNetworkCarrier();

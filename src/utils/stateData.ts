@@ -34,4 +34,5 @@ export const stateData = [
   {stateId: 33, stateName: 'Uttar Pradesh'},
   {stateId: 34, stateName: 'Uttarakhand'},
   {stateId: 35, stateName: 'West Bengal'},
+  
 ];

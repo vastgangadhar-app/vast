@@ -19,7 +19,6 @@ import { BottomSheet, Card } from '@rneui/base';
 import { translate } from '../../utils/languageUtils/I18n';
 import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
 import { encrypt } from '../../utils/encryptionUtils';
-import { useLocationHook } from '../../utils/hooks/useLocationHook';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
 import { useNavigation } from '@react-navigation/native';
@@ -33,6 +32,7 @@ import Rechargeconfirm from '../../components/Rechargeconfirm';
 import OnelineDropdownSvg from '../drawer/svgimgcomponents/simpledropdown';
 import TabBar from './TabView/TabBarView';
 import RecentText from '../../components/RecentText';
+import { useLocationHook } from '../../hooks/useLocationHook';
 
 const MunicipalTaxScreen = () => {
   const { get, post } = useAxiosHook();
@@ -132,7 +132,7 @@ const MunicipalTaxScreen = () => {
 
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
-  const { userId } = useSelector((state: RootState) => state.userInfo);
+  const { userId,Loc_Data } = useSelector((state: RootState) => state.userInfo);
   const { latitude, longitude } = useLocationHook();
   const readLatLongFromStorage = async () => {
     try {
@@ -153,7 +153,7 @@ const MunicipalTaxScreen = () => {
   };
   const onRechargePress = useCallback(async () => {
     setShowLoader(true);
-const loc = await readLatLongFromStorage()
+
     const mobileNetwork = await getNetworkCarrier();
     const ip = await getMobileIp();
     const encryption = await encrypt([
@@ -161,8 +161,8 @@ const loc = await readLatLongFromStorage()
       consumerNo,
       optcode,
       amount,
-      loc?.latitude,
-      loc?.longitude,
+      Loc_Data['latitude'],Loc_Data['longitude'],
+
       'city',
       'address',
       'postcode',
@@ -218,7 +218,12 @@ const loc = await readLatLongFromStorage()
       });
       console.log(res);
       console.log(status);
+      if(res.status ==='False'){
+        alert(res.message);
+        setShowLoader(false);
 
+        return
+      }
       status = res.Response;
       Message = res.Message;
       await recenttransactions();
@@ -586,10 +591,10 @@ const loc = await readLatLongFromStorage()
           </View>
         )}
         <View>
-          <FlotingInput label={paramname} value={consumerNo} keyboardType="numeric"
+          <FlotingInput label={paramname} value={consumerNo} 
             
             onChangeTextCallback={text => {
-              setconsumerNo(text); setconsumerNo(text.replace(/\D/g, ""));
+              setconsumerNo(text); 
               if (text.length >= 5) {
                 setIsinfo(true)
               } else {
@@ -618,7 +623,9 @@ const loc = await readLatLongFromStorage()
             )}
           </View>
         </View>
-        <FlotingInput label={'Enter Amount'} value={amount} onChangeTextCallback={text => setAmount(text)}
+        <FlotingInput label={'Enter Amount'}
+             maxLength={5}
+              value={amount} onChangeTextCallback={text => setAmount(text)}
           keyboardType="numeric" />
 
 

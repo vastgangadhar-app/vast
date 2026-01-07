@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, AsyncStorage } from 'react-native';
+import React, { useEffect, useId, useState } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, AsyncStorage, ScrollView } from 'react-native';
 // import { createDrawerNavigator } from "@react-navigation-drawer";
 import {
   DrawerContentScrollView,
@@ -29,10 +29,17 @@ import { colors } from '../../utils/styles/theme';
 import LoginScreen from '../login/LoginScreen';
 import { APP_URLS } from '../../utils/network/urls';
 import { url } from 'inspector';
+import useAxiosHook from '../../utils/network/AxiosClient';
+import { decryptData } from '../../utils/encryptionUtils';
+import Notifications from './Notifications';
+import Mpin from './securityPages/Mpin';
+import Entypo from 'react-native-vector-icons/Entypo';  // or another icon set like MaterialIcons
+import LoginReport from './securityPages/LoginReport';
 
 const Drawer = createDrawerNavigator();
 const DrawerNavigation = ({ navigation }) => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo)
+  const { get } = useAxiosHook()
+  const { colorConfig, IsDealer, userId } = useSelector((state: RootState) => state.userInfo)
   const Next = `
     <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="18" height="18" stroke="#000000" stroke-width="30" x="0" y="0" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g><path d="M149.3 481c-3 0-6-1.1-8.2-3.4-4.6-4.6-4.6-11.9 0-16.5L346.2 256 141.1 50.9c-4.6-4.6-4.6-11.9 0-16.5s11.9-4.6 16.5 0l213.3 213.3c4.6 4.6 4.6 11.9 0 16.5L157.6 477.6c-2.3 2.3-5.3 3.4-8.3 3.4z" fill="#000000" opacity="1" data-original="#000000" class=""></path></g></svg>
 `;
@@ -69,35 +76,70 @@ const DrawerNavigation = ({ navigation }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await readData();
-      setAdminData(data);
-      console.log(data);
-    };
+
+
+
+      if (!IsDealer) {
+        const res = await get({ url: APP_URLS.getProfile })
+        if (res.data) {
+          setAdminData(JSON.parse(decryptData(res.value1, res.value2, res.data)));
+          console.log(JSON.parse(decryptData(res.value1, res.value2, res.data)))
+
+          const data = JSON.parse(decryptData(res.value1, res.value2, res.data))
+          console.log(data.videokycstatus)
+
+
+          if (data.videokycstatus === 'Y') {
+
+
+            // Alert.alert(
+            //   'Info',
+            //   'Video kyc is pending',
+            //   [
+            //     {
+            //       text: 'OK',  // Button text
+            //       onPress: () => console.log('OK Pressed'),
+            //     },
+            //     {
+            //       text: 'Procceed Video Kyc',  
+            //       onPress: () => {
+            //         navigation.navigate('VideoKYC');
+
+
+            //       },
+            //     },
+            //   ],
+            //   { cancelable: false }
+            // );
+
+          }
+        }
+      } else {
+        const dealer_profile = await get({ url: `${APP_URLS.dealer_profile}dlmid=${userId}` })
+        setAdminData(dealer_profile);
+
+        console.log(dealer_profile, '******')
+      }
+
+
+    }
 
     fetchData();
   }, []);
   const Firmname = '';
-  const readData = async () => {
-    try {
-      const jsonValue = await AsyncStorage.getItem('adminFarmData');
-      console.log(jsonValue, 'adminFarmData')
-      if (jsonValue != null) {
-        const parsedData = JSON.parse(jsonValue);
-        console.log('Retrieved data:', parsedData);
-        const adminFarmName = parsedData.adminFarmName;
-        const frmanems = parsedData.frmanems;
-        console.log('adminFarmName:', adminFarmName);
-        console.log('frmanems:', frmanems);
-        return parsedData;
-      } else {
-        console.log('No data found');
-        return null;
+  const [latestVersion, setLatestVersion] = useState('');
+
+ useEffect(() => {
+    const fetchVersion = async () => {
+      try {
+        const version = await get({ url: APP_URLS.current_version });
+        setLatestVersion(version.currentversion);
+      } catch (error) {
+        console.error('Version fetch error:', error);
       }
-    } catch (error) {
-      console.error('Error reading data from AsyncStorage:', error);
-      return null;
-    }
-  };
+    };
+    fetchVersion();
+  }, []);
 
   return (
     <Drawer.Navigator
@@ -128,8 +170,8 @@ const DrawerNavigation = ({ navigation }) => {
                   //  onLeayout={onRender}
                   >
 
-                    {adminData && adminData.photoss ? <Image
-                      source={{ uri: `http://${APP_URLS.baseWebUrl}${adminData.photoss}` }}
+                    {adminData && adminData.Photo ? <Image
+                      source={{ uri: `http://${APP_URLS.baseWebUrl}${adminData.Photo}` }}
                       style={styles.userimg}
                     /> : <Image
                       source={require('./assets/bussiness-man.png')}
@@ -139,15 +181,21 @@ const DrawerNavigation = ({ navigation }) => {
                   </View>
                 </View>
                 <Text style={styles.framtext}>
-                  {/* {adminData.frmanems ? adminData.frmanems : 'Insta Money'} */}
-                  {adminData && adminData.frmanems ? adminData.frmanems : APP_URLS.AppName}
+
+                  {adminData && adminData.firmName ? adminData.firmName : APP_URLS.AppName}
                 </Text>
 
 
               </View>
             </LinearGradient>
-
-            <DrawerItemList {...props} />
+            <ScrollView style={{ height: '100%' }}>
+              <DrawerItemList {...props} />
+              <View style={{ height: 200 ,}} >
+               <Text style={styles.prevText}>
+                              App Version : V{latestVersion}
+                          </Text>
+                          </View>
+            </ScrollView>
           </SafeAreaView>
         );
       }}
@@ -162,7 +210,7 @@ const DrawerNavigation = ({ navigation }) => {
         drawerActiveBackgroundColor: '#fff',
 
         drawerItemStyle: {
-          paddingBottom: 5,
+          paddingBottom: 2,
           borderBottomColor: colors.border,
           borderBottomWidth: hScale(1),
         },
@@ -175,10 +223,7 @@ const DrawerNavigation = ({ navigation }) => {
         },
       }}
 
-    // screenOptions={{
-    //     headerLeft: () => <MenuPage onPress={() => navigation.openDrawer()} />,
-    //     // ... other screenOptions
-    //   }}
+
     >
       <Drawer.Screen
         name="Dashboard"
@@ -221,7 +266,7 @@ const DrawerNavigation = ({ navigation }) => {
         options={{
           title: '', headerShown: false,
 
-          drawerLabel: translate('setting'),
+          drawerLabel: translate('settings'),
           drawerIcon: ({ focused, size }) => (
             <>
               <SvgXml
@@ -277,6 +322,26 @@ const DrawerNavigation = ({ navigation }) => {
       />
 
       <Drawer.Screen
+        name="Login Report"
+        component={LoginReport}
+        options={{
+          title: '', headerShown: false,
+
+          drawerLabel: translate('loginInfo'),
+          drawerIcon: ({ focused, size }) => (
+            <>
+              <SvgXml
+                xml={Securityimg}
+                width={wScale(25)}
+                height={hScale(25)}
+                style={styles.svgrightmargin}
+              />
+              <SvgXml xml={Next} style={styles.rightimg} />
+            </>
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="ReferAndEran"
         component={ReferAndEran}
         options={{
@@ -318,14 +383,11 @@ const DrawerNavigation = ({ navigation }) => {
       />
 
 
-
-
-
       <Drawer.Screen name='Privacy Policy' component={Privacy}
 
 
         options={{
-          // drawerLabel: translate('logout'),
+          drawerLabel: translate('privacy'),
           headerShown: false,
 
           drawerIcon: ({ focused, size }) => (
@@ -345,11 +407,40 @@ const DrawerNavigation = ({ navigation }) => {
               />
 
             </>
+          ),
+        }} />
+
+
+      <Drawer.Screen name='Notifications' component={Notifications}
+
+
+        options={{
+          headerShown: false,
+
+          drawerLabel: translate('Notifications'),
+
+          drawerIcon: ({ focused, size }) => (
+            <>
+              <Entypo
+                style={{ left: wScale(-5) }}
+                name={"notification"}
+                size={wScale(25)}
+                color={'#000'}
+              />
+              <SvgXml
+                xml={Next}
+
+                style={styles.rightimg}
+              />
+
+            </>
 
 
 
           ),
-
+          drawerItemStyle: {
+            borderWidth: 0
+          },
 
 
 
@@ -390,6 +481,8 @@ const DrawerNavigation = ({ navigation }) => {
 
 
         }} />
+
+
     </Drawer.Navigator>
 
   );
@@ -398,14 +491,12 @@ const DrawerNavigation = ({ navigation }) => {
 const styles = StyleSheet.create({
   Safearea: {
     height: wScale(205),
-    //  backgroundColor: '#fe8276',
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
   imgbg: {
     alignItems: 'center',
-    // justifyContent: 'flex-end',
     backgroundColor: 'rgba(255,255, 255, 0.3)',
     padding: wScale(10),
     borderRadius: wScale(19),
@@ -446,6 +537,12 @@ const styles = StyleSheet.create({
     marginLeft: -8,
     width: wScale(25),
     height: wScale(25),
+  },
+   prevText: {
+    fontSize: wScale(15),
+    color: '#000',
+    marginBottom: hScale(20),
+    textAlign:'center'
   },
 });
 export default DrawerNavigation;

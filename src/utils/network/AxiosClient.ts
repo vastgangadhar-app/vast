@@ -1,35 +1,33 @@
 import axios from 'axios';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
 import { useCallback, useEffect, useMemo } from 'react';
-import { Alert } from 'react-native';
-import { APP_URLS } from './urls';
-import { useDispatch } from 'react-redux';
 import { reset, setAuthToken, setRefreshToken, setUserId } from '../../reduxUtils/store/userInfoSlice';
+import { APP_URLS } from './urls';
 import { encrypt } from '../encryptionUtils';
 
 const useAxiosHook = () => {
-  const { authToken = '', refreshToken } = useSelector(
+  const { authToken = '', refreshToken, IsDealer } = useSelector(
     (state: RootState) => state.userInfo,
   );
   const dispatch = useDispatch();
   let isRefreshing = false;
 
   useEffect(() => {
-    console.log('**AUTH_TOKEN', authToken)
-  }, [authToken])
+    console.log('**AUTH_TOKEN', authToken);
+  }, [authToken]);
+
+
   const axiosInstance = useMemo(
     () =>
       axios.create({
-     //  baseURL: 'https://native.stdigipe.in/',
-    //  baseURL: 'http://native.badshahwallet.in/',
-    baseURL: 'https://native.smartpaymoney.in/',
-
- // baseURL: 'https://native.vastwebindia.com/',
+        baseURL: 'http://native.ssvcms.in//',
+        //  baseURL: 'http://native.skeshari.in/',
       }),
     [],
   );
 
+  // ---------- API functions ----------
   const get = useCallback(
     async ({ url }: { url: string }) => {
       const response = await axiosInstance.get(url);
@@ -49,19 +47,25 @@ const useAxiosHook = () => {
       config?: any;
     }) => {
       try {
-
         const response = await axiosInstance.post(url, data, config);
         return response.data;
       } catch (e) {
-
         return e;
       }
     },
     [axiosInstance],
   );
 
-  const onRefreshToken = useCallback(async () => {
+  const put = useCallback(
+    async ({ url, data }: { url: string; data: any }) => {
+      const response = await axiosInstance.put(url, data);
+      return response.data;
+    },
+    [axiosInstance],
+  );
 
+  // ---------- Refresh Token (Normal) ----------
+  const onRefreshToken = useCallback(async () => {
     const data = {
       refresh_token: refreshToken,
       grant_type: 'refresh_token',
@@ -83,12 +87,12 @@ const useAxiosHook = () => {
       dispatch(setAuthToken(response?.access_token));
       dispatch(setUserId(response?.userId));
       dispatch(setRefreshToken(response?.refresh_token));
-
       return response;
     }
     return null;
-  }, [dispatch, post]);
+  }, [dispatch, post, refreshToken]);
 
+  // ---------- Refresh Token (Test - Username/Password + Encryption) ----------
   const onRefreshTokenTest = useCallback(async () => {
     const encryption = encrypt(['9090909090', '123456789']);
 
@@ -116,53 +120,53 @@ const useAxiosHook = () => {
       dispatch(setAuthToken(response?.access_token));
       dispatch(setUserId(response?.userId));
       dispatch(setRefreshToken(response?.refresh_token));
-
       return response;
     }
     return null;
   }, [dispatch, post]);
 
-  const put = useCallback(
-    async ({ url, data }: { url: string; data: any }) => {
-      const response = await axiosInstance.put(url, data);
-      return response.data;
-    },
-    [axiosInstance],
-  );
-
+  // ---------- Request Interceptor ----------
   axiosInstance.interceptors.request.use(
     config => {
+      // Token set karna
       if (authToken && !config.headers.Authorization) {
         config.headers.Authorization = `Bearer ${authToken}`;
       }
+
+      // Dealer prefix handling
+      if (config.url) {
+        if (IsDealer) {
+          if (
+            config.url.startsWith("api/Radiant/") ||
+            config.url.startsWith("api/RadiantCash/")
+          ) {
+            config.url = `Dealer/${config.url}`;
+          }
+        }
+      }
       return config;
     },
-    error => {
-      return Promise.reject(error);
-    },
+    error => Promise.reject(error),
   );
 
+  // ---------- Response Interceptor ----------
   axiosInstance.interceptors.response.use(
-    response => {
-      return response;
-    },
+    response => response,
     async error => {
-
       if (error.response && error.response.status === 401 && isRefreshing === false) {
         isRefreshing = true;
 
-        const response = await onRefreshTokenTest();
+        // Pehle test wala refresh
+        let response = await onRefreshToken();
+
 
         if (response) {
           error.config.headers.Authorization = `Bearer ${response?.access_token}`;
-
           return axiosInstance(error.config);
-        }
-        else {
+        } else {
           dispatch(reset());
           return Promise.reject(error);
         }
-
       }
       if (error.response && error.response.data) {
         return Promise.reject(error.response.data);
@@ -170,6 +174,7 @@ const useAxiosHook = () => {
       return Promise.reject(error);
     },
   );
+
   return { get, post, put };
 };
 

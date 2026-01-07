@@ -7,7 +7,7 @@ import { RootState } from '../../../reduxUtils/store';
 import { hScale, wScale } from '../../../utils/styles/dimensions';
 
 const AepsAadharCom = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig, IsDealer } = useSelector((state: RootState) => state.userInfo);
   const color1 = `${colorConfig.secondaryColor}20`; // Transparent background color
 
   const { get } = useAxiosHook();
@@ -16,8 +16,9 @@ const AepsAadharCom = () => {
   useEffect(() => {
     const fetchCommissionData = async () => {
       try {
+        const url2 = `${APP_URLS.dealeropcomn}ddltype=AEPS`;
         const url = `${APP_URLS.opComm}ddltype=AEPS`;
-        const response = await get({ url });
+        const response = await get({ url: IsDealer ? url2 : url });
 
         if (response && Array.isArray(response)) {
           setList(response);

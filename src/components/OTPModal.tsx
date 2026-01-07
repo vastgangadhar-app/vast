@@ -16,7 +16,11 @@ const OTPModal = ({
   setShowOtpModal,
   disabled = false,
   verifyOtp,
-  inputCount
+  inputCount,
+  resendotp,
+  isresend = false,
+  email = '',
+  sendID
 }) => {
   // Handle OTP change
   const handleOtpChange = (otp, setOtp) => {
@@ -38,15 +42,22 @@ const OTPModal = ({
         scrollViewProps={{ scrollEnabled: false }}
         containerStyle={{ backgroundColor: 'transparent' }}
       >
-        <View style={{ backgroundColor: colors.white, height: SCREEN_HEIGHT / 1.5, flex: 1 }}>
-          <View style={[styles.StateTitle, { backgroundColor: colorConfig.secondaryColor }]}>
-            <Text style={styles.stateTitletext}>{'Verify OTP'}</Text>
+        <View style={styles.main} >
+          <View style={[styles.StateTitle, { backgroundColor: colorConfig.secondaryColor, }]}>
+            <Text style={[styles.stateTitletext,]}>{'Verify OTP'}</Text>
+
           </View>
 
           <View>
             {setMobileOtp && (
               <>
-                <Text style={styles.text}>{'Enter the OTP sent to your mobile'}</Text>
+                <Text style={styles.text}>
+                 OTP Sent to Mobile Number or Email
+           {/* ${email ? ' and Email' : ''}` */}
+                 
+                </Text>
+                <Text style={[styles.numberID, { color: colorConfig.secondaryColor }]}>{sendID}</Text>
+
                 <OTPTextView
                   handleTextChange={(otp) => handleOtpChange(otp, setMobileOtp)} // Handle OTP change
                   containerStyle={{
@@ -82,14 +93,40 @@ const OTPModal = ({
             buttonStyle={styles.SignupButton}
             titleStyle={{ fontWeight: 'bold' }}
           />
-         
+          {isresend && <Button
+            //disabled={disabled}
+            title={'Resend Otp'}
+            onPress={resendotp}
+            buttonStyle={styles.SignupButton}
+            titleStyle={{ fontWeight: 'bold' }}
+
+          />}
+
         </View>
-      </BottomSheet>
-    </View>
+      </BottomSheet >
+    </View >
   );
 };
 
 const styles = StyleSheet.create({
+  main: {
+    backgroundColor: colors.white, height: SCREEN_HEIGHT / 1.5, flex: 1, borderTopLeftRadius: wScale(15),
+    borderTopRightRadius: wScale(15),
+  },
+
+  Resendstyle: {
+    height: wScale(55),
+    width: wScale(355),
+    alignSelf: 'center',
+    borderRadius: 20,
+    marginTop: 10,
+    backgroundColor: colors.dark_blue
+  },
+  resendtitl: {
+    color: 'red'
+  },
+
+
   StateTitle: {
     paddingVertical: hScale(10),
     backgroundColor: '#ff4670',
@@ -98,6 +135,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: wScale(15),
     justifyContent: 'center',
     alignItems: 'center',
+
   },
   stateTitletext: {
     paddingHorizontal: wScale(12),
@@ -105,6 +143,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     textTransform: 'uppercase',
+  },
+  numberID: {
+    paddingHorizontal: wScale(12),
+    fontSize: wScale(20),
+    color: '#000',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    textAlign: 'center'
   },
   SignupButton: {
     marginTop: wScale(40),

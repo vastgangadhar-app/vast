@@ -19,19 +19,21 @@ import ClosseModalSvg2 from '../../drawer/svgimgcomponents/ClosseModal2';
 import OnelineDropdownSvg from '../../drawer/svgimgcomponents/simpledropdown';
 import { colors } from '../../../utils/styles/theme';
 import BankBottomSite from '../../../components/BankBottomSite';
-import { useLocationHook } from '../../../utils/hooks/useLocationHook';
 import ShowLoader from '../../../components/ShowLoder';
 import { ALERT_TYPE, Dialog, Toast } from 'react-native-alert-notification';
 import { openSettings } from 'react-native-permissions';
 import { launchCamera } from 'react-native-image-picker';
 import { Video } from 'react-native-compressor';
-import { isDriverFound, openFingerPrintScanner } from 'react-native-rdservice-fingerprintscanner';
+import { isDriverFound, openFingerPrintScanner, openFaceAuth } from 'react-native-rdservice-fingerprintscanner';
 import SelectDevice from './DeviceSelect';
 import QrcodAddmoneysvg from '../../drawer/svgimgcomponents/QrcodAddmoneysvg';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import { useRdDeviceConnectionHook } from '../../../hooks/useRdDeviceConnectionHook';
+import { useLocationHook } from '../../../hooks/useLocationHook';
+import CloseAadharSvg from '../../drawer/svgimgcomponents/CloseAadharSvg';
+import NotFoundScreen from '../../../components/NotFoundScreen';
 
-const AdharPay = () => {
+const AdharPay = ({ }) => {
     const navigation = useNavigation();
     const { isDeviceConnected } = useRdDeviceConnectionHook();
 
@@ -71,20 +73,20 @@ const AdharPay = () => {
     const hours = now.getHours();
     const minutes = now.getMinutes();
     const seconds = now.getSeconds();
-    const { latitude, longitude, getLocation } = useLocationHook();
-    const [location, setLocation] = useState({ latitude: '', longitude: '' });
 
     const formattedDate = `${dayOfWeek} ${dayOfMonth} ${month} ${hours}:${minutes}:${seconds}`;
- 
+
 
     const closeDialog = () => {
         setDialogVisible(false);
     };
 
-    const OnPressEnq = async (fingerprintData) => {
+    const OnPressEnq = async (fingerprintData,pidDataXx) => {
         const pidData = fingerprintData.PidData;
         const DevInfo = pidData.DeviceInfo;
         const Resp = pidData.Resp;
+        const pidDataX = pidDataXx;
+
 
 
         const cardnumberORUID = {
@@ -117,7 +119,7 @@ const AdharPay = () => {
             rdsVer: DevInfo.rdsVer,
             sessionKey: pidData.Skey.content
         };
-        BEnQ(captureResponse, cardnumberORUID);
+        BEnQ(captureResponse, cardnumberORUID,pidDataX);
         try {
 
             // Alert.alert(
@@ -147,47 +149,32 @@ const AdharPay = () => {
 
 
 
-    const readLatLongFromStorage = async () => {
+
+    const BEnQ = useCallback(async (captureResponse1, cardnumberORUID1, amount,pidDataX, otpcontroller) => {
+        setIsLoading(true);
         try {
-            const locationData = await AsyncStorage.getItem('locationData');
-
-            if (locationData !== null) {
-                const { latitude, longitude } = JSON.parse(locationData);
-                return { latitude, longitude };
-            } else {
-                return null;
-            }
-        } catch (error) {
-            console.error('Failed to read location data from AsyncStorage:', error);
-            return null;
-        }
-    };
-
-    const BEnQ = async (captureResponse1, cardnumberORUID1) => {
-        try {
-
-            const lat = await readLatLongFromStorage();
             const Model = await getMobileDeviceId();
+            const address = `${latitude}${longitude}`; // Combine latitude and longitude as a string
 
-            const address = lat?.latitude;
             const jdata = {
+                capxml:pidDataX,
                 captureResponse: captureResponse1,
                 cardnumberORUID: cardnumberORUID1,
                 languageCode: 'en',
-                latitude: lat?.latitude,
-                longitude: lat?.longitude,
-                mobileNumber: mobileNumber,
-                merchantTranId: userId,
+                latitude: latitude,
+                longitude: longitude,
+                mobileNumber: mobileNumber, // Ensure mobileNumber is defined
+                merchantTranId: userId, // Ensure userId is defined
                 merchantTransactionId: userId,
                 paymentType: 'B',
-                otpnum: otpcontroller,
+                otpnum: otpcontroller, // Pass the OTP controller
                 requestRemarks: 'TN3000CA06532',
                 subMerchantId: 'A2zsuvidhaa',
-                timestamp: formattedDate,
+                timestamp: formattedDate, // Ensure formattedDate is defined
                 transactionType: 'M',
-                name: consumerName,
+                name: consumerName, // Ensure consumerName is defined
                 Address: address,
-                transactionAmount: amountcont
+                transactionAmount: amount // Pass the amount
             };
 
             const headers = {
@@ -200,7 +187,7 @@ const AdharPay = () => {
             const data = JSON.stringify(jdata);
 
             const response = await post({
-                url: 'AEPS/api/app/Aeps/Aadharpay',
+                url: activeAepsLine ? 'AEPS/api/Nifi/app/Aeps/Aadharpay' : 'AEPS/api/app/Aeps/Aadharpay',
                 data: data,
                 config: {
                     headers,
@@ -208,20 +195,22 @@ const AdharPay = () => {
             });
 
             const { RESULT, ADDINFO, agentid } = response;
-            setFingerprintData(720)
-            setIsLoading(false)
-            setsts(ADDINFO.TransactionStatus)
-            if (RESULT === '0') {
-                checkvideo(amount, agentid, response)
-            } else {
-                setIsLoading(false)
+            setFingerprintData(720);
+            setIsLoading(false);
+            //  setSts(ADDINFO.TransactionStatus);
 
+            if (RESULT === '0') {
+                checkvideo(amount, agentid, response);
+            } else {
+                setIsLoading(false);
                 Alert.alert(`Note:`, ADDINFO);
             }
         } catch (error) {
             console.error('Error during balance enquiry:', error);
+            setIsLoading(false); // Reset loading state on error
         }
-    };
+    }, [latitude, longitude, mobileNumber, userId, formattedDate, consumerName]); // Add necessary dependencies
+
 
     const [dialogData, setDialogData] = useState({
         trnstatus: 'Success',
@@ -233,8 +222,10 @@ const AdharPay = () => {
     });
     const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
         useDeviceInfoHook();
-    const { userId } = useSelector((state: RootState) => state.userInfo);
-    const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+    const { userId, Loc_Data, } = useSelector((state: RootState) => state.userInfo);
+    const { colorConfig, activeAepsLine } = useSelector((state: RootState) => state.userInfo);
+    const { latitude, longitude } = Loc_Data;
+
     const color1 = `${colorConfig.secondaryColor}20`
 
     const color2 = `${colorConfig.primaryColor}40`
@@ -328,7 +319,8 @@ const AdharPay = () => {
         const CheckEkyc = async () => {
             try {
                 const url = `AEPS/api/data/AAdhar2fa`;
-                const response = await get({ url: url });
+                const url2 = `AEPS/api/Nifi/data/AAdhar2fa`;
+                const response = await get({ url: activeAepsLine ? url2 : url });
                 const msg = response.Message;
                 const Status = response.Status;
                 if (Status === true) {
@@ -347,28 +339,20 @@ const AdharPay = () => {
             } finally {
             }
         };
-        CheckEkyc();
-        if (fingerprintData) {
-            return;
-        }
+        //CheckEkyc();
 
 
 
-        if (fingerprintData == 720) {
-            if (fingerprintData === 720) {
-                return;
-            } else if (fingerprintData["PidData"].Resp.errCode === 0 && isScan) {
-                OnPressEnq();
-            }
-        }
-        const PidData = JSON.stringify(fingerprintData);
-    
+
         banks();
-        checkAepsStatus();
-    }, [fingerprintData])
+        //  checkAepsStatus();
+    }, [])
     async function adhar_Validation(adharnumber) {
         try {
-            const response = await get({ url: `${APP_URLS.aadharValidation}${adharnumber}` })
+            const response = await get({
+                url: activeAepsLine ? `/Common/api/data/AdharCardValidationCheck?aadharnumber=${adharnumber}`
+                    : `${APP_URLS.aadharValidation}${adharnumber}`
+            })
             if (response['status'] === true) {
                 setIsValid(true)
             } else {
@@ -391,7 +375,8 @@ const AdharPay = () => {
 
     async function getUserNamefunction(MoNumber) {
         try {
-            const response = await get({ url: `${APP_URLS.aepsNameinfo}${MoNumber}` })
+            const response = await get({ url: activeAepsLine ? `AEPS/api/Nifi/app/Aeps/AEPSNAMEFIND?mobile=${MoNumber}` : `${APP_URLS.aepsNameinfo}${MoNumber}` })
+
             setAutofcs(true);
             setConsumerName(response.RESULT);
         } catch (error) {
@@ -401,7 +386,10 @@ const AdharPay = () => {
 
     const checkvideo = async (transamount, agentid, AddharpayResponse) => {
         try {
-            const response = await post({ url: `${APP_URLS.checkadharpayvideo}?transamount=${transamount}&agentid=${agentid}` });
+            const response = await post({
+                url: activeAepsLine ? `${APP_URLS.checkadharpayvideoNifi}?transamount=${transamount}&agentid=${agentid}`
+                    : `${APP_URLS.checkadharpayvideo}?transamount=${transamount}&agentid=${agentid}`
+            });
             const { ADDINFO, RESULT } = await response.json();
             setIsLoading(false)
             if (RESULT === '0') {
@@ -423,7 +411,7 @@ const AdharPay = () => {
                 setIsLoading(false)
                 const addinfo = AddharpayResponse.ADDINFO
                 aepsresponsepress(addinfo);
-              
+
             };
         } catch (error) {
             console.error(error);
@@ -431,7 +419,7 @@ const AdharPay = () => {
     }
     const checkAepsStatus = async () => {
         try {
-            const respone = await get({ url: `${APP_URLS.checkaepsStatus}` });
+            const respone = await get({ url: activeAepsLine ? `AEPS/api/Nifi/data/AepsStatus` : `${APP_URLS.checkaepsStatus}` });
             if (respone['Response'] === true) {
                 videostatus();
             } else {
@@ -441,7 +429,7 @@ const AdharPay = () => {
                     ToastAndroid.BOTTOM,
                 );
             }
-     
+
 
         } catch (error) {
             console.log(error);
@@ -451,7 +439,10 @@ const AdharPay = () => {
     };
     const uploadvideo = async (video, Agentid) => {
         try {
-            const response = await post({ url: `${APP_URLS.checkadharpayvideo}Videolink=${video}&agentid=${Agentid}` });
+            const response = await post({
+                url: activeAepsLine ? `${APP_URLS.checkadharpayvideoNifi}Videolink=${video}&agentid=${Agentid}` :
+                    `${APP_URLS.checkadharpayvideo}Videolink=${video}&agentid=${Agentid}`
+            });
             if (response.status) {
 
                 Alert.alert(
@@ -481,7 +472,7 @@ const AdharPay = () => {
 
     const banks = async () => {
         try {
-            const response = await post({ url: `${APP_URLS.aepsBanklist}` })
+            const response = await post({ url: activeAepsLine ? `AEPS/api/Nifi/Aeps/banklist` : `${APP_URLS.aepsBanklist}` })
             if (response.RESULT === '0') {
                 setBanklist(response['ADDINFO']['data'])
             } else {
@@ -492,7 +483,7 @@ const AdharPay = () => {
     };
     const videostatus = async () => {
         try {
-            const response = await get({ url: `${APP_URLS.adharpayvideostatus}` })
+            const response = await get({ url: activeAepsLine ? `AEPS/api/Nifi/data/VideoStatus` : `${APP_URLS.adharpayvideostatus}` })
             if (response.Status === true) {
 
                 setShowDialog(false);
@@ -529,7 +520,8 @@ const AdharPay = () => {
         try {
 
             const response = await post({
-                url: `${APP_URLS.adharpaysendotp}amount=${amountcont}&usermobile=${mobileNumber}`
+                url: activeAepsLine ? `${APP_URLS.adharpaysendotpNifi}amount=${amountcont}&usermobile=${mobileNumber}` :
+                    `${APP_URLS.adharpaysendotp}amount=${amountcont}&usermobile=${mobileNumber}`
             });
             if (response.status === "1") {
                 ToastAndroid.showWithGravity(
@@ -699,7 +691,7 @@ const AdharPay = () => {
                     setFingerprintData(-1);
                 } else if (res.errorCode === 0) {
 
-                    OnPressEnq(res.pidDataJson);
+                    OnPressEnq(res.pidDataJson,res.pidDataXML);
 
                     const responseString = JSON.stringify(res.pidDataJson, null, 2);
                     //    Alert.alert('Tab Fingerprint Data', responseString);
@@ -717,47 +709,104 @@ const AdharPay = () => {
             });
     };
 
+    const [isFace, setIsFace] = useState(false)
 
     const handleSelection = (selectedOption) => {
-
         if (deviceName === 'Device') {
-            ToastAndroid.showWithGravity('Please Select Your Device', ToastAndroid.SHORT, ToastAndroid.BOTTOM);
             return;
         }
+
+
         const captureMapping = {
-            'mantra L0': 'com.mantra.rdservice',
-            'mantra L1': 'com.mantra.mfs110.rdservice',
-            'startek L0': 'com.acpl.registersdk',
-            'startek L1': 'com.acpl.registersdk_l1',
-            'morpho L0': 'com.scl.rdservice',
-            'morpho L1': 'com.idemia.l1rdservice',
+            'Mantra L0': 'com.mantra.rdservice',
+            'Mantra L1': 'com.mantra.mfs110.rdservice',
+            'Startek L0': 'com.acpl.registersdk',
+            'Startek L1': 'com.acpl.registersdk_l1',
+            'Morpho L0': 'com.scl.rdservice',
+            'Morpho L1': 'com.idemia.l1rdservice',
+            'Aadhaar Face RD': 'Aadhaar Face RD',
         };
 
-        if (captureMapping[selectedOption]) {
-            isDriverFound(captureMapping[selectedOption])
-                .then((res) => {
-                    if (isDeviceConnected) {
-                        capture(captureMapping[selectedOption]);
-                    } else {
-                        ToastAndroid.showWithGravityAndOffset(
-                            res.message + '  But Device Not Connected',
-                            ToastAndroid.LONG,
-                            ToastAndroid.TOP,
-                            0,
-                            1000
-                        );
-                    }
+        const selectedCapture = captureMapping[selectedOption];
+        if (selectedCapture) {
 
-
-                    //  alert(`Capture Mapping: ${captureMapping[selectedOption]}\nResponse: ${JSON.stringify(res)}`);
-
-                })
-                .catch((error) => {
-                    console.error('Error finding driver:', error);
-                    alert('Error: Could not find the selected driver.');
-                });
+            if (selectedOption === 'Aadhaar Face RD') {
+                setIsFace(selectedOption === 'Aadhaar Face RD')
+                openFace();
+            } else {
+                isDriverFound(selectedCapture)
+                    .then((res) => {
+                        capture(selectedCapture);
+                    })
+                    .catch((error) => {
+                        console.error('Error finding driver:', error);
+                        alert('Error: Could not find the selected driver.');
+                    });
+            }
         } else {
             alert('Invalid option selected');
+        }
+    };
+
+    const openFace = () => {
+        openFaceAuth(userId)
+            .then(async (response) => {
+                console.log('Face Auth Response:', response);
+                if (response.errorCode === 892) {
+                    return;
+                }
+                OnPressEnq2(response);
+            })
+            .catch((error) => {
+                console.error('Error during face authentication:', error);
+            });
+    };
+
+    const OnPressEnq2 = async (fingerprintData) => {
+        const pidData = fingerprintData.pidDataJson.PidData;
+        const DevInfo = pidData.DeviceInfo;
+        const Resp = pidData.Resp;
+
+        //console.log(pidData)
+        const cardnumberORUID = {
+            adhaarNumber: aadharNumber,
+            indicatorforUID: "0",
+            nationalBankIdentificationNumber: bankid
+        };
+
+        const captureResponse = {
+            Devicesrno: isFace ? '' : DevInfo.additional_info.Param[0].value,
+            PidDatatype: "X",
+            Piddata: pidData.Data.content,
+            ci: pidData.Skey.ci,
+            dc: DevInfo.dc,
+            dpID: DevInfo.dpId,
+            errCode: Resp.errCode,
+            errInfo: isFace ? fingerprintData.errInfo : Resp.errInfo,
+            fCount: Resp.fCount,
+            fType: Resp.fType,
+            hmac: pidData.Hmac,
+            iCount: Resp.fCount,
+            iType: "0",
+            mc: DevInfo.mc,
+            nmPoints: Resp.nmPoints,
+            pCount: "0",
+            pType: "0",
+            qScore: Resp.qScore,
+            rdsID: DevInfo.rdsId,
+            rdsVer: DevInfo.rdsVer,
+            sessionKey: pidData.Skey.content
+        };
+
+        console.log(captureResponse, '>>>>>>>>>>>>>>>>>>>>>>')
+        try {
+
+            BEnQ(captureResponse, cardnumberORUID);
+
+        } catch (error) {
+            Alert.alert('Error', 'An error occurred while processing your request. Please try again.');
+        } finally {
+            // setIsLoading(true);
         }
     };
 
@@ -830,6 +879,48 @@ const AdharPay = () => {
             <QRCodeScanner onRead={onSuccess} />
         </View>
     }
+    if (true) {
+        return (
+            <View style={{
+                flex: 1,
+                //justifyContent: 'center',
+                backgroundColor: '#f5f5f5',
+            }}>
+                {/* <View style={{
+                    backgroundColor: '#fff',
+                    borderRadius: 10,
+                    padding: 20,
+
+                    width: '90%',
+                    alignItems: 'center',
+                    elevation: 5
+                }}>
+                    <CloseAadharSvg />
+                    <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 15, color: colorConfig.primaryColor }}>
+                        Service Disabled
+                    </Text>
+                    <View style={{ padding: 10 }}>
+                        <Text style={{ fontSize: 16, color: '#333', marginBottom: 5 }}>
+                            As per the norms, Aadhaar Pay service cannot be used with Wallet service.
+                        </Text>
+                        <Text style={{ fontSize: 16, color: '#333' }}>
+                            Aadhaar Pay service cannot be used with Wallet service.
+                        </Text>
+                    </View>
+                </View> */}
+                <NotFoundScreen
+                    title2={'Service Disabled'}
+
+                    description={
+                        `As per the norms, Aadhaar Pay service cannot be used with Wallet service.${'\n'}Aadhaar Pay service cannot be used with Wallet service.`
+                    }
+                    buttontitle={'Go Back'}
+                />
+            </View>
+        );
+    }
+
+
     return (
         <View style={styles.main}>
 
@@ -875,11 +966,13 @@ const AdharPay = () => {
                             <ShowLoader />
                         ) : null}
 
-                        {/* <TouchableOpacity onPress={aepsresponsepress}>
-                <Text style={{ color: 'red' }}>
-                    Aeps Respons
-                </Text>
-            </TouchableOpacity> */}
+                        {
+                            /* <TouchableOpacity onPress={aepsresponsepress}>
+                    <Text style={{ color: 'red' }}>
+                        Aeps Respons
+                    </Text>
+                </TouchableOpacity> */
+                        }
 
 
                         <FlotingInput
@@ -936,7 +1029,7 @@ const AdharPay = () => {
                         />
                         <TouchableOpacity
                             style={{}}
-                            onPress={() => {  setisbank(true) }}
+                            onPress={() => { setisbank(true) }}
                         >
                             <>
                                 <FlotingInput
@@ -1055,6 +1148,17 @@ const styles = StyleSheet.create({
         paddingBottom: hScale(20)
     },
     dialog: {
+        backgroundColor: '#fff',
+        padding: wScale(20),
+        borderRadius: hScale(10),
+        width: '80%',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOpacity: 0.3,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 5,
+    },
+    dialog2: {
         backgroundColor: '#fff',
         padding: wScale(20),
         borderRadius: hScale(10),

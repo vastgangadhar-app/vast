@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, StyleSheet, AsyncStorage } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, StyleSheet, AsyncStorage, ToastAndroid } from 'react-native';
 import { useDeviceInfoHook } from '../../../utils/hooks/useDeviceInfoHook';
-import { useLocationHook } from '../../../utils/hooks/useLocationHook';
 import { useNavigation } from '@react-navigation/native';
 import { hScale, wScale } from '../../../utils/styles/dimensions';
 import { APP_URLS } from '../../../utils/network/urls';
@@ -11,18 +10,24 @@ import DynamicButton from '../../drawer/button/DynamicButton';
 import { colors } from '../../../utils/styles/theme';
 import OTPModal from '../../../components/OTPModal';
 import DeviceConnected from './checkDeviceConnected';
+import { useLocationHook } from '../../../hooks/useLocationHook';
+import ShowLoader from '../../../components/ShowLoder';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../reduxUtils/store';
 
 const Aepsekyc = () => {
   const [MailOtp, setMailOtp] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [otpModalVisible1, setOtpModalVisible1] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [primarykeyid, setprimarykeyid] = useState('');
   const [encodeFPTxnId, setencodeFPTxnId] = useState('');
   const navigation = useNavigation<any>();
   const { get, post } = useAxiosHook();
-  const { latitude, longitude } = useLocationHook();
+  const { userId, Loc_Data, activeAepsLine } = useSelector((state: RootState) => state.userInfo);
+
+  const { latitude, longitude } = Loc_Data;
 
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
@@ -56,63 +61,61 @@ const Aepsekyc = () => {
   };
 
   useEffect(() => {
-    console.log(latitude.toString(), longitude, Model);
+    console.log(longitude, Model);
+    if (latitude?.length > 1 && longitude?.length > 1) {
+      setIsLoading(false);
+    } else {
+      ToastAndroid.show('Please wait for fetching lat, long', ToastAndroid.SHORT);
+    }
 
-    console.log('LOC##', latitude, longitude)
-  }, [])
-      const readLatLongFromStorage = async () => {
-          try {
-              const locationData = await AsyncStorage.getItem('locationData');
-  
-              if (locationData !== null) {
-                  const { latitude, longitude } = JSON.parse(locationData);
-                  console.log('Latitude:', latitude, 'Longitude:', longitude);
-                  return { latitude, longitude };
-              } else {
-                  console.log('No location data found');
-                  return null;
-              }
-          } catch (error) {
-              console.error('Failed to read location data from AsyncStorage:', error);
-              return null;
-          }
-      };
-  const kycotpsend = async (deviceid) => {
+  }, [longitude, latitude])
 
+  const kycotpsend = useCallback(async (deviceid) => {
     setIsLoading(true);
-    const loc = await readLatLongFromStorage();
-
     try {
-      const url = `${APP_URLS.sendekycotp}`;
-      console.log(url, '*******************')
+      const url = activeAepsLine ? `${APP_URLS.sendekycotpNifi}` : `${APP_URLS.sendekycotp}`;
+      console.log(url, latitude, '*******************');
+
       const data1 = {
-        latitude: loc?.latitude,
-        longitude: loc?.longitude,
-        ImeiNo: deviceid
+        latitude: latitude, // Default to 0 if latitude is null or undefined
+        longitude: longitude, // Default to 0 if longitude is null or undefined
+        ImeiNo: deviceid ?? '', // Default to empty string if deviceid is null or undefined
       };
+
       const data = JSON.stringify(data1);
-      console.log(data)
+      console.log(data);
+
       const headers = {
-        trnTimestam: formattedDate,
-        deviceIMEI: deviceid,
+        trnTimestam: formattedDate ?? '', // Ensure formattedDate is not null
+        deviceIMEI: deviceid ?? '', // Ensure deviceid is available
       };
-      console.log(headers)
+
+      console.log(headers);
+
+      // Make the POST request
       const response = await post({
         url: url,
         data: data,
+        config: {
+          headers,
+        },
       });
 
-      console.log('Response:', response);
+      console.log('Responseee:', response);
 
       if (response) {
-
         const { Status, Message, primaryKeyId, encodeFPTxnId } = response;
         setprimarykeyid(primaryKeyId);
         setencodeFPTxnId(encodeFPTxnId);
         console.log(Status, Message, primaryKeyId, encodeFPTxnId);
+
         if (Status) {
-          setShowOtpInput(true);
-          Alert.alert('Success', `${Message}`);
+          setShowOtpInput(true); // Show OTP input if the status is successful
+          ToastAndroid.showWithGravity(
+            `Success: ${Message}`,
+            ToastAndroid.SHORT,
+            ToastAndroid.BOTTOM
+          );
         } else {
           Alert.alert('Error', `${Message}`);
         }
@@ -122,9 +125,13 @@ const Aepsekyc = () => {
     } catch (error) {
       console.error('Error:', error);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Set loading to false once the request is complete
     }
-  };
+  }, [
+    latitude,
+    longitude,
+    formattedDate
+  ]);
 
 
   const handleVerifyOtp = async () => {
@@ -143,25 +150,23 @@ const Aepsekyc = () => {
   };
 
 
-  const verifyotp = async (MailOtp, deviceid, prikey, encodeFPTxnid) => {
-    const loc = await readLatLongFromStorage();
+  const verifyotp = useCallback(async (MailOtp, deviceid, prikey, encodeFPTxnid) => {
     try {
-
       const requestBody = {
-        latitude: loc?.latitude,
-        longitude: loc?.longitude,
+        latitude: latitude,
+        longitude: longitude,
         ImeiNo: deviceid,
         otp: MailOtp,
         primaryKeyId: prikey,
         encodeFPTxnId: encodeFPTxnid
       };
 
-      console.log(requestBody)
-      const data = JSON.stringify(requestBody)
+      console.log(requestBody);
+      const data = JSON.stringify(requestBody);
       const response = await post({
-        url: 'AEPS/api/data/EkycVerifyOtp',
+        url: activeAepsLine ? 'AEPS/api/Nifi/data/EkycVerifyOtp' : 'AEPS/api/data/EkycVerifyOtp',
         data: data,
-      })
+      });
 
       console.log(data);
       console.log(response, '~~~~~~~~~~~~~~~~~~~~');
@@ -169,9 +174,8 @@ const Aepsekyc = () => {
       // {"Message": "Otp is expired..Please request for new otp", "Status": false}
 
       if (response) {
-
         if (response.Status === true) {
-          navigation.navigate('Aepsekycscan');
+          navigation?.navigate("Aepsekycscan");
         } else {
           Alert.alert('Error', `${response.Message} !!!`);
         }
@@ -182,9 +186,8 @@ const Aepsekyc = () => {
       console.error(error);
       // Handle errors here
     }
-  };
-
-  console.log('mobilenum*****,', mobileNumber)
+  }, [latitude, longitude]); //
+  console.log(latitude, longitude)
   return (
     <View style={styles.main}>
       <AppBarSecond title={'E-Kyc'} />
@@ -238,6 +241,8 @@ const Aepsekyc = () => {
             </View>
           )}
         </View>
+
+        {isLoading && <ShowLoader />}
       </ScrollView>
 
     </View>

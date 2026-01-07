@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { View, Text, Image } from 'react-native-animatable';
-import { ActivityIndicator, Alert, PermissionsAndroid, TextInput, ToastAndroid } from 'react-native';
+import { ActivityIndicator, Alert, PermissionsAndroid, TextInput, ToastAndroid, RefreshControl, AsyncStorage, } from 'react-native';
 import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
 import LinearGradient from 'react-native-linear-gradient';
 import { StyleSheet } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { hScale, SCREEN_HEIGHT, wScale } from '../../utils/styles/dimensions';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../reduxUtils/store';
 import LottieView from 'lottie-react-native';
@@ -29,8 +29,9 @@ import { colors } from '../../utils/styles/theme';
 import { FlashList } from '@shopify/flash-list';
 import { openSettings } from 'react-native-permissions';
 import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
-const Profile = () => {   
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+import AadharCardUpload from '../../components/AdharImageUpload';
+const Profile = () => {
+  const { colorConfig, IsDealer } = useSelector((state: RootState) => state.userInfo);
   const { get, post } = useAxiosHook();
   const [profileData, setProfileData] = useState<any>({});
 
@@ -74,36 +75,7 @@ const Profile = () => {
   const setselectedopt = value => {
     setSelectedOpt(value);
   };
-  const requestCameraPermission = useCallback(async () => {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.CAMERA,
-        {
-          title: "Camera Permission",
-          message:
-            "This app needs access to your camera to take photos and videos.",
-          buttonPositive: "OK",
-        }
-      );
 
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-
-      } else {
-        Dialog.show({
-          type: ALERT_TYPE.WARNING,
-          title: "Permission Required",
-          textBody: "Please grant the camera permission from settings.",
-          button: "OK",
-          onPressButton: () => {
-            Dialog.hide();
-            openSettings().catch(() => console.warn("cannot open settings"));
-          },
-        });
-      }
-    } catch (err) {
-      console.warn(err);
-    }
-  }, []);
   const navigation = useNavigation();
 
   const [selectedGender, setSelectedGender] = useState('Male');
@@ -131,46 +103,78 @@ const Profile = () => {
     setActiveTab(index);
   };
 
-  useEffect(() => {
-    requestCameraPermission;
-    const fetchData = async () => {
-      const res = await get({ url: APP_URLS.getProfile })
-      if (res.data) {
-        setProfileData(JSON.parse(decryptData(res.value1, res.value2, res.data)));
-        console.log(JSON.parse(decryptData(res.value1, res.value2, res.data)))
 
-        const data = JSON.parse(decryptData(res.value1, res.value2, res.data))
-        console.log(data.videokycstatus)
+  const defaultProfileData = {
+    Name: '',
+    firmName: '',
+    JoinDate: new Date().toISOString().split('T')[0],
+    Mobile: '',
+    Email: '',
+    BusinessType: '',
+    Aadhar: '',
+    BusinessTypeCode: '',
+    PAN: '',
+    GST: '',
+    Address: '',
+    State: '',
+    District: '',
+    Cityname: '',
+    PINCode: '',
+    Photo: null,
+    dob: '',
+  };
+
+  // Merge default + actual data
+  const fetchData = async () => {
+    const url2 = `${APP_URLS.dealer_profile}dlmid=${userId}`
+    const res = await get({ url: IsDealer ? url2 : APP_URLS.getProfile })
+    setRefreshing(false);
 
 
-        if(data.videokycstatus ==='Y'){
+    console.log(res, '*******', IsDealer ? url2 : APP_URLS.getProfile)
+    if (res) {
 
 
-          // Alert.alert(
-          //   'Info',
-          //   'Video kyc is pending',
-          //   [
-          //     {
-          //       text: 'OK',  // Button text
-          //       onPress: () => console.log('OK Pressed'),
-          //     },
-          //     {
-          //       text: 'Procceed Video Kyc',  
-          //       onPress: () => {
-          //         navigation.navigate('VideoKYC');
+
+      setProfileData(IsDealer ? res : JSON.parse(decryptData(res.value1, res.value2, res.data)));
+      console.log(JSON.parse(decryptData(res.value1, res.value2, res.data)))
+
+      const data = JSON.parse(decryptData(res.value1, res.value2, res.data))
+      console.log(data.videokycstatus)
 
 
-          //       },
-          //     },
-          //   ],
-          //   { cancelable: false }
-          // );
-          
-        }
+      if (data.videokycstatus === 'Y') {
+
+
+        // Alert.alert(
+        //   'Info',
+        //   'Video kyc is pending',
+        //   [
+        //     {
+        //       text: 'OK',  // Button text
+        //       onPress: () => console.log('OK Pressed'),
+        //     },
+        //     {
+        //       text: 'Procceed Video Kyc',  
+        //       onPress: () => {
+        //         navigation.navigate('VideoKYC');
+
+
+        //       },
+        //     },
+        //   ],
+        //   { cancelable: false }
+        // );
+
       }
-
     }
 
+  }
+  const profileDataToUse = { ...defaultProfileData, ...profileData };
+
+  useEffect(() => {
+
+    console.log(profileData)
     fetchData();
     setState(profileData?.State);
     setName(profileData?.Name);
@@ -178,6 +182,9 @@ const Profile = () => {
     setaadharNo(profileData?.Aadhar);
     setpanNo(profileData?.PAN);
     setGST(profileData?.GST);
+
+    Promise.all([fetchData()]).then(() => setRefreshing(false));
+
   }, [profileData.State, profileData?.Name, profileData?.firmName, profileData?.Aadhar, profileData?.PAN, profileData?.GST])
 
   const onPressDeleteUser = () => {
@@ -190,7 +197,7 @@ const Profile = () => {
   };
   const handleItemClick = (type, base64Img) => {
     let data = {};  // Declare the data object
-  
+
     switch (type) {
       case 'Aadhar Card':
         data = {
@@ -200,7 +207,7 @@ const Profile = () => {
           'currentrole': role
         };
         break;
-        
+
       case 'Pan Card':
         data = {
           "PancardFront": base64Img,
@@ -208,7 +215,7 @@ const Profile = () => {
           'currentrole': role
         };
         break;
-  
+
       case 'GST IN':
         data = {
           "Registrationcertificatepath": base64Img,
@@ -216,7 +223,7 @@ const Profile = () => {
           'currentrole': role
         };
         break;
-  
+
       case 'Shop Selfie':
         data = {
           "ShopeWithSelfie": base64Img,
@@ -224,7 +231,7 @@ const Profile = () => {
           'currentrole': role
         };
         break;
-  
+
       case 'Service Agreement':
         data = {
           "Serviceaggreementpath": base64Img,
@@ -232,7 +239,7 @@ const Profile = () => {
           'currentrole': role
         };
         break;
-  
+
       case 'Profile image':
         data = {
           "ProfileImagess": base64Img,
@@ -240,27 +247,28 @@ const Profile = () => {
           "currentrole": role,
         };
         break;
-  
+
       default:
-        data = null;  // Return null if no match
+        data = null;
         break;
     }
-  
-    return data;  // Return the data object
+
+    return data;
   };
-  
+
 
   const uploadDoCx = async (typ, bs64) => {
+    setImageModalVisible(false)
     try {
-      const data = await handleItemClick(typ, bs64);
+      const data = handleItemClick(typ, bs64);
       const body = JSON.stringify(data);
-  
-      const endpoint = typ === 'Profile image' 
-        ? `/api/user/UploadUserImages` 
-        : `/api/user/UploadDocumentsImages`;
-  
+      console.log(body, 'BODY****', typ)
+      const endpoint = typ === 'Profile image'
+        ? `api/user/UploadUserImages`
+        : `api/user/UploadDocumentsImages`;
+
       const url = `https://${APP_URLS.baseWebUrl}${endpoint}`;
-  console.log(url)
+      console.log(url)
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -269,14 +277,14 @@ const Profile = () => {
         },
         body: body,
       });
-  
+
       if (!response.ok) {
         throw new Error(`Failed to upload. Status: ${response.status}`);
       }
-  
+
       const responseData = await response.json();
-  
-      if (responseData  === 'Image Updated Successfully.') {
+
+      if (responseData === 'Image Updated Successfully.') {
         ToastAndroid.show(responseData, ToastAndroid.SHORT);
 
       } else {
@@ -410,6 +418,7 @@ const Profile = () => {
   const [aadharNo, setaadharNo] = useState<any>(profileData?.Aadhar);
   const [panNo, setpanNo] = useState<any>(profileData?.PAN);
   const [GST, setGST] = useState<any>(profileData?.GST);
+  const [lastupload, setLastUpload] = useState('');
 
   const showBottomSheetList = () => {
     return (
@@ -449,46 +458,7 @@ const Profile = () => {
       />
     );
   };
-  const aadhar2SideUpload = () => {
 
-    Alert.alert(
-      '',
-      `Choose Options For Upload Aadhar Front/Back Side Image`,
-      [
-        {
-          text: 'Cancel',
-          onPress: () => {setshowLoader(false)},
-          style: 'cancel',
-        },
-        {
-          text: 'Front Side',
-          onPress: async () => {
-            FrontAadhar('Front Side')
-            //     const options = {
-            //       mediaType: 'image',
-            //     };
-
-            //     await launchCamera({ mediaType: 'photo', includeBase64: true }, (response) => {
-            //       console.log(response?.assets?.[0]?.base64);
-            //  })
-
-          },
-          style: 'default',
-        },
-        {
-          text: 'Back Side',
-          onPress: async () => {
-
-
-            BackAadhar('Back Side')
-
-          },
-        },
-      ],
-      { cancelable: false }
-    );
-
-  }
 
   const FrontAadhar = (Typename) => {
 
@@ -498,7 +468,7 @@ const Profile = () => {
       [
         {
           text: 'Cancel',
-          onPress: () => {setshowLoader(false)},
+          onPress: () => { setshowLoader(false) },
           style: 'cancel',
         },
         {
@@ -539,7 +509,7 @@ const Profile = () => {
       [
         {
           text: 'Cancel',
-          onPress: () => {setshowLoader(false)},
+          onPress: () => { setshowLoader(false) },
           style: 'cancel',
         },
         {
@@ -580,13 +550,15 @@ const Profile = () => {
     );
   }
   const UploadOptions = (Typename) => {
+
+    setLastUpload(Typename)
     Alert.alert(
       Typename,
       `Choose Options For Upload ${Typename}`,
       [
         {
           text: 'Cancel',
-          onPress: () => {setshowLoader(false)},
+          onPress: () => { setshowLoader(false) },
           style: 'cancel',
         },
         {
@@ -597,31 +569,8 @@ const Profile = () => {
               mediaType: 'image',
             };
 
-            await launchCamera({ mediaType: 'photo', includeBase64: true }, (response) => {
-              console.log(response?.assets?.[0]?.base64);
-              setbase64Img(response?.assets?.[0]?.base64)
-              uploadDoCx(Typename, response?.assets?.[0]?.base64);
+            requestCameraPermission(Typename);
 
-            })
-            //  await launchCamera(options, async (response) => {
-            //     if (response.didCancel) {
-
-            //       console.log('User cancelled video picker');
-            //     } else if (response.errorCode) {
-            //       console.log('VideoPicker Error: ', response.errorMessage);
-            //     } else { 
-
-            //        setbase64Img(response?.assets?.[0]?.base64);
-
-
-            //        console.log(response?.assets?.[0]?.base64)
-            //     if(!base64Img){
-            //       uploadDoCx(Typename);
-            //   } 
-
-
-            //     }
-            //   });
           },
           style: 'default',
         },
@@ -632,8 +581,7 @@ const Profile = () => {
             await launchImageLibrary({ selectionLimit: 1, mediaType: 'photo', includeBase64: true }, (response) => {
               setbase64Img(response?.assets?.[0]?.base64)
 
-              if (!base64Img) {
-                console.log(base64Img);
+              if (response?.assets?.[0]?.base64) {
                 uploadDoCx(Typename, response?.assets?.[0]?.base64);
               }
             });
@@ -645,124 +593,244 @@ const Profile = () => {
       { cancelable: false }
     );
   }
+
+  const requestCameraPermission = useCallback(async (type) => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        {
+          title: "Camera Permission",
+          message:
+            "This app needs access to your camera to take photos for upload cancel cheque.",
+          buttonPositive: "OK",
+        }
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        if (type == 'AA') {
+          navigation.navigate('AadharCardUpload', { id: userId });
+        } else {
+          await launchCamera({ mediaType: 'photo', includeBase64: true }, (response) => {
+            setbase64Img(response?.assets?.[0]?.base64)
+
+            if (response?.assets?.[0]?.base64) {
+              uploadDoCx(type, response?.assets?.[0]?.base64);
+            }
+          })
+        }
+
+
+      } else {
+        Dialog.show({
+          type: ALERT_TYPE.WARNING,
+          title: "Permission Required",
+          textBody: "Please grant the camera permission from settings.",
+          button: "OK",
+          onPressButton: () => {
+            Dialog.hide();
+            openSettings().catch(() => console.warn("cannot open settings"));
+          },
+        });
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  }, []);
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    //setViewMoreStatus(false)
+    fetchData().then(() => setRefreshing(false));
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      const checkStatusAndCall = async () => {
+        try {
+          const status = await AsyncStorage.getItem('Profile_status');
+          console.error(' Profile_status:', status);
+          if (status === 'Updated') {
+            fetchData()
+          }
+
+
+        } catch (error) {
+          console.error('Error reading AsyncStorage:', error);
+        }
+      };
+
+      checkStatusAndCall();
+
+      return () => {
+      };
+    }, [])
+  );
+
+  console.error(profileData)
   return (
     <View style={styles.main}>
+
       <LinearGradient
+
         colors={[colorConfig.primaryColor, colorConfig.secondaryColor]}
         style={{ flex: 1 }}>
-        <View>
-          <AppBar
-            title={'Manage Profile'}
-            actionButton={<SvgXml xml={deleteaccount} />}
-          // onActionPress={onPressDeleteUser}
-          />
-
-          <View>
-            <View style={styles.imgtopedit}>
-              <View
-                style={[
-                  styles.editmainview,
-                  { backgroundColor: colorConfig.secondaryColor },
-                ]}>
-                <View style={styles.editimagestyle}>
-                  <View style={styles.profileimgedit1}>
-                    <Image
-                      resizeMode='cover'
-
-                      source={profileImage ? { uri: "data:image/png;base64," + profileImage } : profileData?.Photo ? {uri: `http://${APP_URLS.baseWebUrl}` + profileData?.Photo} : require('../drawer/assets/bussiness-man.png')}
-                      style={{ height: hScale(80), width: wScale(80) }}
-                    />
-                    <View
-                      style={[
-                        styles.profileimgeditbutton,
-                        { backgroundColor: colorConfig.secondaryColor },
-                      ]}>
-                      <TouchableOpacity onPress={async () => {
+        <AppBar
+          title={'Manage Profile'}
+          actionButton={<SvgXml xml={deleteaccount} />}
+        // onActionPress={onPressDeleteUser}
+        />
 
 
-                        await launchImageLibrary({ selectionLimit: 1, mediaType: 'photo', includeBase64: true }, async (response) => {
-                         await setProfileImage(response?.assets?.[0]?.base64);
+        <View style={styles.imgtopedit}>
+          <View
+            style={[
+              styles.editmainview,
+              { backgroundColor: colorConfig.secondaryColor },
+            ]}>
+            <View style={styles.editimagestyle}>
+              <View style={styles.profileimgedit1}>
+                <Image
+                  resizeMode='cover'
 
-                         const profileImage = response?.assets?.[0]?.base64;
-                          uploadDoCx('Profile image', profileImage);
+                  source={profileImage ? { uri: "data:image/png;base64," + profileImage } : profileData?.Photo ? { uri: `http://${APP_URLS.baseWebUrl}` + profileData?.Photo } : require('../drawer/assets/bussiness-man.png')}
+                  style={{ height: hScale(80), width: wScale(80) }}
+                />
+                <View
+                  style={[
+                    styles.profileimgeditbutton,
+                    { backgroundColor: colorConfig.secondaryColor },
+                  ]}>
+                  <TouchableOpacity onPress={async () => {
+
+
+                    try {
+                      const granted = await PermissionsAndroid.request(
+                        PermissionsAndroid.PERMISSIONS.CAMERA,
+                        {
+                          title: "Camera Permission",
+                          message:
+                            "This app needs access to your camera to take photos for upload cancel cheque.",
+                          buttonPositive: "OK",
+                        }
+                      );
+                      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                        if (Object.keys(profileDataToUse).length !== 0) {
+
+                          await AsyncStorage.setItem('Profile_status', 'un');
+
+                          navigation.navigate('EditProfile', { profileData: profileDataToUse });
+
+                        }
+                        console.log(Object.keys(profileData).length !== 0)
+
+                      } else {
+                        Dialog.show({
+                          type: ALERT_TYPE.WARNING,
+                          title: "Permission Required",
+                          textBody: "Please grant the camera permission from settings.",
+                          button: "OK",
+                          onPressButton: () => {
+                            Dialog.hide();
+                            openSettings().catch(() => console.warn("cannot open settings"));
+                          },
                         });
+                      }
+                    } catch (err) {
+                      console.warn(err);
+                    }
+
+                    // await launchImageLibrary({ selectionLimit: 1, mediaType: 'photo', includeBase64: true }, async (response) => {
+                    //   await setProfileImage(response?.assets?.[0]?.base64);
+
+                    //   const profileImage = response?.assets?.[0]?.base64;
+                    //   uploadDoCx('Profile image', profileImage);
+                    // });
 
 
 
 
 
-                      }}>
-                        <SvgXml xml={editProfile} />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.editimageTextstyle}>
-                  <Text
-                    allowFontScaling={false}
-                    style={styles.profileImportantNote}>
-                    Profile Important Note
-                  </Text>
-                  <Text allowFontScaling={false} style={styles.retailstyle}>
-                    Dear Retail Partner, You can change your profile details
-                    only before verification by the administrator.After
-                    verification you cannot change the verified, you can only
-                    change/upload option documents.
-                  </Text>
-
+                  }}>
+                    <SvgXml xml={editProfile} />
+                  </TouchableOpacity>
                 </View>
               </View>
             </View>
+
+            <View style={styles.editimageTextstyle}>
+              <Text
+                allowFontScaling={false}
+                style={styles.profileImportantNote}>
+                Profile Important Note
+              </Text>
+              <Text allowFontScaling={false} style={styles.retailstyle}>
+                Dear Retail Partner, You can change your profile details
+                only before verification by the administrator.After
+                verification you cannot change the verified, you can only
+                change/upload option documents.
+              </Text>
+
+            </View>
           </View>
+        </View>
+        <ScrollView refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+
 
           <View>
             <View style={styles.personalinfoandkyc}>
               <SelectableButton setselectedopt={setselectedopt} />
             </View>
           </View>
-        </View>
 
-        <ScrollView>
           <View>
             <View style={styles.mainbody}>
-              <View>
+              {Object.keys(profileData).length !== 0 ? <View>
                 {selectedopt ? (
                   <View>
                     <View>
 
-{profileData.videokycstatus === 'Y' ? null :  <TouchableOpacity
-  onPress={() => null}
-  style={{
-    width: '100%',
-    height: hScale(30),
-    borderWidth: 1,
-    borderColor:  profileData.videokycstatus === 'N' ? 'red' : 'orange',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 5,
-    backgroundColor:  profileData.videokycstatus === 'N' ? 'red' : 'orange',
-  }}
->
-  <Text style={{ fontSize: 14, color: 'white', flexDirection: 'row', alignItems: 'center' }}>
-    { profileData.videokycstatus === 'N' ? (
-      <>
-        Upload 🎥
-      </>
-    ) : (
-      <>
-        Pending ⌛
-      </>
-    )}
-  </Text>
-</TouchableOpacity>}
-                  
+                      {profileData.videokycstatus === 'Y' ? null : <TouchableOpacity
+                        onPress={() => {
+
+                          navigation.navigate('VideoKYC', {
+                            'CNTNT': {
+                              'hindi': '',
+                              'Eng': ''
+
+                            }
+                          });
+                        }}
+                        style={{
+                          width: '100%',
+                          height: hScale(30),
+                          borderWidth: 1,
+                          borderColor: profileData.videokycstatus === 'N' ? 'red' : 'orange',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          borderRadius: 5,
+                          backgroundColor: profileData.videokycstatus === 'N' ? 'red' : 'orange',
+                        }}
+                      >
+                        <Text style={{ fontSize: 14, color: 'white', flexDirection: 'row', alignItems: 'center' }}>
+                          {profileData.videokycstatus === 'N' ? (
+                            <>
+                              Continue to video kyc 🎥
+                            </>
+                          ) : (
+                            <>
+                              Pending ⌛
+                            </>
+                          )}
+                        </Text>
+                      </TouchableOpacity>}
+
 
                       <View>
 
                         <FlotingInput label="Your Name"
                           autoFocus={false}
-                          editable={false}
+                          editable={true}
                           value={Name} inputstyle={undefined} labelinputstyle={undefined}
 
                           onChangeTextCallback={(text) => {
@@ -799,6 +867,8 @@ const Profile = () => {
 
                       <View>
                         <FlotingInput label="Date Of Birth (DD MM YYYY)"
+
+                          value={profileData.dob}
                           // autoFocus={true} // Auto-focus on mount
                           onBlur={() => setIsMobileFocused(true)} // When this input blurs, focus the next input
                         />
@@ -817,7 +887,7 @@ const Profile = () => {
 
                       <View style={{ position: 'relative' }}>
                         <FlotingInput label="Select State"
-                                                  editable={false}
+                          editable={false}
 
                           //  autoFocus={true} // Auto-focus on mount
                           onBlur={() => setIsMobileFocused(true)}
@@ -859,7 +929,7 @@ const Profile = () => {
 
                       <FlotingInput
                         label="Area Pincode"
-                        value={profileData?.PIN}
+                        value={profileData?.PINCode}
                         keyboardType="numeric"
                         //  autoFocus={true} // Auto-focus on mount
                         onBlur={() => setIsMobileFocused(true)} // When this input blurs, focus the next input
@@ -917,17 +987,12 @@ const Profile = () => {
 
 
                             if (profileData?.aadharsts === 'N' && profileData?.chkaadharfront === null && profileData?.chkaadharback === null) {
-                              navigation.navigate('AadharCardUpload');
 
-                            
-                              // if (isFrontA) {
-                              //   FrontAadhar('Front');
-                              // } else {
-                              //   BackAadhar('Back')
-                              // }
+                              requestCameraPermission('AA')
+
                               setImagePath('')
                             } else {
-                              console.log(profileData?.aadharcardPath)
+
                               setImagePath(newUrl)
                               setImageModalVisible(true);
                               setModalTitle('Aadhar Card (Front Side)')
@@ -960,16 +1025,21 @@ const Profile = () => {
                         />
                         <View style={styles.righticon2}>
                           <TouchableOpacity onPress={() => {
-                             setImagePath(``)
+                            setImagePath(``)
 
-   const url = `${profileData?.chkpanpath}`;
-   const newUrl = url.replace(/^https?:\/\/www\./, 'https://');
-   console.log(newUrl);
+                            const url = `${profileData?.chkpanpath}`;
+                            const newUrl = url.replace(/^https?:\/\/www\./, 'https://');
+                            console.log(newUrl);
+
+
+
                             if (profileData?.pancardPath === null && profileData?.PSAStatus === 'N') {
                               setshowLoader(true);
-                              UploadOptions('Pan dCadrd')
+                              UploadOptions('Pan Card')
+
                             } else {
-                             setImagePath(`http://${APP_URLS.baseWebUrl}${newUrl}`)
+
+                              setImagePath(`http://${APP_URLS.baseWebUrl}${newUrl}`)
                               setImageModalVisible(true);
                               setModalTitle('Pan Card')
                             }
@@ -1068,7 +1138,7 @@ const Profile = () => {
                         <View style={styles.righticon2}>
                           <TouchableOpacity onPress={() => {
                             if (profileData?.chkShopwithSalfie === null) {
-                              UploadOptions('Selfie Upload');
+                              UploadOptions('Shop Selfie');
                               setshowLoader(true);
                               setImagePath('')
                             } else {
@@ -1141,44 +1211,90 @@ const Profile = () => {
                     </View>
                   </View>
                 )}
-              </View>
-            </View>
-          </View>
-        </ScrollView>
-        <BottomSheet
-          isVisible={showStateList || showDistrictList}
-          onBackdropPress={() => {
-            setShowStateList(false);
-            setShowDistrictList(false);
-          }}
-          scrollViewProps={{ scrollEnabled: false }}
-          containerStyle={{ backgroundColor: 'transparent' }}>
-          <View
-            style={{
-              backgroundColor: colors.white,
-              height: SCREEN_HEIGHT / 1.5,
-              flex: 1,
-              marginBottom: wScale(40),
-            }}>
-            <View style={styles.StateTitle}>
-              <Text style={styles.stateTitletext}>
-                {showStateList ? 'select state' : 'select District'}
-              </Text>
-            </View>
+              </View> : (
 
-            {showBottomSheetList()}
+
+                <View>
+                  <TouchableOpacity
+                    onPress={() =>
+                      navigation.navigate('EditProfile', { profileData: profileDataToUse })
+                    }
+                    style={{ padding: hScale(10), backgroundColor: colorConfig.secondaryColor, borderRadius: 10, bottom: hScale(10) }}>
+                    <Text style={{ color: '#fff', fontWeight: '600' }}>Click to Create Your Profile          {'>>'}</Text>
+                  </TouchableOpacity>
+                  <Text>
+
+                  </Text>
+
+                  <TouchableOpacity
+                    onPress={() =>
+
+                      navigation.navigate('VideoKYC', {
+                        'CNTNT': {
+                          'hindi': '',
+                          'Eng': ''
+
+                        }
+                      })}
+                    style={{ padding: hScale(10), backgroundColor: colorConfig.secondaryColor, borderRadius: 10, bottom: hScale(10) }}>
+                    <Text style={{ color: '#fff', fontWeight: '600' }}>Click to Create Video Kyc          {'>>'}</Text>
+                  </TouchableOpacity>
+                </View>
+
+
+
+              )}
+            </View>
           </View>
-        </BottomSheet>
-        <ImageBottomSheet
-          imagePath={imagePath}
-          setModalVisible={setImageModalVisible}
-          isModalVisible={isImageModalVisible}
-          modalTitle={modalTitle}
-          setImagePath={setImagePath}
-        />
-        {/* <SelectedTad /> */}
+          <BottomSheet
+            isVisible={showStateList || showDistrictList}
+            onBackdropPress={() => {
+              setShowStateList(false);
+              setShowDistrictList(false);
+            }}
+            scrollViewProps={{ scrollEnabled: false }}
+            containerStyle={{ backgroundColor: 'transparent' }}>
+            <View
+              style={{
+                backgroundColor: colors.white,
+                height: SCREEN_HEIGHT / 1.5,
+                flex: 1,
+                marginBottom: wScale(40),
+              }}>
+              <View style={styles.StateTitle}>
+                <Text style={styles.stateTitletext}>
+                  {showStateList ? 'select state' : 'select District'}
+                </Text>
+              </View>
+
+              {showBottomSheetList()}
+            </View>
+          </BottomSheet>
+          <ImageBottomSheet
+            imagePath={imagePath}
+            setModalVisible={setImageModalVisible}
+            isModalVisible={isImageModalVisible}
+            modalTitle={modalTitle}
+            setImagePath={setImagePath}
+            isUri={true}
+            ReUpload={() => {
+              setImageModalVisible(false)
+              if (modalTitle == 'Aadhar Card (Front Side)' || modalTitle == 'Address Proof (Back Side)') {
+                requestCameraPermission('AA')
+              } else {
+                UploadOptions(modalTitle || lastupload);
+
+              }
+
+            }
+            }
+          />
+
+        </ScrollView >
       </LinearGradient>
-    </View>
+
+    </View >
+
   );
 };
 

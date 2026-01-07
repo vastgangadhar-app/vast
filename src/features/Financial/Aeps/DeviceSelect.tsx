@@ -9,20 +9,23 @@ import CheckSvg from '../../drawer/svgimgcomponents/CheckSvg';
 import CloseSvg from '../../drawer/svgimgcomponents/CloseSvg';
 import FlotingInput from '../../drawer/securityPages/FlotingInput';
 import OnelineDropdownSvg from '../../drawer/svgimgcomponents/simpledropdown';
+import FacescanSvg from '../../drawer/svgimgcomponents/FacescanSvg';
+import { colors } from '../../../utils/styles/theme';
 
-const SelectDevice = ({ setDeviceName, device, opPress, pkg }) => {
+const SelectDevice = ({ setDeviceName, device, opPress, pkg, isface = false, isface2 = false, onPressface, isProcees }) => {
   const [selectedDevice, setSelectedDevice] = useState();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isModalVisible2, setIsModalVisible2] = useState(false);
   const { colorConfig } = useSelector((state: RootState) => state.userInfo);
   const [rdpkg, setRdPkg] = useState(pkg);
 
   const devices = [
-    'mantra L0',
-    'mantra L1',
-    'startek L0',
-    'startek L1',
-    'morpho L0',
-    'morpho L1'
+    'Mantra L0',
+    'Mantra L1',
+    'Startek L0',
+    'Startek L1',
+    'Morpho L0',
+    'Morpho L1'
   ];
 
   const handleOpenModal = () => {
@@ -48,12 +51,13 @@ const SelectDevice = ({ setDeviceName, device, opPress, pkg }) => {
     }
     console.log(selectedOption)
     const captureMapping = {
-      'mantra L0': 'com.mantra.rdservice',
-      'mantra L1': 'com.mantra.mfs110.rdservice',
-      'startek L0': 'com.acpl.registersdk',
-      'startek L1': 'com.acpl.registersdk_l1',
-      'morpho L0': 'com.scl.rdservice',
-      'morpho L1': 'com.idemia.l1rdservice',
+      'Mantra L0': 'com.mantra.rdservice',
+      'Mantra L1': 'com.mantra.mfs110.rdservice',
+      'Startek L0': 'com.acpl.registersdk',
+      'Startek L1': 'com.acpl.registersdk_l1',
+      'Morpho L0': 'com.scl.rdservice',
+      'Morpho L1': 'com.idemia.l1rdservice',
+
     };
 
     console.log(captureMapping[selectedOption])
@@ -72,20 +76,61 @@ const SelectDevice = ({ setDeviceName, device, opPress, pkg }) => {
       alert('Invalid option selected');
     }
   };
+  const check = () => {
+    console.log(isProcees)
+    console.log(isProcees)
+
+    if(!isProcees){
+      ToastAndroid.show('Please complate all fields', ToastAndroid.BOTTOM)
+return;
+    }
+
+    if (!isface) {
+      ToastAndroid.show('The bank you have selected is not allowed for face authentication.', ToastAndroid.BOTTOM)
+      return
+    }
+
+
+
+    onPressface()
+
+
+  }
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={handleOpenModal} style={[styles.selectButton,]}>
-        <FlotingInput
-          label={selectedDevice ? 'your Device' : 'Select your Device'}
-          value={selectedDevice}
-          editable={false}
-        />
-        <View style={[styles.righticon2]}>
-          {selectedDevice ? <View style={[styles.languageEmojiContainer, { backgroundColor: colorConfig.secondaryColor }]}>
-            <CheckSvg />
-          </View> : <OnelineDropdownSvg />}
-        </View>
-      </TouchableOpacity>
+      <View style={styles.devicerow}>
+        <TouchableOpacity onPress={handleOpenModal} style={[styles.selectButton,]}>
+          <FlotingInput
+            label={selectedDevice ? 'Your Device' : 'Select Your Device'}
+            value={selectedDevice}
+            editable={false}
+          />
+          <View style={[styles.righticon2]}>
+            {/* {selectedDevice ? <View style={[styles.languageEmojiContainer, { backgroundColor: colorConfig.secondaryColor }]}>
+              <CheckSvg />
+            </View> : */}
+            <OnelineDropdownSvg />
+
+
+          </View>
+
+        </TouchableOpacity >
+
+        <TouchableOpacity
+          disabled={!isface}
+          onPress={check}
+          style={[styles.facestyle, isface && styles.bnaktru
+          ]} >
+
+          <Text style={styles.facetex}>
+            Face {'\n'}Auth
+          </Text>
+          <FacescanSvg />
+        </TouchableOpacity>
+
+
+      </View>
+
       <Modal visible={isModalVisible}
         onRequestClose={handleCloseModal}
         animationType="slide"
@@ -150,7 +195,7 @@ const SelectDevice = ({ setDeviceName, device, opPress, pkg }) => {
         </View>
       </Modal>
 
-    </View>
+    </View >
   );
 };
 
@@ -159,7 +204,14 @@ const styles = StyleSheet.create({
   },
   selectButton: {
     borderRadius: 8,
-    marginTop: hScale(20)
+    width: '70%'
+  },
+  devicerow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    // alignItems: 'center',
+    // marginTop: hScale(20),
+
   },
   deviceItem: {
     paddingVertical: hScale(12),
@@ -207,7 +259,7 @@ const styles = StyleSheet.create({
     borderRightWidth: wScale(33), // Width of the triangle
     borderBottomWidth: wScale(0), // Set to 0 to hide the bottom edge
     borderLeftWidth: wScale(3), // Width of the triangle
-    width: wScale(70),
+    width: '100%',
     height: hScale(40),
     borderRightColor: 'transparent', // Hide the right edge
     borderBottomColor: 'transparent', // Hide the bottom edge
@@ -248,7 +300,10 @@ const styles = StyleSheet.create({
     width: wScale(35),
     alignItems: 'center',
     justifyContent: 'center',
+    borderColor: '#fff'
   },
+
+
   righticon2: {
     position: "absolute",
     left: "auto",
@@ -257,7 +312,29 @@ const styles = StyleSheet.create({
     height: "85%",
     alignItems: "flex-end",
     justifyContent: "center",
-    paddingRight: wScale(12),
+    paddingRight: wScale(4),
+  },
+  facestyle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: wScale(0.8),
+    borderColor: 'red',
+    backgroundColor: colors.red_deactivated_bg,
+    borderRadius: wScale(5),
+    width: '28%',
+    paddingHorizontal: wScale(8),
+    height: hScale(48),
+    marginTop: hScale(8.9),
+    justifyContent: 'space-between'
+
+  },
+  facetex: {
+    textAlign: 'center',
+    color: '#000',
+  },
+  bnaktru: {
+    backgroundColor: colors.green10,
+    borderColor: colors.green01D
   },
 });
 

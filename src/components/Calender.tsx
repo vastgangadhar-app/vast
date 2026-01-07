@@ -9,7 +9,7 @@ import { hScale, wScale } from '../utils/styles/dimensions';
 import BackSvg from '../features/drawer/svgimgcomponents/BackSvg';
 import NextcalenderSvg from '../features/drawer/svgimgcomponents/NextcalenderSvg';
 
-const CustomCalendar = ({ onDateSelected }) => {
+const CustomCalendar = ({ onDateSelected, selectedDate }) => {
   const { colorConfig } = useSelector((state: RootState) => state.userInfo);
   const handleDateChange = (date) => {
     const formattedDate = moment(date).format('YYYY-MM-DD');
@@ -18,16 +18,18 @@ const CustomCalendar = ({ onDateSelected }) => {
   };
 
   return (
-    <View style={[styles.main, { backgroundColor: colorConfig.secondaryColor }]}>
-      <View style={styles.container}>
+    <View style={[styles.main, { backgroundColor: colorConfig.secondaryColor, }]}>
+      <View style={[styles.container, { borderColor: colorConfig.secondaryColor }]}>
         <CalendarPicker
           onDateChange={handleDateChange}
+          initialDate={selectedDate ? new Date(selectedDate) : new Date()}
+          selectedDayTextColor="green"
           nextTitle={<NextcalenderSvg size={25} color='#000' />}
           previousTitle={<BackSvg size={25} color='#000' />}
           selectedDayColor="red"
-          monthTitleStyle	={styles.month}
-          yearTitleStyle	={styles.month}
-          selectMonthTitle	={styles.month}
+          monthTitleStyle={styles.month}
+          yearTitleStyle={styles.month}
+          selectMonthTitle={styles.month}
         />
       </View>
     </View>
@@ -39,18 +41,21 @@ const styles = StyleSheet.create({
     borderTopEndRadius: 10,
     borderTopLeftRadius: 10,
     flex: 1,
+
   },
   container: {
     borderTopEndRadius: 10,
     borderTopLeftRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
     flex: 1,
     paddingBottom: hScale(20),
+    borderWidth: 6,
+    borderBottomWidth: 0
   },
-  month:{
-    fontSize:wScale(25),
-    fontWeight:'bold',
-    textTransform:'uppercase'
+  month: {
+    fontSize: wScale(25),
+    fontWeight: 'bold',
+    textTransform: 'uppercase'
   }
 });
 

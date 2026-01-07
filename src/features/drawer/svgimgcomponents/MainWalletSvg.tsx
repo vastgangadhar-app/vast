@@ -4,18 +4,10 @@ import { SvgXml } from "react-native-svg";
 import { wScale } from "../../../utils/styles/dimensions";
 import { color } from "@rneui/base";
 
-const MainWalletSvg = ({ size = wScale(34), color = '#fff' }) => {
+const MainWalletSvg = ({ size = wScale(90), color = '#fff' }) => {
     const svgname = `
 
-<?xml version="1.0" standalone="no"?>
-<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="128" height="128" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="wallet">
-<g id="wallet_2">
-<path id="Combined Shape" fill-rule="evenodd" clip-rule="evenodd" d="M36 17V14H41C41.5526 14 42 14.4471 42 15V22H35.0216C31.7073 22 29.0216 24.6857 29.0216 28C29.0216 31.3143 31.7073 34 35.0216 34H38.9316C39.4839 34 39.9316 33.5523 39.9316 33C39.9316 32.4477 39.4839 32 38.9316 32H35.0216C32.8119 32 31.0216 30.2097 31.0216 28C31.0216 25.7903 32.8119 24 35.0216 24H42V39C42 39.5529 41.5526 40 41 40H7C6.44744 40 6 39.5529 6 39V15V13V9C6 8.44713 6.44744 8 7 8H33C33.5526 8 34 8.44713 34 9V12H9C8.44772 12 8 12.4477 8 13C8 13.5523 8.44772 14 9 14H34V17C34 17.5523 34.4477 18 35 18C35.5523 18 36 17.5523 36 17ZM41 12H36V9C36 7.34225 34.6568 6 33 6H7C5.34318 6 4 7.34225 4 9V13V15V39C4 40.6577 5.34318 42 7 42H41C42.6568 42 44 40.6577 44 39V15C44 13.3423 42.6568 12 41 12Z" fill="#000000"/>
-<path id="Stroke 7" fill-rule="evenodd" clip-rule="evenodd" d="M38 28C38 29.104 37.104 30 36 30C34.896 30 34 29.104 34 28C34 26.896 34.896 26 36 26C37.104 26 38 26.896 38 28Z" fill="#000000"/>
-</g>
-</g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="512" height="512" x="0" y="0" viewBox="0 0 28 28" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g><g data-name="Layer 2"><path d="M25.014 15H17.75a3.5 3.5 0 0 0 0 7h7.264a1.238 1.238 0 0 0 1.236-1.236v-4.528A1.238 1.238 0 0 0 25.014 15zM17.5 19.75a1.25 1.25 0 1 1 1.25-1.25 1.252 1.252 0 0 1-1.25 1.25zM3.75 9.5h1.428a6.453 6.453 0 0 1-.2-4H3.75a2 2 0 0 0 0 4zM20.75 9.5V6.632A1.132 1.132 0 0 0 19.618 5.5h-1.71a6.453 6.453 0 0 1-.2 4zM10.941 9.5V5.575L9.8 6.722a.5.5 0 0 1-.707-.707l2-2a.5.5 0 0 1 .707 0l2 2a.5.5 0 0 1-.707.707l-1.152-1.147V9.5h4.693a5.616 5.616 0 0 0 .5-2.309 5.692 5.692 0 0 0-11.383 0 5.623 5.623 0 0 0 .5 2.309z" fill="${color}" opacity="1" data-original="#000000" class=""></path><path d="M13.25 18.5a4.505 4.505 0 0 1 4.5-4.5h7v-2.368a1.132 1.132 0 0 0-1.132-1.132H3.75a2.978 2.978 0 0 1-2-.779V24.5a2 2 0 0 0 2 2h19.868a1.132 1.132 0 0 0 1.132-1.132V23h-7a4.505 4.505 0 0 1-4.5-4.5zm-2.826 5.468h-5a.5.5 0 1 1 0-1h5a.5.5 0 0 1 0 1z" fill="${color}" opacity="1" data-original="#000000" class=""></path></g></g></svg>
 
 `;
     return (

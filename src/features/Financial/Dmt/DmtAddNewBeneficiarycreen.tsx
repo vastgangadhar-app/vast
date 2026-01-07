@@ -21,13 +21,14 @@ import DynamicButton from '../../drawer/button/DynamicButton';
 import ClosseModalSvg2 from '../../drawer/svgimgcomponents/ClosseModal2';
 import { colors } from '../../../utils/styles/theme';
 import { it } from 'date-fns/locale';
+import CloseSvg from '../../drawer/svgimgcomponents/CloseSvg';
+import ShowLoader from '../../../components/ShowLoder';
+import { onReceiveNotification2 } from '../../../utils/NotificationService';
 
-const DmtAddNewBenificiaryScreen = ({ route }) => {
+const DmtAddNewBenificiaryScreen = ({ no, Name ,onPress ,onPress2 }) => {
   const { colorConfig } = useSelector((state: RootState) => state.userInfo);
 
   const color1 = `${colorConfig.secondaryColor}20`;
-console.log('**EKYC', route.params)
-  const { no, Name } = route.params;
   const { userId } = useSelector((state: RootState) => state.userInfo);
 
   const [name, setName] = useState('');
@@ -57,23 +58,41 @@ console.log('**EKYC', route.params)
     item["bank_name"].toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handlepress = () => {
+    onPress()
+
+    console.log('efeeeeeeeeeee')
+  }
+  const handlepress2 = () => {
+    onPress2()
+  }
   useEffect(() => {
     setIsR(Name === 'A2Z');
     console.log(Name === 'RADIANT');
 
-    console.log(route.params)
   }, [])
+  const removeUnwantedWords = (text) => {
+    let cleanedText = text
+      .replace(/\bs\/o\b/gi, '')    
+      .replace(/\bw\/o\b/gi, '');   
+    console.log(cleanedText.trim())
+    return cleanedText.trim();
+  };
 
 
   const handleAddBeneficiary = async (bename) => {
+
+   
+    const namee = await  removeUnwantedWords(bename)
+    setIsload(true)
+
     console.log(Name);
-    const { remid } = route.params;
     if (accountNumber === reEnterAccountNumber) {
       setGoodMark2(true);
       setIsLoading(true);
       setValidate(false);
 
-      const url = `MoneyDMT/api/Money/AddNewRecipient?Name=${bename}&AccountNo=${accountNumber}&IFSC=${ifscCode}&SenderNo=${senderNo}&remitterid=${id}`
+      const url = `MoneyDMT/api/Money/AddNewRecipient?Name=${namee}&AccountNo=${accountNumber}&IFSC=${ifscCode}&SenderNo=${senderNo}&remitterid=${id}`
       console.log(url);
       
       try {
@@ -83,7 +102,9 @@ console.log('**EKYC', route.params)
             setGoodMark2(false);
             Alert.alert('', res['ADDINFO'].status, [{
               text: 'OK', onPress: () => {
-                navigation.goBack();
+                handlepress2()
+
+             //   navigation.goBack();
               }
             }]);
           } else if (res['RESULT'] === '0' && res?.ADDINFO?.statuscode === 'TXN') {
@@ -93,20 +114,34 @@ console.log('**EKYC', route.params)
             Alert.alert('Success', res['ADDINFO']['status'], [{
               text: '', onPress: () => {
                 setModalVisible(false); 
-                navigation.goBack();
+           
+                handlepress2()
+
+                //  navigation.goBack();
               }
             }]);
-
+            setIsload(false)
+  const mockNotification = {
+            notification: {
+              title:res['ADDINFO']['status'],
+              body: res['ADDINFO']['status']  + `Details - Name :${name} ,Acc No :${accountNumber} ,Mo : ${senderNo}`,
+            },
+          };
+          
+          // Call the function
+          onReceiveNotification2(mockNotification);  
           } else {
             Alert.alert('Error', '', [{ text: 'OK', onPress: () => { } }]);
+            setIsload(false)
 
           }
-
 
         console.log(res['ADDINFO']['data']['beneficiary']);
       } catch (error) {
         console.error('Error saving account:', error);
       } finally {
+        setIsload(false)
+
         setIsLoading(false);
       }
     } else {
@@ -117,10 +152,8 @@ console.log('**EKYC', route.params)
 
   const { get, post } = useAxiosHook();
   useEffect(() => {
-    // setsenderNo(route.params['no'])
     getBanks();
     getGenUniqueId();
-    console.log(route.params)
   }, [])
   const getBanks = async () => {  
     // try {
@@ -186,13 +219,13 @@ console.log('**EKYC', route.params)
 
   //   }
   // }
-
+const [isload,setIsload]= useState(false)
   const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
     useDeviceInfoHook();
     const verifyAcc = async (mb, iff, cd, bno, mal, sk, pi, kk, bankName, kyc, uniqueid) => {
       console.log(mb, iff, cd, bno, mal, sk, pi, kk, bankName, kyc, uniqueid);
       console.log(sk, 'sk');
-      
+      setIsload(true)
       try {
         const Model = await getMobileDeviceId();
         const url = `${APP_URLS.verifybankACC}mb=${mb}&iff=${iff}&cd=${Model}&bno=${bno}&mal=${mal}&sk=${sk}&pi=${Model}&kk=${kk}&bankName=${bankName}&kyc=''&uniqueid=${uniqueid}`;
@@ -201,7 +234,7 @@ console.log('**EKYC', route.params)
         const res = await post({ url: Name === 'A2Z' ? verifybankACC : url });
         console.log(verifybankACC, '1234567890');
         setIsLoading(false);
-        console.log(res)
+        console.log(res,'verifybankACC*****************')
         const addinfo = res.ADDINFO;
         if (res.RESULT === '1') {
           const statusCode = addinfo.statuscode;
@@ -214,7 +247,7 @@ console.log('**EKYC', route.params)
               [{ text: 'OK', onPress: () => {} }]
             );
           } else {
-            Alert.alert('Message', res?.ADDINFO?.data?.bankrefno, [{ text: 'OK', onPress: () => {} }]);
+            Alert.alert('Message', res?.ADDINFO?.data?.bankrefno || res?.ADDINFO?.status, [{ text: 'OK', onPress: () => {} }]);
           }
           
           setGoodMark(false);
@@ -237,24 +270,41 @@ console.log('**EKYC', route.params)
             bankRefNo: bankrefno,
           });
           setModalVisible(true);
-    
+          const mockNotification = {
+            notification: {
+              title: verify,
+              body: res['ADDINFO']['status']  + `Details - Name :${bename} ,A/c No :${accountNumber} ,Mo : ${senderNo} ,Bank Ref No :${bankrefno}`,
+            },
+          };
+          
+          // Call the function
+          onReceiveNotification2(mockNotification);
           if (verify === 'VERIFIED') {
             setGoodMark(true);
           } else {
             setGoodMark(false);
           }
-    
-          if (local === 'Local') {
-            Alert.alert(
-              bename,
-              res.ADDINFO,
-              [{ text: 'OK', onPress: () => {} }]
-            );
-          }
+          // {"ADDINFO": {"Local": "Local",
+          //    "data": {"bankrefno": "",
+          //      "benename": "VISHAL HARI VANJARI", "charged_amt": "-2.5000",
+          //       "ipay_id": "0J181559374335", "locked_amt": 0,
+          //        "remarks": "Transaction Successful",
+          //         "verification_status": "VERIFIED"}, 
+          // "status": "Transaction Successful", 
+          // "statuscode": "TXN"}, "RESULT": "0"} 
+          // if (local === 'Local') {
+          //   Alert.alert(
+          //     bename,
+          //     res.ADDINFO,
+          //     [{ text: 'OK', onPress: () => {} }]
+          //   );
+          // }
         } else {
           setIsLoading(false);
           Alert.alert('Failed', res.ADDINFO, [{ text: 'OK', onPress: () => {} }]);
         }
+
+        setIsload(false)
       } catch (error) {
         console.error(error);
       }
@@ -352,14 +402,43 @@ console.log(item['id']);
     />
   }
   return (
-    <View style={styles.main}>
-      <AppBarSecond title={'Add Beneficiary'} />
+    <View style={[styles.main, { borderColor: colorConfig.secondaryColor }]}>
+            {isload && <ShowLoader/>}
+
+    <View
+      style={[
+        styles.texttitalView,
+        { backgroundColor: colorConfig.secondaryColor },
+      ]}>
+      <View
+        style={[
+          styles.cutout,
+          { borderTopColor: colorConfig.secondaryColor },
+        ]}
+      />
+      <Text style={styles.texttital}>           Add Benificiary</Text>
+      <Text style={{ color: "#fff" }}>                   {no}</Text>
+
+    </View>
+
+
+    <TouchableOpacity
+      onPress={() => {
+        handlepress()
+
+      }}
+      activeOpacity={0.7}
+      style={[
+        styles.closebuttoX, { backgroundColor: colorConfig.secondaryColor },
+      ]}>
+      <CloseSvg />
+    </TouchableOpacity>
       <ScrollView>
 
         <View style={styles.container}>
-          <FlotingInput label={'Mobile Number'} value={senderNo}
+          {/* <FlotingInput label={'Mobile Number'} value={senderNo}
             maxLength={10}
-            keyboardType='decimal-pad' onChangeTextCallback={text => setsenderNo(text)} editable={false} />
+            keyboardType='decimal-pad' onChangeTextCallback={text => setsenderNo(text)} editable={false} /> */}
           <FlotingInput label={'Name'} valu={name}
             onChangeTextCallback={text => setName(text)} />
 
@@ -382,14 +461,20 @@ console.log(item['id']);
             </View>
 
           </TouchableOpacity>
-          <FlotingInput label={'IFSC Code'} editable={false} value={ifscCode} onChangeTextCallback={text => setIfscCode(text.toUpperCase())}
+          <FlotingInput label={'IFSC Code'} editable={true} value={ifscCode} onChangeTextCallback={text => setIfscCode(text.toUpperCase())}
           />
           <>
             <DynamicButton
               title={translate('Save Account')}
               styleoveride={{ marginBottom: hScale(20), marginTop: hScale(10) }}
               onPress={() => {  
-                handleAddBeneficiary(name)
+if(accountNumber === reEnterAccountNumber){
+            handleAddBeneficiary(name)
+}else{
+  ToastAndroid.show('Please check Account number are Same ?',ToastAndroid.BOTTOM)
+}
+
+      
                 // if (Name == 'A2Z') {
                 //   handleSaveAccount(name);
                 // } else {
@@ -483,7 +568,10 @@ console.log(item['id']);
                 </>
               )}
               <View style={styles.buttonContainer}>
-                <Button title="Save" onPress={() => { handleAddBeneficiary(name); }} />
+                <Button title="Save" onPress={() => { 
+                  
+                  
+                  handleAddBeneficiary(name); }} />
                 <Text>             </Text>
                 <Button title="Cancel" onPress={() => setModalVisible(false)} />
               </View>
@@ -497,12 +585,18 @@ console.log(item['id']);
 };
 const styles = StyleSheet.create({
   main: {
-    flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
+    elevation: 5,
+    borderWidth: 1,
+    marginTop: hScale(20),
+    borderRadius: 5,
+    marginHorizontal: wScale(13)
   },
   container: {
+    top: hScale(8),
     paddingHorizontal: wScale(20),
     paddingVertical: wScale(15),
+    marginTop: hScale(20)
   },
   righticon2: {
     position: "absolute",
@@ -601,6 +695,51 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 20,
+  },
+  
+  texttitalView: {
+    width: wScale(200),
+    height: hScale(40),
+    borderTopLeftRadius: wScale(5),
+    position: 'absolute',
+    top: hScale(-1),
+    left: wScale(-1),
+    justifyContent: 'center',
+    paddingBottom: hScale(3),
+    borderBottomRightRadius: 0,
+  },
+  cutout: {
+    borderTopWidth: hScale(40), // Height of the triangle
+    borderRightWidth: wScale(33), // Width of the triangle
+    borderBottomWidth: wScale(0), // Set to 0 to hide the bottom edge
+    borderLeftWidth: wScale(3), // Width of the triangle
+    width: '100%',
+    height: hScale(40),
+    borderRightColor: 'transparent', // Hide the right edge
+    borderBottomColor: 'transparent', // Hide the bottom edge
+    borderLeftColor: 'transparent', // Hide the left edge
+    position: 'absolute',
+    right: wScale(-50),
+    zIndex: wScale(0),
+    top: wScale(0),
+  },
+  texttital: {
+    fontSize: wScale(18),
+    fontWeight: 'bold',
+    color: '#fff',
+    width: 240,
+    paddingLeft: wScale(10)
+  },
+  closebuttoX: {
+    borderRadius: wScale(24),
+    alignItems: 'center',
+    height: wScale(42),
+    width: wScale(42),
+    justifyContent: 'center',
+    elevation: 5,
+    position: 'absolute',
+    right: wScale(-11),
+    top: hScale(-11),
   },
 })
 export default DmtAddNewBenificiaryScreen;

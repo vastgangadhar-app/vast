@@ -15,7 +15,7 @@ import OnelineDropdownSvg from '../drawer/svgimgcomponents/simpledropdown';
 import ShareSvg from '../drawer/svgimgcomponents/sharesvg';
 
 const MatmReport = () => {
-  const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+  const { colorConfig, IsDealer } = useSelector((state: RootState) => state.userInfo);
   const color1 = `${colorConfig.secondaryColor}20`;
   const [transactions, setTransactions] = useState([]);
   const [present, setPresent] = useState(10);
@@ -36,6 +36,7 @@ const MatmReport = () => {
   const [searchnumber, setSearchnumber] = useState('');
   const [heightview, setHeightview] = useState(true);
 
+
   useEffect(() => {
     recentTransactions(selectedDate.from, selectedDate.to, selectedStatus);
   }, []);
@@ -45,11 +46,12 @@ const MatmReport = () => {
       setLoading(true);
       const formattedFrom = new Date(from).toISOString().split('T')[0];
       const formattedTo = new Date(to).toISOString().split('T')[0];
+      const url2 = `${APP_URLS.dealermicroatm}txt_frm_date=${formattedFrom}&txt_to_date=${formattedTo}&userrole=Dealer`;
       const url = `${APP_URLS.matmReport}ddl_status=${status}&txt_frm_date=${formattedFrom}&txt_to_date=${formattedTo}`;
-      console.log(url);
+      console.log(IsDealer ? url2 : url);
 
-      const response = await get({ url: url });
-      console.log(response.Message);
+      const response = await get({ url: IsDealer ? url2 : url });
+      console.log(response);
 
       const transactionsData = response.Message || [];
       setTransactions(transactionsData);
@@ -76,6 +78,7 @@ const MatmReport = () => {
     setHeightview(!heightview);
 
   };
+
   const TransactionDetails = ({ item }) => {
     return (
       <TouchableOpacity activeOpacity={0.4} style={[styles.card, {
@@ -167,13 +170,13 @@ const MatmReport = () => {
             </TouchableOpacity>
           </View>
           <View style={[styles.border,]} />
-      
+
           <View style={styles.rowview}>
             <View >
               <Text style={styles.statusText}>Card Number</Text>
               <Text style={styles.timetex}>{item.masked_pan}</Text>
             </View>
-          
+
           </View>
           {
             heightview ? <View>
@@ -234,9 +237,122 @@ const MatmReport = () => {
 
     );
   };
+
+  const TransactionDetails2 = ({ item }) => {
+    return (
+      <TouchableOpacity
+        activeOpacity={0.4}
+        style={[styles.card, {
+          backgroundColor: color1,
+          borderColor: item.status === 'success' || item.status === 'Success' ? 'green' : item.status === 'Failed' || item.status === 'failed' ? 'red' : '#e6b42c',
+        }]}
+        onPress={() => handlePress(item)}
+      >
+        <View>
+
+          <View style={styles.rowview}>
+            <View>
+              <Text style={styles.timetex}>Firm Name : {item.Frm_Name === '' ? "....." : item.Frm_Name}</Text>
+              <Text style={styles.txntyp}>Device id : {item.deviceid === '' ? "....." : item.deviceid}</Text>
+            </View>
+
+          </View>
+
+          <View style={[styles.rowview]}>
+            <View >
+              <Text style={styles.statusText}>Plan Name</Text>
+              <Text style={[styles.amounttex, { textTransform: 'uppercase' }]}>
+                {item.planname ? item.planname : '...'}
+              </Text>
+            </View>
+            <View style={styles.drporow}>
+              <View style={[{ transform: [{ rotate: heightview ? '180deg' : '0deg' }] }]}>
+                <OnelineDropdownSvg />
+              </View>
+            </View>
+          </View>
+          <View style={[styles.border]} />
+
+          <View style={styles.rowview}>
+            <View>
+              <Text style={styles.statusText}>Request Time</Text>
+              <Text style={styles.timetex}>{item.transdate}</Text>
+            </View>
+            <TouchableOpacity style={styles.shearbtn}>
+              <ShareSvg size={wScale(20)} color='#000' />
+              <Text style={[styles.sheartext, { backgroundColor: colorConfig.secondaryColor }]}>
+                Share
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={[styles.border]} />
+
+          <View style={styles.rowview}>
+            <View >
+              <Text style={styles.statusText}>Noof Trans</Text>
+              <Text style={styles.timetex}>{item.nooftrans}</Text>
+            </View>
+
+          </View>
+
+          {
+            heightview ? <View>
+              <View style={[styles.border,]} />
+
+
+              <View style={styles.rowview}>
+                <Text style={[styles.statusText,]}>
+                  {item.transaction_id ? item.transaction_id : '...'}
+                </Text>
+                <Text style={[styles.timetex, styles.textrit]}>{item.payment_method}</Text>
+              </View>
+
+              <View style={[styles.border,]} />
+              <View style={[styles.rowview,]}>
+                <View style={styles.blance}>
+                  <Text style={[styles.statusText,]}>Pre Balance</Text>
+                  <Text style={[styles.timetex,]}>₹ {`${item.dlmpre}`}</Text>
+                </View>
+                {/* <View style={styles.blance}>
+                  <Text style={[styles.statusText, { textAlign: 'center' }]}>Network</Text>
+                  <Text style={[styles.timetex, { textAlign: 'center' }]}>₹ {`${item.network}`}</Text>
+                </View> */}
+
+                <View style={[styles.blance, { borderRightWidth: 0 }]}>
+                  <Text style={[styles.statusText, styles.textrit,]}>Pos Balance</Text>
+                  <Text style={[styles.timetex, styles.textrit,]}>₹ {`${item.dlmpost}`}</Text>
+                </View>
+              </View>
+              <View style={[styles.border,]} />
+
+              <View style={[styles.rowview,]}>
+                <View style={styles.blance}>
+                  <Text style={[styles.statusText,]}>GST₹</Text>
+                  <Text style={[styles.timetex,]}>₹ {`${item.dlmgst}`}</Text>
+                </View>
+                <View style={styles.blance}>
+                  <Text style={[styles.statusText, { textAlign: 'center' }]}>TDS</Text>
+                  <Text style={[styles.timetex, { textAlign: 'center' }]}>₹ {`${item.dlmtds}`}</Text>
+                </View>
+
+                <View style={[styles.blance, { borderRightWidth: 0 }]}>
+                  <Text style={[styles.statusText, styles.textrit,]}>Commission</Text>
+                  <Text style={[styles.timetex, styles.textrit,]}>₹ {`${item.dlmcomm}`}</Text>
+                </View>
+              </View>
+
+            </View> : null
+          }
+
+        </View>
+      </TouchableOpacity>
+
+
+    );
+  };
   return (
     <View style={styles.main}>
-      <AppBarSecond title={'m-ATM History'} />
+      <AppBarSecond title={!IsDealer ? 'm-ATM History' : 'Micro Atm Rental Report'} />
       <DateRangePicker
         onDateSelected={(from, to) => setSelectedDate({ from, to })}
         SearchPress={(from, to, status) => recentTransactions(from, to, status)}
@@ -244,6 +360,8 @@ const MatmReport = () => {
         setStatus={setSelectedStatus}
         searchnumber={searchnumber}
         setSearchnumber={setSearchnumber}
+        isshowRetailer={false}
+        isStShow={true}
       />
       <View style={styles.container}>
 
@@ -255,7 +373,7 @@ const MatmReport = () => {
           ) : (
             <FlatList
               data={transactions.slice(0, present)}
-              renderItem={({ item }) => <TransactionDetails item={item} />}
+              renderItem={({ item }) => IsDealer ? <TransactionDetails2 item={item} /> : <TransactionDetails item={item} />}
               keyExtractor={(item, index) => index.toString()}
               ListFooterComponent={
                 transactions.length > present ? (

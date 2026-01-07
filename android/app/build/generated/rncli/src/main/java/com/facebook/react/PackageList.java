@@ -15,6 +15,12 @@ import java.util.ArrayList;
 import com.reactnativecommunity.asyncstorage.AsyncStoragePackage;
 // @react-native-community/netinfo
 import com.reactnativecommunity.netinfo.NetInfoPackage;
+// @react-native-firebase/app
+import io.invertase.firebase.app.ReactNativeFirebaseAppPackage;
+// @react-native-firebase/firestore
+import io.invertase.firebase.firestore.ReactNativeFirebaseFirestorePackage;
+// @react-native-firebase/messaging
+import io.invertase.firebase.messaging.ReactNativeFirebaseMessagingPackage;
 // @react-native-masked-view/masked-view
 import org.reactnative.maskedview.RNCMaskedViewPackage;
 // @shopify/flash-list
@@ -45,6 +51,8 @@ import com.curvedbottombar.CurvedBottomBarPackage;
 import com.learnium.RNDeviceInfo.RNDeviceInfo;
 // react-native-device-number
 import com.reactlibrary.devicenumber.DeviceNumberPackage;
+// react-native-file-viewer
+import com.vinzscam.reactnativefileviewer.RNFileViewerPackage;
 // react-native-fs
 import com.rnfs.RNFSPackage;
 // react-native-gesture-handler
@@ -55,6 +63,8 @@ import com.github.douglasjunior.reactNativeGetLocation.ReactNativeGetLocationPac
 import org.linusu.RNGetRandomValuesPackage;
 // react-native-hash
 import com.drazail.RNHash.RnHashPackage;
+// react-native-html-to-pdf
+import com.christopherdro.htmltopdf.RNHTMLtoPDFPackage;
 // react-native-image-picker
 import com.imagepicker.ImagePickerPackage;
 // react-native-instantpay-mpos
@@ -69,6 +79,8 @@ import com.faizal.OtpVerify.OtpVerifyPackage;
 import com.reactnativepagerview.PagerViewPackage;
 // react-native-permissions
 import com.zoontek.rnpermissions.RNPermissionsPackage;
+// react-native-push-notification
+import com.dieam.reactnativepushnotification.ReactNativePushNotificationPackage;
 // react-native-rdservice-fingerprintscanner
 import com.rdservicefingerprintscanner.RdserviceFingerprintscannerPackage;
 // react-native-reanimated
@@ -81,6 +93,8 @@ import com.swmansion.rnscreens.RNScreensPackage;
 import cl.json.RNSharePackage;
 // react-native-sim-cards-manager
 import com.reactnativesimcardsmanager.SimCardsManagerPackage;
+// react-native-sound-player
+import com.johnsonsu.rnsoundplayer.RNSoundPlayerPackage;
 // react-native-splash-screen
 import org.devio.rn.splashscreen.SplashScreenReactPackage;
 // react-native-svg
@@ -93,6 +107,10 @@ import com.brentvatne.react.ReactVideoPackage;
 import fr.greweb.reactnativeviewshot.RNViewShotPackage;
 // react-native-webview
 import com.reactnativecommunity.webview.RNCWebViewPackage;
+// rn-fetch-blob
+import com.RNFetchBlob.RNFetchBlobPackage;
+// rn-scratch-card
+import com.rnscratchcard.RnScratchCardPackage;
 
 public class PackageList {
   private Application application;
@@ -140,6 +158,9 @@ public class PackageList {
       new MainReactPackage(mConfig),
       new AsyncStoragePackage(),
       new NetInfoPackage(),
+      new ReactNativeFirebaseAppPackage(),
+      new ReactNativeFirebaseFirestorePackage(),
+      new ReactNativeFirebaseMessagingPackage(),
       new RNCMaskedViewPackage(),
       new ReactNativeFlashListPackage(),
       new LottiePackage(),
@@ -155,11 +176,13 @@ public class PackageList {
       new CurvedBottomBarPackage(),
       new RNDeviceInfo(),
       new DeviceNumberPackage(),
+      new RNFileViewerPackage(),
       new RNFSPackage(),
       new RNGestureHandlerPackage(),
       new ReactNativeGetLocationPackage(),
       new RNGetRandomValuesPackage(),
       new RnHashPackage(),
+      new RNHTMLtoPDFPackage(),
       new ImagePickerPackage(),
       new InstantpayMposPackage(),
       new LinearGradientPackage(),
@@ -167,18 +190,22 @@ public class PackageList {
       new OtpVerifyPackage(),
       new PagerViewPackage(),
       new RNPermissionsPackage(),
+      new ReactNativePushNotificationPackage(),
       new RdserviceFingerprintscannerPackage(),
       new ReanimatedPackage(),
       new SafeAreaContextPackage(),
       new RNScreensPackage(),
       new RNSharePackage(),
       new SimCardsManagerPackage(),
+      new RNSoundPlayerPackage(),
       new SplashScreenReactPackage(),
       new SvgPackage(),
       new VectorIconsPackage(),
       new ReactVideoPackage(),
       new RNViewShotPackage(),
-      new RNCWebViewPackage()
+      new RNCWebViewPackage(),
+      new RNFetchBlobPackage(),
+      new RnScratchCardPackage()
     ));
   }
 }
