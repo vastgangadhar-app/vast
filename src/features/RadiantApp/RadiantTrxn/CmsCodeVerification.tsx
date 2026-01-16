@@ -29,6 +29,7 @@ import ShowLoader from '../../../components/ShowLoder';
 
 const CmsCodeVerification = ({ route }) => {
     const { item, item1 } = route.params;
+
     console.log(item, item1)
 
 
@@ -294,7 +295,6 @@ const CmsCodeVerification = ({ route }) => {
                                 </View>
                             </View>
                             <View style={[styles.tableContainer, { borderColor: colorConfig.secondaryColor }]}>
-                                {/* Header Row */}
                                 <View style={styles.tableRow}>
                                     <View style={styles.tableCell}>
                                         <Text style={styles.tableLabel}>
@@ -480,12 +480,12 @@ const styles = StyleSheet.create({
     },
     resendButton: {
         backgroundColor: '#fff',
-        paddingHorizontal: hScale(20),
+        paddingHorizontal: wScale(20),
         borderRadius: wScale(80),
         alignItems: 'center',
         marginBottom: hScale(10),
         paddingVertical: hScale(5),
-        marginTop: hScale(5)
+        marginTop: hScale(5),
     },
     buttonText: {
         color: '#000',
@@ -506,6 +506,7 @@ const styles = StyleSheet.create({
         fontSize: wScale(10),
         marginTop: hScale(0),
         color: '#fff',
+        textAlign:'left',
     },
     codeInputContainer: {
         flexDirection: 'row',
@@ -565,6 +566,7 @@ const styles = StyleSheet.create({
         paddingTop: hScale(4),
         marginTop: hScale(10),
         marginBottom: hScale(10),
+        flexWrap:'nowrap'
 
     },
 
@@ -572,12 +574,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        flex:1
     },
     resendText: {
         fontSize: wScale(20),
         color: '#fff',
         fontWeight: 'bold',
         marginTop: hScale(-8),
+        flex:1
     },
     rowContainer: {
         flexDirection: 'row',

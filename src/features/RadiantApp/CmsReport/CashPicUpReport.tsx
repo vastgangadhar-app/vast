@@ -95,7 +95,7 @@ const CashPicUpReport = () => {
                 }]}>
                     <View style={styles.row}>
                         <View style={styles.item}>
-                            <Text style={styles.label}>HCL SLIP -</Text>
+                            <Text style={styles.label}>HCL Slip Number</Text>
                             <Text style={styles.label}>Reqsts Status -</Text>
 
                         </View>
@@ -180,7 +180,7 @@ const CashPicUpReport = () => {
 
     return (
         <View style={styles.main}>
-            <AppBarSecond title={'Cash PicUp Report'} />
+            <AppBarSecond title={'Cash PickUp Report'} />
             <DateRangePicker
 
                 SearchPress={() => fetchReport(selectedDate.from, selectedDate.to, selectedStatus)}

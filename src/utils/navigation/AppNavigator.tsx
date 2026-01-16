@@ -186,6 +186,7 @@ import ImgPendingcms from '../../features/RadiantApp/RadiantNewClient/ImgPending
 import PickupSalaryCalendar from '../../features/RadiantApp/CmsSalarySheet/PickupSalaryCalendar';
 import CrePayout from '../../features/RadiantApp/CmsSalarySheet/CrePayout';
 import CmsShowPayoutStructure from '../../features/RadiantApp/RadiantNewClient/CmsShowPayoutStructure';
+import PrepaySlipSummary from '../../features/History/CmsReport/PrepaySlipSummary';
 
 const Stack = createNativeStackNavigator();
 
@@ -1036,28 +1037,33 @@ export const AppNavigator = () => {
         component={RadiantPrepayReport}
         options={{ headerShown: false }}
       />
-   <Stack.Screen
+      <Stack.Screen
         name="ImgPendingcms"
         component={ImgPendingcms}
         options={{ headerShown: false }}
       />
-   <Stack.Screen
+      <Stack.Screen
         name="PickupSalaryCalendar"
         component={PickupSalaryCalendar}
         options={{ headerShown: false }}
       />
-    <Stack.Screen
+      <Stack.Screen
         name="CrePayout"
         component={CrePayout}
         options={{ headerShown: false }}
       />
-   
- <Stack.Screen
+
+      <Stack.Screen
         name="CmsShowPayoutStructure"
         component={CmsShowPayoutStructure}
         options={{ headerShown: false }}
       />
-   
+   <Stack.Screen
+        name="PrepaySlipSummary"
+        component={PrepaySlipSummary}
+        options={{ headerShown: false }}
+      />
+
 
     </Stack.Navigator>
   );

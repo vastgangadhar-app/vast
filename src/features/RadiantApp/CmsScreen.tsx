@@ -14,7 +14,7 @@ import DownloadDocRadiant from './Radiantregister/DownloadDocRadiant';
 import useAxiosHook from '../../utils/network/AxiosClient';
 import { APP_URLS } from '../../utils/network/urls';
 import { RootState } from '../../reduxUtils/store';
-import { setRctype } from '../../reduxUtils/store/userInfoSlice';
+import { setRceID, setRctype ,} from '../../reduxUtils/store/userInfoSlice';
 import CmsPayoutStructure from './RadiantNewClient/CmsPayoutStructure';
 import SelfieScreen from './selfiescreen';
 import ImgPendingcms from './RadiantNewClient/ImgPendingcms';
@@ -22,9 +22,10 @@ import AddMoneyPayResponse from '../../components/AddMoneyPayResponse';
 import CrePayout from './CmsSalarySheet/CrePayout';
 import PickupSalaryCalendar from './CmsSalarySheet/PickupSalaryCalendar';
 import CmsShowPayoutStructure from './RadiantNewClient/CmsShowPayoutStructure';
+import CmsPrePay from './RadiantTrxn/CmsPrePay';
 
 const CmsScreen = () => {
-  const { rceIdStatus } = useSelector((state: RootState) => state.userInfo);
+  const { rceIdStatus, } = useSelector((state: RootState) => state.userInfo);
 
   const [status, setStatus] = useState<boolean | null>(null);
   const [status2, setStatus2] = useState<string | null>(null);
@@ -43,10 +44,14 @@ const CmsScreen = () => {
         const res1 = await post({ url: APP_URLS.RCEID });
         const s1 = res1?.Content?.ADDINFO?.sts ?? null;
         const t1 = res1?.Content?.ADDINFO?.Type ?? null;
+        const rceID = res1?.Content?.ADDINFO?.CEID ?? null;
+
         const t3 = res1?.Content?.ADDINFO?.ImageStatus ?? null;
+        console.log(res1, '===');
 
         setStatus(s1);
         dispatch(setRctype(t1));
+        dispatch(setRceID(rceID))
         setImageStatus(t3)
         if (s1 === false) {
           const res2 = await post({ url: APP_URLS.RadiantCEIntersetCheck });
@@ -112,13 +117,10 @@ const CmsScreen = () => {
   };
 
   return <View style={styles.container}>
-    {/* {renderScreen()} */}
-    <CrePayout/>
+    {renderScreen()}
+    {/* <CrePayout/> */}
     {/* <PickupSalaryCalendar/> */}
     {/* <CmsShowPayoutStructure /> */}
-    {/* <InterestVerification/> */}
-
-
   </View>;
 };
 

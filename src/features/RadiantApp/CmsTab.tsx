@@ -33,6 +33,7 @@ import useAxiosHook from '../../utils/network/AxiosClient';
 import { APP_URLS } from '../../utils/network/urls';
 import CmsNewPinSvg from '../drawer/svgimgcomponents/CmsNewPinSvg';
 import PickupCalendarSvg from '../drawer/svgimgcomponents/PickupCalendarSvg';
+import PayoutInfoSvg from '../drawer/svgimgcomponents/PayoutInfoSvg';
 
 
 const CmsTab = () => {
@@ -106,12 +107,21 @@ const CmsTab = () => {
             id: '2',
             title: 'Cash Pickup Calendar',
             description:
-                'The pickup calendar shows your activity every day. Your salary is calculated based on the number of working days. Your attendance and zero collection reports are also displayed.'   ,     
-                    nav: 'PickupSalaryCalendar',
+                'The pickup calendar shows your activity every day. Your salary is calculated based on the number of working days. Your attendance and zero collection reports are also displayed.',
+            nav: 'PickupSalaryCalendar',
             img: <PickupCalendarSvg color={svgColor} />,
         },
         {
             id: '3',
+            title: 'RCE Payout Information',
+            description:
+                'Payout and payout structure (Calculation Method) are available. Payout amount is determined based on the number of working days, leave taken, penalties, cash deposit charges and travel allowance.',
+            nav: 'CrePayout',
+            img: <PayoutInfoSvg color={svgColor} />,
+        },
+
+        {
+            id: '4',
             title: 'Cash Pickup Report',
             description:
                 'This report will give complete details of payment collection done by the RC from the customer location, whether the RCE has made the payment through digital slip or through physical slip.',
@@ -119,7 +129,7 @@ const CmsTab = () => {
             img: <RadintDepositSvg color={svgColor} />,
         },
         {
-            id: '4',
+            id: '5',
             title: 'Pickup & Deposit Ledger',
             description:
                 'Money is picked up by RCE from the customer point or dropped off by the customer and through whatever medium the money is given to the company, the complete credit debit report will be in this ledger.',
@@ -128,7 +138,7 @@ const CmsTab = () => {
             img: <CmsLedgerSvg color={svgColor} />,
         },
         {
-            id: '5',
+            id: '6',
             title: 'Cash Pickup Prepay Report',
             description:
                 'Money is picked up by RCE from the customer point or dropped off by the customer and through whatever medium the money is given to the company, the complete credit debit report will be in this ledger.',

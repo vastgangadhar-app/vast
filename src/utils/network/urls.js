@@ -345,11 +345,14 @@ export const APP_URLS = {
   VastbazzarUPIQRGenerate: 'UPINEW/api/data/VastbazaarQR?amount=',
   UPISUMSlab: 'UPI/api/data/UPISUMSlab',
   CashPickupRemainBalVerify: 'api/RadiantCash/CashPickupRemainBal',
+  CashPickupRemainBalNEW: 'api/RadiantCash/CashPickupRemainBalNEW',
   RadiantPrepayReport: 'api/Radiant/RadiantPrepayReport',
   RCEPayoutStructure: 'api/Radiant/RCEPayoutStructure',
   RCETotalSalary: 'api/Radiant/RCETotalSalary',
   RCETotalSalaryDetails: 'api/Radiant/RCETotalSalaryDetails',
   Pickupcalendars: 'api/Radiant/Pickupcalendars',
+  RadiantPDFReport: 'api/Radiant/RadiantPDFReport?transid=',
+
 
 };
 

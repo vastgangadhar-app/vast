@@ -34,6 +34,7 @@ const initialState = {
     status: null,
     status2: null
   },
+  rceId: null,
   fcmToken: '',
   cmsVerify: false,
   rctype: null,
@@ -70,6 +71,9 @@ const userInfoSlice = createSlice({
 
     setRcPrePayAnomut: (state, action) => {
       state.rcPrePayAnomut = action.payload;
+    },
+    setRceID: (status, action) => {
+      status.rceId = action.payload
     },
     setUserId: (state, action) => {
       state.userId = action.payload;
@@ -160,6 +164,7 @@ export const {
   setCmsAddMFrom,
   setRadiantList,
   clearEntryScreen,
+  setRceID,
 } = userInfoSlice.actions;
 
 export default userInfoSlice.reducer;

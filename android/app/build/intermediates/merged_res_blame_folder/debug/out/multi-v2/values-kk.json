@@ -4,23 +4,6 @@
             "outputFile": "E:\\react_native Project\\aasha_reactNative\\android\\app\\build\\intermediates\\incremental\\mergeDebugResources\\merged.dir\\values-kk\\values-kk.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\ANDROID  SUPPORT\\.gradle\\caches\\transforms-3\\e07e06049cfe5b626528b40ccb06a54c\\transformed\\jetified-play-services-basement-18.5.0\\res\\values-kk\\values.xml",
-                    "from": {
-                        "startLines": "4",
-                        "startColumns": "0",
-                        "startOffsets": "195",
-                        "endColumns": "159",
-                        "endOffsets": "354"
-                    },
-                    "to": {
-                        "startLines": "70",
-                        "startColumns": "4",
-                        "startOffsets": "5729",
-                        "endColumns": "163",
-                        "endOffsets": "5888"
-                    }
-                },
-                {
                     "source": "C:\\Users\\ANDROID  SUPPORT\\.gradle\\caches\\transforms-3\\ab37309072cf508e1012e9a3887c001b\\transformed\\material-1.6.1\\res\\values-kk\\values-kk.xml",
                     "from": {
                         "startLines": "2,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59",
@@ -124,6 +107,23 @@
                         "startOffsets": "6960,7075,11310,11434,11563,11696,11832,11951,12090,12185,12334,12476",
                         "endColumns": "114,89,123,128,132,135,118,138,94,148,141,127",
                         "endOffsets": "7070,7160,11429,11558,11691,11827,11946,12085,12180,12329,12471,12599"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\ANDROID  SUPPORT\\.gradle\\caches\\transforms-3\\c14c9f214be58a907a7a6977c5680189\\transformed\\jetified-play-services-basement-18.9.0\\res\\values-kk\\values.xml",
+                    "from": {
+                        "startLines": "4",
+                        "startColumns": "0",
+                        "startOffsets": "218",
+                        "endColumns": "159",
+                        "endOffsets": "377"
+                    },
+                    "to": {
+                        "startLines": "70",
+                        "startColumns": "4",
+                        "startOffsets": "5729",
+                        "endColumns": "163",
+                        "endOffsets": "5888"
                     }
                 },
                 {

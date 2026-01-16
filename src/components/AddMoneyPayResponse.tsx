@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { 
-  View, Text, StyleSheet, ScrollView, AsyncStorage, 
-  ImageBackground, BackHandler, ToastAndroid 
+import {
+  View, Text, StyleSheet, ScrollView, AsyncStorage,
+  ImageBackground, BackHandler, ToastAndroid
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Entypo from "react-native-vector-icons/Entypo";
@@ -16,7 +16,7 @@ import ShowLoader from "./ShowLoder";
 import ShareGoback from "./ShareGoback";
 import useAxiosHook from "../utils/network/AxiosClient";
 import { APP_URLS } from "../utils/network/urls";
-import { clearEntryScreen } from "../reduxUtils/store/userInfoSlice";
+import { clearEntryScreen, setCmsAddMFrom } from "../reduxUtils/store/userInfoSlice";
 
 export default function AddMoneyPayResponse() {
   const capRef = useRef();
@@ -75,9 +75,9 @@ export default function AddMoneyPayResponse() {
   const status = statusRaw?.toLowerCase() || "";
   const color =
     status === "pending" ? "#fa9507" :
-    status === "failed" ? "red" :
-    status === "success" ? "green" :
-    "#ddd";
+      status === "failed" ? "red" :
+        status === "success" ? "green" :
+          "#ddd";
 
   // BackHandler
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function AddMoneyPayResponse() {
       if (cmsAddMFrom === "PageA") {
         navigation.navigate("CashPickup");
       } else if (cmsAddMFrom === "CmsPrePay") {
-        navigation.navigate("CmsPrePay", { item:radiantList });
+        navigation.navigate("CmsPrePay", { item: radiantList });
       } else {
         navigation.navigate("DashboardScreen");
       }
@@ -107,16 +107,36 @@ export default function AddMoneyPayResponse() {
     return () => clearTimeout(timer);
   }, [status, cmsAddMFrom, radiantList]);
 
-  const onPressGoBack = () => {
-    if (status === "success") {
-      if (cmsAddMFrom === "PageA") navigation.navigate("CashPickup");
-      else if (cmsAddMFrom === "CmsPrePay") navigation.navigate("CmsPrePay", { item:radiantList });
-      else navigation.navigate("DashboardScreen");
-      dispatch(clearEntryScreen(null));
+  // const onPressGoBack = () => {
+  //   if (status === "success") {
+  //     if (cmsAddMFrom === "PageA") navigation.navigate("CashPickup");
+  //     else if (cmsAddMFrom === "CmsPrePay") navigation.navigate("CmsPrePay", { item: radiantList }, dispatch(setCmsAddMFrom("AddMoneyPayResponse")));
+  //     else navigation.navigate("DashboardScreen");
+  //     dispatch(clearEntryScreen(null));
+  //   } else {
+  //     navigation.goBack();
+  //   }
+  // };
+const onPressGoBack = () => {
+  if (status === "success") {
+
+    if (cmsAddMFrom === "PageA") {
+      navigation.navigate("CashPickup");
+
+    } else if (cmsAddMFrom === "CmsPrePay") {
+      dispatch(setCmsAddMFrom("AddMoneyPayResponse"));
+      navigation.navigate("CmsPrePay", { item: radiantList });
+
     } else {
-      navigation.goBack();
+      navigation.navigate("DashboardScreen");
     }
-  };
+
+    dispatch(clearEntryScreen(null));
+
+  } else {
+    navigation.goBack();
+  }
+};
 
   const onShare = useCallback(async () => {
     try {

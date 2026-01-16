@@ -282,10 +282,10 @@ library {
   maven_library {
     groupId: "com.google.android.gms"
     artifactId: "play-services-basement"
-    version: "18.5.0"
+    version: "18.9.0"
   }
   digests {
-    sha256: "\243\337n\373)\276\262\377x\373|\336q*\307s\275l\334\337\311\203<\220\030\225\200O`\234\231^"
+    sha256: "\306\355r6\261\263\316\002\226\265\b\245\300\240\221\b\375R\3305Y\323\\\255&9P\\\320J\262U"
   }
   repo_index {
     value: 2
@@ -1420,10 +1420,10 @@ library {
   maven_library {
     groupId: "com.google.android.gms"
     artifactId: "play-services-auth"
-    version: "21.4.0"
+    version: "21.5.0"
   }
   digests {
-    sha256: "I8\360\026?\244\326R6z\372\315\365\230\2262\345\025\224O\3035N\f\374J\035@x\223\322\241"
+    sha256: "V\353)\201\350A\367\314\234\031\275)\271p\211\006\354\255\363\207l\"g\a\234\233\002M\301\004\232\320"
   }
   repo_index {
     value: 2

@@ -645,29 +645,29 @@
 327            android:windowSoftInputMode="stateAlwaysHidden" />
 327-->[in.payu:upisdk:1.7.2] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\464b8b73b7ac0e978c00f705f0d80a94\transformed\jetified-upisdk-1.7.2\AndroidManifest.xml:30:13-60
 328        <activity
-328-->[com.google.android.gms:play-services-auth:21.4.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\1b760533d16e7018285f55318d38a379\transformed\jetified-play-services-auth-21.4.0\AndroidManifest.xml:23:9-27:75
+328-->[com.google.android.gms:play-services-auth:21.5.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\3718758913cf82b1d7459367e3e0b917\transformed\jetified-play-services-auth-21.5.0\AndroidManifest.xml:23:9-27:75
 329            android:name="com.google.android.gms.auth.api.signin.internal.SignInHubActivity"
-329-->[com.google.android.gms:play-services-auth:21.4.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\1b760533d16e7018285f55318d38a379\transformed\jetified-play-services-auth-21.4.0\AndroidManifest.xml:24:13-93
+329-->[com.google.android.gms:play-services-auth:21.5.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\3718758913cf82b1d7459367e3e0b917\transformed\jetified-play-services-auth-21.5.0\AndroidManifest.xml:24:13-93
 330            android:excludeFromRecents="true"
-330-->[com.google.android.gms:play-services-auth:21.4.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\1b760533d16e7018285f55318d38a379\transformed\jetified-play-services-auth-21.4.0\AndroidManifest.xml:25:13-46
+330-->[com.google.android.gms:play-services-auth:21.5.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\3718758913cf82b1d7459367e3e0b917\transformed\jetified-play-services-auth-21.5.0\AndroidManifest.xml:25:13-46
 331            android:exported="false"
-331-->[com.google.android.gms:play-services-auth:21.4.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\1b760533d16e7018285f55318d38a379\transformed\jetified-play-services-auth-21.4.0\AndroidManifest.xml:26:13-37
+331-->[com.google.android.gms:play-services-auth:21.5.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\3718758913cf82b1d7459367e3e0b917\transformed\jetified-play-services-auth-21.5.0\AndroidManifest.xml:26:13-37
 332            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-332-->[com.google.android.gms:play-services-auth:21.4.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\1b760533d16e7018285f55318d38a379\transformed\jetified-play-services-auth-21.4.0\AndroidManifest.xml:27:13-72
+332-->[com.google.android.gms:play-services-auth:21.5.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\3718758913cf82b1d7459367e3e0b917\transformed\jetified-play-services-auth-21.5.0\AndroidManifest.xml:27:13-72
 333        <!--
 334            Service handling Google Sign-In user revocation. For apps that do not integrate with
 335            Google Sign-In, this service will never be started.
 336        -->
 337        <service
-337-->[com.google.android.gms:play-services-auth:21.4.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\1b760533d16e7018285f55318d38a379\transformed\jetified-play-services-auth-21.4.0\AndroidManifest.xml:33:9-37:51
+337-->[com.google.android.gms:play-services-auth:21.5.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\3718758913cf82b1d7459367e3e0b917\transformed\jetified-play-services-auth-21.5.0\AndroidManifest.xml:33:9-37:51
 338            android:name="com.google.android.gms.auth.api.signin.RevocationBoundService"
-338-->[com.google.android.gms:play-services-auth:21.4.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\1b760533d16e7018285f55318d38a379\transformed\jetified-play-services-auth-21.4.0\AndroidManifest.xml:34:13-89
+338-->[com.google.android.gms:play-services-auth:21.5.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\3718758913cf82b1d7459367e3e0b917\transformed\jetified-play-services-auth-21.5.0\AndroidManifest.xml:34:13-89
 339            android:exported="true"
-339-->[com.google.android.gms:play-services-auth:21.4.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\1b760533d16e7018285f55318d38a379\transformed\jetified-play-services-auth-21.4.0\AndroidManifest.xml:35:13-36
+339-->[com.google.android.gms:play-services-auth:21.5.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\3718758913cf82b1d7459367e3e0b917\transformed\jetified-play-services-auth-21.5.0\AndroidManifest.xml:35:13-36
 340            android:permission="com.google.android.gms.auth.api.signin.permission.REVOCATION_NOTIFICATION"
-340-->[com.google.android.gms:play-services-auth:21.4.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\1b760533d16e7018285f55318d38a379\transformed\jetified-play-services-auth-21.4.0\AndroidManifest.xml:36:13-107
+340-->[com.google.android.gms:play-services-auth:21.5.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\3718758913cf82b1d7459367e3e0b917\transformed\jetified-play-services-auth-21.5.0\AndroidManifest.xml:36:13-107
 341            android:visibleToInstantApps="true" />
-341-->[com.google.android.gms:play-services-auth:21.4.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\1b760533d16e7018285f55318d38a379\transformed\jetified-play-services-auth-21.4.0\AndroidManifest.xml:37:13-48
+341-->[com.google.android.gms:play-services-auth:21.5.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\3718758913cf82b1d7459367e3e0b917\transformed\jetified-play-services-auth-21.5.0\AndroidManifest.xml:37:13-48
 342        <service
 342-->[com.google.android.gms:play-services-mlkit-text-recognition:16.3.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\b4b879641567267effec366f96cc6085\transformed\jetified-play-services-mlkit-text-recognition-16.3.0\AndroidManifest.xml:9:9-15:19
 343            android:name="com.google.mlkit.common.internal.MlKitComponentDiscoveryService"
@@ -825,11 +825,11 @@
 426        </provider>
 427
 428        <meta-data
-428-->[com.google.android.gms:play-services-basement:18.5.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\e07e06049cfe5b626528b40ccb06a54c\transformed\jetified-play-services-basement-18.5.0\AndroidManifest.xml:21:9-23:69
+428-->[com.google.android.gms:play-services-basement:18.9.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\c14c9f214be58a907a7a6977c5680189\transformed\jetified-play-services-basement-18.9.0\AndroidManifest.xml:21:9-23:69
 429            android:name="com.google.android.gms.version"
-429-->[com.google.android.gms:play-services-basement:18.5.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\e07e06049cfe5b626528b40ccb06a54c\transformed\jetified-play-services-basement-18.5.0\AndroidManifest.xml:22:13-58
+429-->[com.google.android.gms:play-services-basement:18.9.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\c14c9f214be58a907a7a6977c5680189\transformed\jetified-play-services-basement-18.9.0\AndroidManifest.xml:22:13-58
 430            android:value="@integer/google_play_services_version" />
-430-->[com.google.android.gms:play-services-basement:18.5.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\e07e06049cfe5b626528b40ccb06a54c\transformed\jetified-play-services-basement-18.5.0\AndroidManifest.xml:23:13-66
+430-->[com.google.android.gms:play-services-basement:18.9.0] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\c14c9f214be58a907a7a6977c5680189\transformed\jetified-play-services-basement-18.9.0\AndroidManifest.xml:23:13-66
 431
 432        <provider
 432-->[com.squareup.picasso:picasso:2.8] C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\3624718a815e04adc0e5acaf4acfa52b\transformed\jetified-picasso-2.8\AndroidManifest.xml:8:9-11:40

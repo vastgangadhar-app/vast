@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Keyboard } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, } from 'react-native';
 import FlotingInput from '../../drawer/securityPages/FlotingInput';
 import AlertSvg from '../../drawer/svgimgcomponents/AlertSvg';
 import { hScale, wScale } from '../../../utils/styles/dimensions';
@@ -11,20 +11,23 @@ import useAxiosHook from '../../../utils/network/AxiosClient';
 import { useNavigation } from '../../../utils/navigation/NavigationService';
 import { Item } from 'react-native-paper/lib/typescript/components/Drawer/Drawer';
 import { useDispatch } from 'react-redux';
-import { setCmsAddMFrom, setRcPrePayAnomut } from '../../../reduxUtils/store/userInfoSlice';
+import { clearEntryScreen, setCmsAddMFrom, setRcPrePayAnomut } from '../../../reduxUtils/store/userInfoSlice';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../reduxUtils/store';
 import { useFocusEffect } from '@react-navigation/native';
+import CmsZeroSvg from '../../drawer/svgimgcomponents/CmsZeroSvg';
+import CmsSlipDownload from '../../drawer/svgimgcomponents/CmsSlipDownloadSvg';
 
 const CmsPrePay = ({ route }) => {
-    const { colorConfig, Loc_Data, cmsVerify, rctype,radiantList } = useSelector((state: RootState) => state.userInfo);
+    const { colorConfig, Loc_Data, cmsVerify, rctype, radiantList, rceIdStatus, rceId, cmsAddMFrom } = useSelector((state: RootState) => state.userInfo);
 
     const { item } = route.params
     console.log(item, '099090');
-    console.log(radiantList,'-=radiantList');
-    
+    console.log(radiantList, rceIdStatus, rceId, cmsAddMFrom, '-=radiantList');
 
 
+    const [rceID, setRceID] = useState('');
+    const [shopId, setShopID] = useState('')
     const [amount, setAmount] = useState('');
     const [Ramount, setRAmount] = useState('');
     const [loading, setLoading] = useState(false);
@@ -38,6 +41,10 @@ const CmsPrePay = ({ route }) => {
 
     const { post, get } = useAxiosHook();
     useEffect(() => {
+        if (radiantList?.ShopId) {
+            setShopID(radiantList.ShopId);
+        };
+        setRceID(rceId)
         if (!amount || !Ramount) {
             setStatus('');
             return;
@@ -48,33 +55,36 @@ const CmsPrePay = ({ route }) => {
         } else {
             setStatus('MISMATCH');
         }
-    }, [amount, Ramount]);
+    }, [amount, Ramount, radiantList]);
 
     const showMismatch = Ramount !== '' && amount !== '' && Number(amount) !== Number(Ramount);
+
+
     useEffect(() => {
         if (
-            Number(amount) > 0 &&
+            // Number(amount)  &&
             Number(amount) === Number(Ramount)
         ) {
             fatchData();
         }
-    }, [amount, Ramount]);
+    }, [amount, Ramount, adminiStatus?.allowzero]);
+
 
     const fatchData = async () => {
         setLoading(true);
 
         try {
-            const url = `${APP_URLS.CashPickupRemainBalVerify}?Amount=${amount}`;
-            console.log("API URL 👉", url);
+            const url = `${APP_URLS.CashPickupRemainBalNEW}?Amount=${amount}&RCEID=${rceID}&Shopid=${shopId}`;
+            console.log("API URL 👉🟰🟰🟰🟰🟰🟰", url);
 
             const response = await post({ url });
-            console.log("API RESPONSE 👉", response);
+            console.log("API RESPONSE 👉🟰🟰🟰🟰🟰🟰", response);
 
             setAmountneed(response.amountneeded);
             setAdminiStatus(response);  // store full response
-            if (response?.apiremainstatus && response?.sts) {
-                navigation.navigate('CmsCoustomerInfo', { item,setAmount,setRAmount });
-             
+            if (response?.apiremainstatus && response?.sts && response?.allowzero) {
+                navigation.navigate('CmsCoustomerInfo', { item, setAmount, setRAmount });
+
             }
 
             return response;
@@ -86,31 +96,25 @@ const CmsPrePay = ({ route }) => {
         }
     };
 
-    // useEffect(() => {
-    //     console.log('0-0-0==');
 
-    //     if (!amount) {
-    //         setRAmount('')
-    //     }
-    //     if (amount === Ramount) {
-    //         console.log('0-0-0==11');
-
-    //         fatchData();
-    //     }
-    // }, [amount, Ramount]);
     useFocusEffect(
-    useCallback(() => {
-        console.log('Screen is focused, fetch data if needed*+-');
+        useCallback(() => {
+            if (
+                // adminiStatus?.allowzero === true &&
+                cmsAddMFrom === 'AddMoneyPayResponse' &&
+                amount &&
+                Number(amount) === Number(Ramount)
+            ) {
+                fatchData();
+                dispatch(clearEntryScreen(null));
+            }
+        }, [
+            cmsAddMFrom,
+            amount,
+            Ramount,
+        ])
+    );
 
-        if (amount && Number(amount) === Number(Ramount)) {
-            fatchData();
-        }
-
-        return () => {
-            console.log('Screen is unfocused, cleanup if needed-+*');
-        };
-    }, [amount, Ramount])
-);
 
 
     const handleAddMoney = () => {
@@ -240,6 +244,26 @@ const CmsPrePay = ({ route }) => {
                         </View>
                     )}
 
+
+
+                    {adminiStatus?.allowzero === false &&
+                        <View style={styles.zeroView}>
+                            <View style={[styles.svgimg, { backgroundColor: `${colorConfig.secondaryColor}1A` }]}>
+                                <CmsZeroSvg />
+                            </View>
+                            <View style={styles.zeroTextCon}>
+                                <Text style={styles.zeroTitle}>
+                                    Zero amount is not allowed.
+                                </Text>
+
+
+                                <Text style={styles.zeroText}>
+                                    According to company rules and regulations, a retail executive can generate a maximum of five zero-value pickup slips from a particular store each month.
+                                </Text>
+                            </View>
+                        </View>
+                    }
+
                 </View>
             </ScrollView >
         </View >
@@ -323,5 +347,35 @@ const styles = StyleSheet.create({
         borderColor: 'red',
         marginTop: hScale(20),
     },
+    svgimg: {
+        borderRadius: 10,
+        paddingHorizontal: wScale(10),
+        paddingVertical: hScale(5),
+        marginVertical: hScale(5)
+    },
+    zeroView: {
+        flexDirection: 'row',
+        backgroundColor: 'rgba(253, 181, 181, 0.3)', flex: 1,
+        // paddingVertical: hScale(8),
+        paddingHorizontal: wScale(5)
 
+    },
+
+    zeroTextCon: {
+        paddingLeft: wScale(4),
+        flex: 1,
+    },
+    zeroText: {
+        fontSize: wScale(13),
+        textAlign: 'justify',
+        color: '#000',
+        marginTop: hScale(10)
+
+    },
+    zeroTitle: {
+        fontSize: wScale(16),
+        fontWeight: 'bold',
+        textAlign: 'center',
+        color: '#000',
+    }
 });

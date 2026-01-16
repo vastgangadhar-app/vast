@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: wScale(8),
     paddingVertical: wScale(5),
     borderRadius: 5,
-
+height:hScale(48)
   },
   buttonText: {
     color: '#fff',
@@ -303,11 +303,15 @@ const styles = StyleSheet.create({
     padding: wScale(10),
     borderRadius: 5,
     backgroundColor: 'rgba(0,0,0,.5)',
+    height:hScale(48)
+
   },
   dropdown: {
     padding: wScale(10),
     borderRadius: 5,
     backgroundColor: 'rgba(0,0,0,.5)',
+    height:hScale(48)
+
   },
   righticon: {
     position: 'absolute',

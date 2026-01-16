@@ -74,23 +74,6 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\ANDROID  SUPPORT\\.gradle\\caches\\transforms-3\\e07e06049cfe5b626528b40ccb06a54c\\transformed\\jetified-play-services-basement-18.5.0\\res\\values-gu\\values.xml",
-                    "from": {
-                        "startLines": "4",
-                        "startColumns": "0",
-                        "startOffsets": "195",
-                        "endColumns": "142",
-                        "endOffsets": "337"
-                    },
-                    "to": {
-                        "startLines": "70",
-                        "startColumns": "4",
-                        "startOffsets": "5736",
-                        "endColumns": "146",
-                        "endOffsets": "5878"
-                    }
-                },
-                {
                     "source": "C:\\Users\\ANDROID  SUPPORT\\.gradle\\caches\\transforms-3\\5545c7aedcdd3eb8855f3e71310771ae\\transformed\\biometric-1.1.0\\res\\values-gu\\values-gu.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11,12,13",
@@ -141,6 +124,23 @@
                         "endLines": "10,14,18,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134",
                         "endColumns": "17,12,12,81,79,82,98,101,76,61,88,87,63,63,59,66,112,113,110,72,77,68,75,81,79,62,62,52,57,47,60,61,61,64,61,66,62,65,66,66,52,61,75,75,53",
                         "endOffsets": "331,534,722,7350,7430,7513,7612,7714,7791,7853,7942,8030,8094,8158,8218,8285,8398,8512,8623,8696,8774,8843,8919,9001,9081,9144,9207,9956,10014,10062,10123,10185,10247,10312,10374,10441,10504,10570,10637,10704,10757,10819,10895,10971,11025"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\ANDROID  SUPPORT\\.gradle\\caches\\transforms-3\\c14c9f214be58a907a7a6977c5680189\\transformed\\jetified-play-services-basement-18.9.0\\res\\values-gu\\values.xml",
+                    "from": {
+                        "startLines": "4",
+                        "startColumns": "0",
+                        "startOffsets": "218",
+                        "endColumns": "142",
+                        "endOffsets": "360"
+                    },
+                    "to": {
+                        "startLines": "70",
+                        "startColumns": "4",
+                        "startOffsets": "5736",
+                        "endColumns": "146",
+                        "endOffsets": "5878"
                     }
                 },
                 {

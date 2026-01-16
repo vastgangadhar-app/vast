@@ -234,10 +234,10 @@
       externalAnnotations="annotations.zip"
       proguardRules="proguard.txt"/>
   <library
-      name="com.google.android.gms:play-services-basement:18.5.0@aar"
-      jars="C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\e07e06049cfe5b626528b40ccb06a54c\transformed\jetified-play-services-basement-18.5.0\jars\classes.jar"
-      resolved="com.google.android.gms:play-services-basement:18.5.0"
-      folder="C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\e07e06049cfe5b626528b40ccb06a54c\transformed\jetified-play-services-basement-18.5.0"
+      name="com.google.android.gms:play-services-basement:18.9.0@aar"
+      jars="C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\c14c9f214be58a907a7a6977c5680189\transformed\jetified-play-services-basement-18.9.0\jars\classes.jar"
+      resolved="com.google.android.gms:play-services-basement:18.9.0"
+      folder="C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\c14c9f214be58a907a7a6977c5680189\transformed\jetified-play-services-basement-18.9.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
@@ -1873,10 +1873,10 @@
       externalAnnotations="annotations.zip"
       proguardRules="proguard.txt"/>
   <library
-      name="com.google.android.gms:play-services-auth:21.4.0@aar"
-      jars="C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\1b760533d16e7018285f55318d38a379\transformed\jetified-play-services-auth-21.4.0\jars\classes.jar"
-      resolved="com.google.android.gms:play-services-auth:21.4.0"
-      folder="C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\1b760533d16e7018285f55318d38a379\transformed\jetified-play-services-auth-21.4.0"
+      name="com.google.android.gms:play-services-auth:21.5.0@aar"
+      jars="C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\3718758913cf82b1d7459367e3e0b917\transformed\jetified-play-services-auth-21.5.0\jars\classes.jar"
+      resolved="com.google.android.gms:play-services-auth:21.5.0"
+      folder="C:\Users\ANDROID  SUPPORT\.gradle\caches\transforms-3\3718758913cf82b1d7459367e3e0b917\transformed\jetified-play-services-auth-21.5.0"
       manifest="AndroidManifest.xml"
       resFolder="res"
       assetsFolder="assets"
