@@ -1,7 +1,7 @@
-node_modules
-# Android build
+# React Native
+node_modules/
 android/app/build/
-android/build/
 android/.gradle/
 *.apk
 *.aab
+ios/build/
