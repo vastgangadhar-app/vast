@@ -61,13 +61,27 @@ const CmsPrePay = ({ route }) => {
 
 
     useEffect(() => {
-        if (
-            // Number(amount)  &&
-            Number(amount) === Number(Ramount)
-        ) {
+        const amt = Number(amount);
+        const rAmt = Number(Ramount);
+
+        const isValid =
+            amount !== "" &&
+            Ramount !== "" &&
+            !isNaN(amt) &&
+            !isNaN(rAmt) &&
+            amt >= 0 &&
+            rAmt >= 0 &&
+            amt === rAmt;
+
+        if (isValid) {
             fatchData();
         }
+        if (amount == "") {
+            setRAmount('')
+             fatchData();
+        }
     }, [amount, Ramount, adminiStatus?.allowzero]);
+
 
 
     const fatchData = async () => {
@@ -248,7 +262,10 @@ const CmsPrePay = ({ route }) => {
 
                     {adminiStatus?.allowzero === false &&
                         <View style={styles.zeroView}>
-                            <View style={[styles.svgimg, { backgroundColor: `${colorConfig.secondaryColor}1A` }]}>
+                            <View style={[styles.svgimg, { backgroundColor: `${colorConfig.secondaryColor}1A` },
+                                // { transform: [{ rotate: '-190deg' }] },
+
+                            ]}>
                                 <CmsZeroSvg />
                             </View>
                             <View style={styles.zeroTextCon}>
@@ -351,7 +368,8 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         paddingHorizontal: wScale(10),
         paddingVertical: hScale(5),
-        marginVertical: hScale(5)
+        marginVertical: hScale(5),
+
     },
     zeroView: {
         flexDirection: 'row',
@@ -369,11 +387,11 @@ const styles = StyleSheet.create({
         fontSize: wScale(13),
         textAlign: 'justify',
         color: '#000',
-        marginTop: hScale(10)
+        marginTop: hScale(5)
 
     },
     zeroTitle: {
-        fontSize: wScale(16),
+        fontSize: wScale(20),
         fontWeight: 'bold',
         textAlign: 'center',
         color: '#000',

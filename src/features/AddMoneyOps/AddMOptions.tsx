@@ -8,29 +8,16 @@ import { useDeviceInfoHook } from '../../utils/hooks/useDeviceInfoHook';
 import { RootState } from '../../reduxUtils/store';
 import { useSelector } from 'react-redux';
 import { encrypt } from '../../utils/encryptionUtils';
-import DynamicButton from '../drawer/button/DynamicButton';
 import { colors, FontSize } from '../../utils/styles/theme';
 import AppBarSecond from '../drawer/headerAppbar/AppBarSecond';
-import NetBanksvg from '../drawer/svgimgcomponents/NetBanksvg';
-import DebitCardsvg from '../drawer/svgimgcomponents/DebitCardsvg';
-import Distributorsvg from '../drawer/svgimgcomponents/Distributorsvg';
-import Adminsvg from '../drawer/svgimgcomponents/Adminsvg';
-import WalletSvg from '../drawer/svgimgcomponents/Walletsvg';
-import Upisvg from '../drawer/svgimgcomponents/Upisvg';
 import Upipaymentoptionssvg from '../drawer/svgimgcomponents/Upipaymentoptionssvg';
-import Internationalcardsvg from '../drawer/svgimgcomponents/Internationalcardsvg';
 import QrcodSvg from '../drawer/svgimgcomponents/QrcodSvg';
-import QrcodAddmoneysvg from '../drawer/svgimgcomponents/QrcodAddmoneysvg';
-import CreditCardsvg from '../drawer/svgimgcomponents/CreditCardsvg';
 import uuid from 'react-native-uuid';
-import CheckSvg from '../drawer/svgimgcomponents/CheckSvg';
-import { useLocationHook } from '../../hooks/useLocationHook';
-import ShowLoader from '../../components/ShowLoder';
 import FontAwesome6 from "react-native-vector-icons/FontAwesome6";
 import AllBalance from '../../components/AllBalance';
 import ShowLoaderBtn from '../../components/ShowLoaderBtn';
-import { backgroundUpload } from 'react-native-compressor';
 import { NativeModules } from "react-native";
+import OtheAddMOptions from './OtheAddMOptions';
 const { UpiNative } = NativeModules;
 const AddMoneyOptions = ({ route }) => {
     const { colorConfig, IsDealer, Loc_Data } = useSelector((state: RootState) => state.userInfo);
@@ -54,13 +41,10 @@ const AddMoneyOptions = ({ route }) => {
     const [merchemail, setMerchemail] = useState('');
     const [merchmobile, setMerchmobile] = useState('');
     const [mrchname, setMrchname] = useState('');
-    const [buttontxt, setButtontxt] = useState('Upi');
-
     const [phonepeMin, setPhonepeMin] = useState('');
     const [phonepeMax, setPhonepeMax] = useState('');
     const [checkFun, setCheckFun] = useState('UPI');
     const [intentLoad, setIntentLoad] = useState(false);
-
     const [isLoading, setIsLoading] = useState(false);
     const [upiid, setUpiid] = useState('');
     const [minamnt, setMinamnt] = useState('');
@@ -74,7 +58,6 @@ const AddMoneyOptions = ({ route }) => {
     const [selectedOption, setSelectedOption] = useState('UPI');
     const [charge, setCharge] = useState(null);
     const [totalCharge, setTotalCharge] = useState(null);
-
     const { latitude, longitude } = Loc_Data;
     useEffect(() => {
         upiCharges();
@@ -88,7 +71,6 @@ const AddMoneyOptions = ({ route }) => {
             const userInfo = await get({ url: `${APP_URLS.addmoneyChg}${amount}` });
 
             setCharges(userInfo);
-            // setCharges(Object.entries(userInfo.WalletChargesenc));
             console.log(userInfo);
             setIsLoading(false)
 
@@ -98,100 +80,7 @@ const AddMoneyOptions = ({ route }) => {
             console.error('Error fetching charges:', error);
         }
     }, []);
-    const handleOptionClick = (optionName) => {
 
-        setSelectedOption(optionName)
-        if (optionName == 'QR Code') {
-            setButtontxt('QR Code');
-            setCheckFun('QR Code')
-        } else if (optionName == 'Creditcard') {
-
-            setButtontxt('Credit card');
-            setCheckFun('Creditcard')
-            const creditCardValues = getPaymentMethodValues('Creditcard', charges);
-            console.log(creditCardValues);
-            setChgs(creditCardValues);
-
-        } else if (optionName == 'Wallet') {
-            setButtontxt('Wallet');
-
-            const creditCardValues = getPaymentMethodValues('Wallet', charges);
-            console.log(creditCardValues);
-            setChgs(creditCardValues);
-            setCheckFun('Wallet')
-
-        } else if (optionName == 'debitCardcharges') {
-            setButtontxt('Debit Card');
-
-            const creditCardValues = getPaymentMethodValues('debitCardcharges', charges);
-            console.log(creditCardValues);
-            setChgs(creditCardValues);
-            setCheckFun('debitCardcharges')
-        } else if (optionName == 'Netbanking') {
-            setButtontxt('Net Banking');
-
-            const creditCardValues = getPaymentMethodValues('Netbanking', charges);
-            console.log(creditCardValues);
-            setChgs(creditCardValues);
-            setCheckFun('Netbanking')
-        } else if (optionName == 'UPI') {
-            setButtontxt('UPI');
-            setCheckFun('UPI')
-        } else if (optionName == 'Self UPI') {
-            setButtontxt('Self UPI');
-
-            setCheckFun('Self UPI');
-
-        } else if (optionName == 'Request to Admin') {
-            setButtontxt('Request to Admin');
-
-            setCheckFun('Request to Admin');
-
-        } else {
-            setButtontxt('Request to Distributor');
-
-            setCheckFun('Request to Distributor');
-        }
-    };
-
-    const handleOptionClick2 = (optionName) => {
-        console.log('optionName', optionName);
-        if (optionName === 'QR Code') {
-            upiqr();
-        } else if (optionName === 'Creditcard') {
-
-            gatewaytype('CC')
-
-
-        } else if (optionName === 'Wallet') {
-
-            gatewaytype('WA')
-
-        } else if (optionName === 'debitCardcharges') {
-
-            gatewaytype('DC')
-        } else if (optionName === 'Netbanking') {
-
-            gatewaytype('NB')
-        } else if (optionName === 'UPI') {
-            setButtontxt('UPI');
-            upists();
-            gatewaytype('UP')
-        } else if (optionName === 'Self UPI') {
-            upists2();
-            console.log('Self UPI:', optionName);
-        } else if (optionName === 'Request to Admin') {
-            setButtontxt(IsDealer ? 'Request to Admin' : 'Request to Admin');
-
-            navigation.navigate("ReqToAdmin", { amount, type: 'Admin' });
-
-        } if (optionName === 'Request to Distributor' || optionName === 'Request to Master') {
-            setButtontxt(IsDealer ? 'Request to Master' : 'Request to Distributor');
-
-            navigation.navigate("ReqToAdmin", { amount, type: 'Distributor' });
-
-        }
-    };
     const upiCharges = useCallback(async () => {
 
         try {
@@ -215,18 +104,14 @@ const AddMoneyOptions = ({ route }) => {
             const msz = data["Message"];
             const phonepeMinValue = data["minmium"].toString();
             const phonepeMaxValue = data["maximium"].toString();
-
             setPhonepeMin(phonepeMinValue);
             setPhonepeMax(phonepeMaxValue);
-
             const phonepeam = parseFloat(amount);
             const phonepeMin1 = parseFloat(phonepeMinValue);
             const phonepemaxx1 = parseFloat(phonepeMaxValue);
-
             if (phonepeam >= phonepeMin1 && phonepeam <= phonepemaxx1) {
                 if (resp === "Success") {
                     phonepe();
-
                 } else {
                     showAlert(msz);
                 }
@@ -239,7 +124,6 @@ const AddMoneyOptions = ({ route }) => {
             setIsLoading(false)
 
         }
-
 
     }, [])
 
@@ -325,8 +209,6 @@ const AddMoneyOptions = ({ route }) => {
         }
     }, [from, amount, navigation, upich, Qrcodestatus]);
 
-
-
     const Qrcodestatus = useCallback(async (amnt) => {
         setIsLoading(true)
 
@@ -374,34 +256,6 @@ const AddMoneyOptions = ({ route }) => {
             console.error("Error fetching QR status:", error);
         }
     }, []);
-    /*  try {
-
-         const data = await get({ url: `${APP_URLS.genQr}amountqr=${amnt}` });
-
-         const status = data["Status"];
-         const msz = data["Message"];
-         const qrtsData = data["Success"];
-         const generatedidData = data["GeneratedUniqueid"];
-         const qrcode1Data = data["QRCODE"];
-         navigation.navigate("QRCodePage", { qrcode1Data, generatedidData, qrtsData, amnt, msz });
-
-         setQrts(qrtsData);
-         setGeneratedid(generatedidData);
-         setQrcode1(qrcode1Data);
-
-         if (status === "Success" || msz === "Create") {
-          // navigation.navigate("QRCodePage",{qrcode1Data,generatedidData,qrtsData,amnt});
-
-
-
-
-         } else {
-             showAlert(msz);
-         }
-
-     } catch (error) {
-
-     } */
 
     const showAlert = (message) => {
         Alert.alert(
@@ -423,15 +277,8 @@ const AddMoneyOptions = ({ route }) => {
         const Model = await getMobileDeviceId();
         setIsLoading(true)
 
-
-
         try {
-
-
             const response = await get({ url: `${APP_URLS.upistatus}` });
-
-
-
             const ActiveApi = response['ActiveApi']
             if (ActiveApi === ActiveApi) {
                 const payuamount = parseFloat(route.params['amount']);
@@ -464,10 +311,7 @@ const AddMoneyOptions = ({ route }) => {
         const Model = await getMobileDeviceId();
         setIsLoading(true)
 
-
         try {
-
-
             const response = await get({ url: `${APP_URLS.upistatus}` });
             console.log(response);
             const ActiveApi = response['ActiveApi']
@@ -676,18 +520,10 @@ const AddMoneyOptions = ({ route }) => {
     }, [post]);
 
 
-
-
-
     const Apitransitionsencrypt = useCallback(async (type, data1) => {
         try {
             const id = uuid.v4().toString().substring(0, 16);
             setIsLoading(true)
-
-
-
-
-            // Fetch Network and Device Data
             const mobileNetwork = await getNetworkCarrier();
             const ip = await getMobileIp();
             const model = await getMobileDeviceId();
@@ -892,56 +728,56 @@ const AddMoneyOptions = ({ route }) => {
     };
 
 
-const startPayment = async (upiUrl) => {
-  if (!upiUrl) {
-    Alert.alert("UPI URL missing");
-    return;
-  }
+    const startPayment = async (upiUrl) => {
+        if (!upiUrl) {
+            Alert.alert("UPI URL missing");
+            return;
+        }
 
-  setIntentLoad(true); // 🔄 START LOADING
+        setIntentLoad(true); // 🔄 START LOADING
 
-  try {
-    const result = await UpiNative.pay(upiUrl);
-    console.log("RAW RESULT:", result);
+        try {
+            const result = await UpiNative.pay(upiUrl);
+            console.log("RAW RESULT:", result);
 
-    // 🔴 USER CANCELLED / NO RESPONSE
-    if (result === "CANCELLED" || result === "NO_RESPONSE") {
-      ToastAndroid.show("Payment Cancelled", ToastAndroid.SHORT);
-      return;
-    }
+            // 🔴 USER CANCELLED / NO RESPONSE
+            if (result === "CANCELLED" || result === "NO_RESPONSE") {
+                ToastAndroid.show("Payment Cancelled", ToastAndroid.SHORT);
+                return;
+            }
 
-    // ✅ PARSE RESPONSE
-    const parsed = parseUpiResponse(result);
-    console.log("PARSED JSON:", parsed);
+            // ✅ PARSE RESPONSE
+            const parsed = parseUpiResponse(result);
+            console.log("PARSED JSON:", parsed);
 
-    const status = (parsed.status || parsed.Status || "").toUpperCase();
+            const status = (parsed.status || parsed.Status || "").toUpperCase();
 
-    // ✅ STATUS HANDLING
-    if (status === "SUCCESS") {
-      ToastAndroid.show("Payment Successful", ToastAndroid.SHORT);
- navigation.navigate("AddMoneyPayResponse");
-   
-    } 
-    else if (status === "FAILURE") {
-      ToastAndroid.show("Payment Failed", ToastAndroid.SHORT);
-       navigation.navigate("AddMoneyPayResponse");
-    } 
-    else if (status === "SUBMITTED") {
-      ToastAndroid.show("Payment Pending", ToastAndroid.SHORT);
+            // ✅ STATUS HANDLING
+            if (status === "SUCCESS") {
+                ToastAndroid.show("Payment Successful", ToastAndroid.SHORT);
+                navigation.navigate("AddMoneyPayResponse");
 
-   navigation.navigate("AddMoneyPayResponse");
-    } 
-    else {
-      ToastAndroid.show("Unknown Payment Response", ToastAndroid.SHORT);
-    }
+            }
+            else if (status === "FAILURE") {
+                ToastAndroid.show("Payment Failed", ToastAndroid.SHORT);
+                navigation.navigate("AddMoneyPayResponse");
+            }
+            else if (status === "SUBMITTED") {
+                ToastAndroid.show("Payment Pending", ToastAndroid.SHORT);
 
-  } catch (e) {
-    console.log("UPI ERROR:", e);
-    ToastAndroid.show("UPI Failed", ToastAndroid.SHORT);
-  } finally {
-    setIntentLoad(false); // ✅ STOP LOADING (ALWAYS)
-  }
-};
+                navigation.navigate("AddMoneyPayResponse");
+            }
+            else {
+                ToastAndroid.show("Unknown Payment Response", ToastAndroid.SHORT);
+            }
+
+        } catch (e) {
+            console.log("UPI ERROR:", e);
+            ToastAndroid.show("UPI Failed", ToastAndroid.SHORT);
+        } finally {
+            setIntentLoad(false); // ✅ STOP LOADING (ALWAYS)
+        }
+    };
 
 
 
@@ -1009,11 +845,9 @@ const startPayment = async (upiUrl) => {
 
     return (
         <View style={styles.main}>
+
             <AppBarSecond title={'Payment Options'} actionButton={undefined} onActionPress={undefined} onPressBack={undefined} titlestyle={undefined} />
-      <AllBalance  />
-
-
-
+            <AllBalance />
             <View style={styles.container}>
                 <View style={[styles.chargesContainer,]}>
                     <View style={[styles.chargeview, { backgroundColor: `${colorConfig.secondaryColor}80` }]}>
@@ -1034,148 +868,8 @@ const startPayment = async (upiUrl) => {
                         </View>
                     </View>
                 </View>
-                {/* <View style={styles.rowview}>
-                    <View style={styles.btnview}>
 
-                        <TouchableOpacity
-                            style={[styles.option, { borderColor: colors.green01D }]}
-                            onPress={() => handleOptionClick('UPI')}>
-                            <Upipaymentoptionssvg />
-
-                            {selectedOption === 'UPI' && <View style={[styles.selected,]}>
-                                <CheckSvg size={12} />
-                            </View>}
-                        </TouchableOpacity>
-                        <Text style={[styles.optionText,]}>Gateway</Text>
-                    </View>
-
-                    <View style={styles.btnview}>
-                        <TouchableOpacity
-                            style={styles.option}
-                            onPress={() => handleOptionClick('Self UPI')}>
-                            <Upipaymentoptionssvg />
-                            {selectedOption === 'Self UPI' && <View style={[styles.selected,]}>
-                                <CheckSvg size={12} />
-                            </View>}
-                        </TouchableOpacity>
-                        <Text style={styles.optionText}>Self UPI</Text>
-                    </View>
-                    <View style={styles.btnview}>
-                        <TouchableOpacity
-                            style={styles.option}
-                            onPress={() => handleOptionClick('QR Code')} >
-                            <QrcodAddmoneysvg />
-                            {selectedOption === 'QR Code' && <View style={[styles.selected,]}>
-                                <CheckSvg size={12} />
-                            </View>}
-                        </TouchableOpacity>
-                        <Text style={styles.optionText}>Paytm</Text>
-
-                    </View>
-
-                </View> */}
-
-                {/* <View style={styles.rowview}>
-                    <View style={styles.btnview}>
-                        <TouchableOpacity
-                            style={styles.option}
-                            onPress={() => handleOptionClick('Creditcard')}
-                        >
-                            <CreditCardsvg />
-                            {selectedOption === 'Creditcard' && <View style={[styles.selected,]}>
-                                <CheckSvg size={12} />
-                            </View>}
-                        </TouchableOpacity>
-                        <Text style={styles.optionText}>Credit Card</Text>
-
-                    </View>
-                    <View style={styles.btnview}>
-
-                        <TouchableOpacity
-                            style={styles.option}
-                            onPress={() => handleOptionClick('debitCardcharges')}
-                        >
-                            <DebitCardsvg />
-                            {selectedOption === 'debitCardcharges' && <View style={[styles.selected,]}>
-                                <CheckSvg size={12} />
-                            </View>}
-                        </TouchableOpacity>
-                        <Text style={styles.optionText}>Debit Card</Text>
-
-                    </View>
-                    <View style={styles.btnview}>
-
-                        <TouchableOpacity
-                            style={styles.option}
-                            onPress={() => handleOptionClick('Netbanking')}
-                        >
-                            <NetBanksvg />
-                            {selectedOption === 'Netbanking' && <View style={[styles.selected,]}>
-                                <CheckSvg size={12} />
-                            </View>}
-                        </TouchableOpacity>
-                        <Text style={styles.optionText}>Net Banking</Text>
-                    </View>
-
-                </View>
-
-                <View style={styles.rowview}>
-                    <View style={styles.btnview}>
-                        <TouchableOpacity
-                            style={styles.option}
-                            onPress={() => handleOptionClick(IsDealer ? 'Request to Master' : 'Request to Distributor')}
-                        >
-                            <Distributorsvg />
-                            {selectedOption === (IsDealer ? 'Request to Master' : 'Request to Distributor') && <View style={[styles.selected,]}>
-                                <CheckSvg size={12} />
-                            </View>}
-                        </TouchableOpacity>
-                        <Text style={styles.optionText}> {IsDealer ? 'Request to Master' : 'Request to Distributor'}</Text>
-
-                    </View>
-                    <View style={styles.btnview}>
-
-                        <TouchableOpacity
-                            style={styles.option}
-                            onPress={() => handleOptionClick('Request to Admin')}
-                        >
-                            <Adminsvg />
-                            {selectedOption === 'Request to Admin' && <View style={[styles.selected,]}>
-                                <CheckSvg size={12} />
-                            </View>}
-                        </TouchableOpacity>
-                        <Text style={styles.optionText}>Request to Admin</Text>
-
-                    </View>
-                    <View style={styles.btnview}>
-
-                        <TouchableOpacity
-                            style={styles.option}
-                            onPress={() => handleOptionClick('International Card')}
-                        >
-                            <Internationalcardsvg />
-                            {selectedOption === 'International Card' && <View style={[styles.selected,]}>
-                                <CheckSvg size={12} />
-                            </View>}
-                        </TouchableOpacity>
-                        <Text style={styles.optionText}>International Card</Text>
-                    </View>
-                </View>
-                <View style={styles.btnview}>
-
-                    <TouchableOpacity
-                        style={styles.option}
-                        onPress={() => handleOptionClick('Wallet')}
-                    >
-                        <WalletSvg color={colorConfig.secondaryColor} size={40} />
-                        {selectedOption === 'Wallet' && <View style={[styles.selected,]}>
-                            <CheckSvg size={12} />
-                        </View>}
-                    </TouchableOpacity>
-                    <Text style={styles.optionText}>Wallet</Text>
-
-                </View> */}
-                <View style={styles.btncard}>
+                <View style={[styles.btncard,{backgroundColor:colorConfig.secondaryColor}]}>
                     <View style={[styles.row, {
                         borderWidth: 0, backgroundColor: 'transparent'
                     }]}>
@@ -1229,20 +923,17 @@ const startPayment = async (upiUrl) => {
                             <FontAwesome6 name="chevron-right" size={22} color="#fff" />
                         )}
                     </TouchableOpacity>
+                    <Text style={styles.otherTextS}>
+                        Other Manual Payment Option's
+                    </Text>
+                    <OtheAddMOptions />
 
                 </View>
 
-                {/* {isLoading && <ShowLoader />}
-                <DynamicButton
-                    styleoveride={{ marginTop: 20 }}
-                    title={`Pay by ${buttontxt}`}
-                    onPress={() => {
-                        console.log(checkFun);
-                        handleOptionClick2(checkFun);
-                    }} /> */}
 
 
             </View>
+
         </View>
     );
 };
@@ -1282,11 +973,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flex: 1
     },
-    chargeItem: {
-        padding: wScale(10),
-        borderRadius: 5,
-        backgroundColor: '#f0f0f0',
-    },
+
 
     amounttext: {
         fontSize: FontSize.heading,
@@ -1301,15 +988,7 @@ const styles = StyleSheet.create({
         borderRightWidth: wScale(2),
         borderRightColor: colors.black_01
     },
-    rowview: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: hScale(10),
-        paddingHorizontal: wScale(30),
-    },
-    btnview: {
-        alignItems: 'center'
-    },
+
     option: {
         width: wScale(60),
         height: wScale(60),
@@ -1317,13 +996,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderWidth: wScale(1),
     },
-    optionText: {
-        fontSize: FontSize.xSmall,
-        textAlign: 'center',
-        color: colors.black75,
-        marginTop: hScale(3),
-        width: wScale(90),
-    },
+
     selected: {
         height: wScale(20),
         width: wScale(20),
@@ -1373,10 +1046,7 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         marginLeft: wScale(10)
     },
-    arrow: {
-        color: "#fff",
-        fontSize: 28,
-    },
+
     dividerContainer: {
         flexDirection: "row",
         alignItems: "center",
@@ -1395,10 +1065,17 @@ const styles = StyleSheet.create({
     },
     notText: {
         color: "#fff",
-        fontSize: 12,
+        fontSize: wScale(12),
         textAlign: 'justify',
         paddingBottom: hScale(10)
     },
+    otherTextS:{
+        fontSize:wScale(12),
+        textAlign:'right',
+        color:'#fff',
+        letterSpacing:wScale(1),
+        marginTop:hScale(14)
+    }
 
 
 });

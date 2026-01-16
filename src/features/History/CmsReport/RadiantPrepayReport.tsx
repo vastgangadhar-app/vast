@@ -171,7 +171,7 @@ const RadiantPrepayReport = () => {
                                 <Text style={styles.value}>{item.sts}</Text>
                             </View>
 
-                            <View style={styles.item2}>
+                        <View style={[styles.item2,styles.stsRow]}>
                                 {resolvedStatus === "success" ? (
                                     <View
                                         style={[styles.check, { backgroundColor: "green" },]}>
@@ -179,8 +179,8 @@ const RadiantPrepayReport = () => {
                                     </View>
                                 ) : resolvedStatus === "pending" ? (<PaddingSvg2 size={25} />)
                                     : resolvedStatus === "failed" ? (<FailedSvg size={25} />
-                                    ) : resolvedStatus === "refund" ? (<MaterialCommunityIcons name="clock" color="#000" size={24} />
-                                    ) : <MaterialCommunityIcons name="clock" color="#000" size={25} />
+                                    ) : resolvedStatus === "refund" ? (<MaterialCommunityIcons name="clock" color="blue" size={30} />
+                                    ) : <MaterialCommunityIcons name="clock" color="#000" size={30} />
 
                                 }
                             </View>
@@ -201,10 +201,10 @@ const RadiantPrepayReport = () => {
                     <BorderLine height={.5} width={'100%'} />
 
                     <View style={styles.row}>
-                        <View style={styles.item}>
+                        <View style={[styles.item,]}>
                             <Text style={styles.label}>Transaction ID</Text>
                         </View>
-                        <View style={styles.item2}>
+                        <View style={[styles.item2,]}>
                             <Text style={styles.value}>{item.transid || 'NULL'}</Text>
 
                         </View>
@@ -379,7 +379,6 @@ const styles = StyleSheet.create({
     },
     item: {
         flex: 1,
-        backgroundColor:'red'
     },
     item2: {
         flex: 1,
@@ -463,12 +462,6 @@ const styles = StyleSheet.create({
         marginTop: hScale(2),
     },
     stsRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        paddingVertical: hScale(2),
-        alignItems: 'center',
-        paddingHorizontal: wScale(10),
-        borderRadius: 80
+       flex:0,
     }
 });

@@ -12,8 +12,6 @@ import { useNavigation } from '@react-navigation/native';
 import { RootState } from '../../reduxUtils/store';
 import { hScale, SCREEN_WIDTH, wScale } from '../../utils/styles/dimensions';
 import { colors } from '../../utils/styles/theme';
-
-// SVG Imports
 import NextErrowSvg2 from '../drawer/svgimgcomponents/NextErrowSvg2';
 import RadintDepositSvg from '../drawer/svgimgcomponents/RadintDepositSvg';
 import RadintChequeSvg from '../drawer/svgimgcomponents/RadintChequeSvg';
@@ -37,7 +35,7 @@ import PayoutInfoSvg from '../drawer/svgimgcomponents/PayoutInfoSvg';
 
 
 const CmsTab = () => {
-    const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+    const { colorConfig, rctype } = useSelector((state: RootState) => state.userInfo);
     const { post } = useAxiosHook();
 
 
@@ -119,15 +117,25 @@ const CmsTab = () => {
             nav: 'CrePayout',
             img: <PayoutInfoSvg color={svgColor} />,
         },
-
-        {
-            id: '4',
-            title: 'Cash Pickup Report',
-            description:
-                'This report will give complete details of payment collection done by the RC from the customer location, whether the RCE has made the payment through digital slip or through physical slip.',
-            nav: 'CashPicUpReport',
-            img: <RadintDepositSvg color={svgColor} />,
-        },
+        ...(rctype === 'PostPay'
+            ?
+            [{
+                id: '4',
+                title: 'Cash Pickup Report',
+                description:
+                    'This report will give complete details of payment collection done by the RC from the customer location, whether the RCE has made the payment through digital slip or through physical slip.',
+                nav: 'CashPicUpReport',
+                img: <RadintDepositSvg color={svgColor} />,
+            }]
+            : []),
+        // {
+        //     id: '4',
+        //     title: 'Cash Pickup Report',
+        //     description:
+        //         'This report will give complete details of payment collection done by the RC from the customer location, whether the RCE has made the payment through digital slip or through physical slip.',
+        //     nav: 'CashPicUpReport',
+        //     img: <RadintDepositSvg color={svgColor} />,
+        // },
         {
             id: '5',
             title: 'Pickup & Deposit Ledger',
@@ -137,15 +145,29 @@ const CmsTab = () => {
             nav: 'RadiantLedger',
             img: <CmsLedgerSvg color={svgColor} />,
         },
-        {
-            id: '6',
-            title: 'Cash Pickup Prepay Report',
-            description:
-                'Money is picked up by RCE from the customer point or dropped off by the customer and through whatever medium the money is given to the company, the complete credit debit report will be in this ledger.',
+        ...(rctype === 'PrePay'
+            ?
+            [
+                {
+                    id: '6',
+                    title: 'Cash Pickup Prepay Report',
+                    description:
+                        'Money is picked up by RCE from the customer point or dropped off by the customer and through whatever medium the money is given to the company, the complete credit debit report will be in this ledger.',
 
-            nav: 'RadiantPrepayReport',
-            img: <CmsLedgerSvg color={svgColor} />,
-        },
+                    nav: 'RadiantPrepayReport',
+                    img: <CmsLedgerSvg color={svgColor} />,
+                }]
+            : []
+        ),
+        // {
+        //     id: '6',
+        //     title: 'Cash Pickup Prepay Report',
+        //     description:
+        //         'Money is picked up by RCE from the customer point or dropped off by the customer and through whatever medium the money is given to the company, the complete credit debit report will be in this ledger.',
+
+        //     nav: 'RadiantPrepayReport',
+        //     img: <CmsLedgerSvg color={svgColor} />,
+        // },
 
     ];
 
