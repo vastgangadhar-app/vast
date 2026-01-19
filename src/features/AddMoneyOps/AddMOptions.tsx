@@ -18,9 +18,13 @@ import AllBalance from '../../components/AllBalance';
 import ShowLoaderBtn from '../../components/ShowLoaderBtn';
 import { NativeModules } from "react-native";
 import OtheAddMOptions from './OtheAddMOptions';
+import { clearEntryScreen } from '../../reduxUtils/store/userInfoSlice';
 const { UpiNative } = NativeModules;
 const AddMoneyOptions = ({ route }) => {
-    const { colorConfig, IsDealer, Loc_Data } = useSelector((state: RootState) => state.userInfo);
+    
+    const { colorConfig, IsDealer, Loc_Data, cmsAddMFrom } = useSelector((state: RootState) => state.userInfo);
+        console.log(cmsAddMFrom,'-==-==');
+
     const color1 = `${colorConfig.secondaryColor}20`
     const { amount, jsonData, paymentMode, chargeType, from } = route.params;
     const { getNetworkCarrier, getMobileDeviceId, getMobileIp } =
@@ -842,6 +846,13 @@ const AddMoneyOptions = ({ route }) => {
         callSelfUPIIntent(amount);
     }, []);
 
+    const handleOptionSelect = (type: string) => {
+        clearEntryScreen('')
+        navigation.navigate("OtherPayMent", {
+            paymentType: type,
+        });
+
+    };
 
     return (
         <View style={styles.main}>
@@ -869,7 +880,7 @@ const AddMoneyOptions = ({ route }) => {
                     </View>
                 </View>
 
-                <View style={[styles.btncard,{backgroundColor:colorConfig.secondaryColor}]}>
+                <View style={[styles.btncard, { backgroundColor: colorConfig.secondaryColor }]}>
                     <View style={[styles.row, {
                         borderWidth: 0, backgroundColor: 'transparent'
                     }]}>
@@ -923,11 +934,14 @@ const AddMoneyOptions = ({ route }) => {
                             <FontAwesome6 name="chevron-right" size={22} color="#fff" />
                         )}
                     </TouchableOpacity>
-                    <Text style={styles.otherTextS}>
-                        Other Manual Payment Option's
-                    </Text>
-                    <OtheAddMOptions />
-
+                   {(cmsAddMFrom === 'CmsPrePay' || cmsAddMFrom === 'PageA') && (
+  <>
+    <Text style={styles.otherTextS}>
+      Other Manual Payment Option's
+    </Text>
+    <OtheAddMOptions onSelect={handleOptionSelect} />
+  </>
+)}
                 </View>
 
 
@@ -1069,12 +1083,12 @@ const styles = StyleSheet.create({
         textAlign: 'justify',
         paddingBottom: hScale(10)
     },
-    otherTextS:{
-        fontSize:wScale(12),
-        textAlign:'right',
-        color:'#fff',
-        letterSpacing:wScale(1),
-        marginTop:hScale(14)
+    otherTextS: {
+        fontSize: wScale(12),
+        textAlign: 'right',
+        color: '#fff',
+        letterSpacing: wScale(1),
+        marginTop: hScale(14)
     }
 
 

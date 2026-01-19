@@ -187,6 +187,7 @@ import PickupSalaryCalendar from '../../features/RadiantApp/CmsSalarySheet/Picku
 import CrePayout from '../../features/RadiantApp/CmsSalarySheet/CrePayout';
 import CmsShowPayoutStructure from '../../features/RadiantApp/RadiantNewClient/CmsShowPayoutStructure';
 import PrepaySlipSummary from '../../features/History/CmsReport/PrepaySlipSummary';
+import OtherPayMent from '../../features/RadiantApp/components/OtherPayMent';
 
 const Stack = createNativeStackNavigator();
 
@@ -1063,7 +1064,11 @@ export const AppNavigator = () => {
         component={PrepaySlipSummary}
         options={{ headerShown: false }}
       />
-
+   <Stack.Screen
+        name="OtherPayMent"
+        component={OtherPayMent}
+        options={{ headerShown: false }}
+      />
 
     </Stack.Navigator>
   );

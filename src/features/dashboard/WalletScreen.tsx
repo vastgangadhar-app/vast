@@ -30,6 +30,8 @@ import AllBalance from '../../components/AllBalance';
 import ShowLoaderBtn from '../../components/ShowLoaderBtn';
 import AddMoneyPayResponse from '../../components/AddMoneyPayResponse';
 import { log } from 'console';
+import { useDispatch } from 'react-redux';
+import { clearEntryScreen } from '../../reduxUtils/store/userInfoSlice';
 
 const WalletScreen = () => {
 
@@ -379,6 +381,8 @@ const WalletScreen = () => {
     }
   }, [get]);
   const onpressbtn = () => {
+    dispatch(clearEntryScreen(null))
+
     if (amount.length === 0) {
       ToastAndroid.show('Please enter an amount', ToastAndroid.SHORT); // Show a toast message
     } else {
@@ -390,7 +394,7 @@ const WalletScreen = () => {
 
 
 
-
+  const dispatch = useDispatch()
   const getCharges = useCallback(async (amount) => {
     try {
       const userInfo = await get({ url: `${APP_URLS.addmoneyChg}${amount}` });
@@ -419,10 +423,7 @@ const WalletScreen = () => {
     getData2()
     upiCharges();
     getData();
-  }, [
-
-
-  ]);
+  }, []);
 
 
 
@@ -535,7 +536,7 @@ const WalletScreen = () => {
     <View style={styles.main}>
 
       <AppBarSecond title={''}
-       
+
       />
 
       <AllBalance />

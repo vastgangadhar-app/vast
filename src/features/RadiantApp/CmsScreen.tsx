@@ -14,7 +14,7 @@ import DownloadDocRadiant from './Radiantregister/DownloadDocRadiant';
 import useAxiosHook from '../../utils/network/AxiosClient';
 import { APP_URLS } from '../../utils/network/urls';
 import { RootState } from '../../reduxUtils/store';
-import { setRceID, setRctype ,} from '../../reduxUtils/store/userInfoSlice';
+import { clearEntryScreen, setRceID, setRctype, } from '../../reduxUtils/store/userInfoSlice';
 import CmsPayoutStructure from './RadiantNewClient/CmsPayoutStructure';
 import SelfieScreen from './selfiescreen';
 import ImgPendingcms from './RadiantNewClient/ImgPendingcms';
@@ -38,7 +38,7 @@ const CmsScreen = () => {
   useEffect(() => {
     const loadStatus = async () => {
       setLoading(true);
-
+      dispatch(clearEntryScreen(null))
       try {
         // API 1
         const res1 = await post({ url: APP_URLS.RCEID });
@@ -72,7 +72,7 @@ const CmsScreen = () => {
     };
 
     loadStatus();
-  }, []);
+  }, [dispatch]);
 
   if (loading || status === null || (status === false && status2 === null)) {
     return <RadiantWellCome />;

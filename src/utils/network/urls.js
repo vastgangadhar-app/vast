@@ -352,8 +352,8 @@ export const APP_URLS = {
   RCETotalSalaryDetails: 'api/Radiant/RCETotalSalaryDetails',
   Pickupcalendars: 'api/Radiant/Pickupcalendars',
   RadiantPDFReport: 'api/Radiant/RadiantPDFReport?transid=',
-
-
+  Bankinfo: 'api/Radiant/Bankinfo',
+  CashDepositRequest: 'api/Radiant/CashDepositRequest'
 };
 
 

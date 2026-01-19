@@ -1,43 +1,53 @@
 import React from "react"
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import { hScale, wScale } from "../../utils/styles/dimensions"
-import { commonStyles } from "../../utils/styles/commonStyles"
 import BorderLine from "../../components/BorderLine"
 import { useSelector } from "react-redux"
 import { RootState } from "../../reduxUtils/store"
+type Props = {
+    onSelect: (type: string) => void
+}
+const OtheAddMOptions = ({ onSelect }: Props) => {
 
-const OtheAddMOptions = () => {
-    const {colorConfig}=useSelector((state:RootState)=>state.userInfo)
+
+    const { colorConfig } = useSelector((state: RootState) => state.userInfo)
     return (
-        <View style={[styles.main,{}]}>
+        <View style={[styles.main, {}]}>
 
             <View style={styles.container}>
-                <TouchableOpacity style={styles.btn} onPress={undefined}>
+                <TouchableOpacity style={styles.btn} onPress={() => onSelect('IMPS')}>
                     <Text style={styles.btnText}>
                         IMPS
                     </Text>
                 </TouchableOpacity>
                 <BorderLine style={{ backgroundColor: '#FFF' }} height={'100%'} width={wScale(.5)} />
-                <TouchableOpacity style={styles.btn} onPress={undefined}>
+                <TouchableOpacity style={styles.btn} onPress={() => onSelect('NEFT')}>
                     <Text style={styles.btnText}>
                         NEFT
                     </Text>
                 </TouchableOpacity>
                 <BorderLine style={{ backgroundColor: '#FFF' }} height={'100%'} width={wScale(.5)} />
-                <TouchableOpacity style={styles.btn} onPress={undefined}>
+                <TouchableOpacity style={styles.btn} onPress={() => onSelect('RTGS')}>
                     <Text style={styles.btnText}>
                         RTGS
                     </Text>
                 </TouchableOpacity>
                 <BorderLine style={{ backgroundColor: '#FFF' }} height={'100%'} width={wScale(.5)} />
-                <TouchableOpacity style={[styles.btn, { flex: 2 }]} onPress={undefined}>
+                <TouchableOpacity style={[styles.btn, styles.btnExtra]} onPress={() => onSelect('ATM Cash Deposit')}>
                     <Text style={styles.btnText}>
-                        Cash Deposit
+                        CDMA Deposit
+                    </Text>
+                </TouchableOpacity>
+                                <BorderLine style={{ backgroundColor: '#FFF' }} height={'100%'} width={wScale(.5)} />
+
+                <TouchableOpacity style={[styles.btn, styles.btnExtra]} onPress={() => onSelect('Branch Cash Deposit')}>
+                    <Text style={styles.btnText}>
+                        Branch Deposit
                     </Text>
                 </TouchableOpacity>
 
             </View>
-
+ 
         </View>
     )
 }
@@ -48,7 +58,7 @@ const styles = StyleSheet.create({
         paddingVertical: hScale(10),
         marginTop: hScale(10),
         borderRadius: 5,
-          },
+    },
     container: {
         paddingHorizontal: wScale(1),
         flexDirection: 'row',
@@ -61,9 +71,16 @@ const styles = StyleSheet.create({
         paddingVertical: hScale(4)
     },
     btnText: {
-        fontSize: wScale(18),
+        fontSize: wScale(15),
         color: '#fff',
-        fontWeight: '400'
+        fontWeight: '400',
+        textAlign: 'center',
+        textAlignVertical:'center'
+
+    },
+    btnExtra:{
+        width:'30%',
+        flex:0
     }
 })
 

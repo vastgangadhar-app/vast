@@ -27,9 +27,7 @@ export default function CmsQrAddMoney() {
 
 
   const dispatch = useDispatch();
-  // const handleNavigate = () => {
-  //   dispatch(setCmsAddMFrom("PageA"));
-  // }
+ 
 
 
   const fetchWalletData = async () => {

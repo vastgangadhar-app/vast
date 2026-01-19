@@ -24,10 +24,10 @@ import { APP_URLS } from '../../../utils/network/urls';
 import LocationModal from '../../../components/LocationModal';
 import CheckPickupstatusModel from '../../../components/CheckPickupstatusModel';
 import { useDispatch } from 'react-redux';
-import { log } from 'console';
+import { clear, log } from 'console';
 import AllBalance from '../../../components/AllBalance';
 import CmsQrAddMoney from './CmsQrAddMoney';
-import { setRadiantList } from '../../../reduxUtils/store/userInfoSlice';
+import { clearEntryScreen, setRadiantList } from '../../../reduxUtils/store/userInfoSlice';
 const CashPickup = () => {
   const { colorConfig, Loc_Data, cmsVerify, rctype } = useSelector((state: RootState) => state.userInfo);
   const color1 = `${colorConfig.secondaryColor}20`;
@@ -173,7 +173,7 @@ const CashPickup = () => {
         onPress={async () => {
 
 
-
+// dispatch(clearEntryScreen(null))
           console.log(item)
           await AsyncStorage.setItem('pickup_status', 'unverified');
 
