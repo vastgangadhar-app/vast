@@ -101,6 +101,31 @@ const CmsTab = () => {
             nav: 'CashPickup',
             img: <RadintPickupSvg color={svgColor} />,
         },
+        ...(rctype === 'PrePay'
+            ?
+            [
+                {
+                    id: '6',
+                    title: 'Cash Pickup Report',
+                    description:
+                        'Money is picked up by RCE from the customer point or dropped off by the customer and through whatever medium the money is given to the company, the complete credit debit report will be in this ledger.',
+
+                    nav: 'RadiantPrepayReport',
+                    img: <CmsLedgerSvg color={svgColor} />,
+                }]
+            : []
+        ),
+        ...(rctype === 'PostPay'
+            ?
+            [{
+                id: '4',
+                title: 'Cash Pickup Report',
+                description:
+                    'This report will give complete details of payment collection done by the RC from the customer location, whether the RCE has made the payment through digital slip or through physical slip.',
+                nav: 'CashPicUpReport',
+                img: <RadintDepositSvg color={svgColor} />,
+            }]
+            : []),
         {
             id: '2',
             title: 'Cash Pickup Calendar',
@@ -117,88 +142,77 @@ const CmsTab = () => {
             nav: 'CrePayout',
             img: <PayoutInfoSvg color={svgColor} />,
         },
+
         ...(rctype === 'PostPay'
             ?
             [{
-                id: '4',
-                title: 'Cash Pickup Report',
+
+                id: '5',
+                title: 'Pickup & Deposit Ledger',
                 description:
-                    'This report will give complete details of payment collection done by the RC from the customer location, whether the RCE has made the payment through digital slip or through physical slip.',
-                nav: 'CashPicUpReport',
-                img: <RadintDepositSvg color={svgColor} />,
+                    'Money is picked up by RCE from the customer point or dropped off by the customer and through whatever medium the money is given to the company, the complete credit debit report will be in this ledger.',
+
+                nav: 'RadiantLedger',
+                img: <CmsLedgerSvg color={svgColor} />,
             }]
             : []),
-        // {
-        //     id: '4',
-        //     title: 'Cash Pickup Report',
-        //     description:
-        //         'This report will give complete details of payment collection done by the RC from the customer location, whether the RCE has made the payment through digital slip or through physical slip.',
-        //     nav: 'CashPicUpReport',
-        //     img: <RadintDepositSvg color={svgColor} />,
-        // },
-        {
-            id: '5',
-            title: 'Pickup & Deposit Ledger',
-            description:
-                'Money is picked up by RCE from the customer point or dropped off by the customer and through whatever medium the money is given to the company, the complete credit debit report will be in this ledger.',
 
-            nav: 'RadiantLedger',
-            img: <CmsLedgerSvg color={svgColor} />,
-        },
-        ...(rctype === 'PrePay'
-            ?
-            [
-                {
-                    id: '6',
-                    title: 'Cash Pickup Prepay Report',
-                    description:
-                        'Money is picked up by RCE from the customer point or dropped off by the customer and through whatever medium the money is given to the company, the complete credit debit report will be in this ledger.',
-
-                    nav: 'RadiantPrepayReport',
-                    img: <CmsLedgerSvg color={svgColor} />,
-                }]
-            : []
-        ),
-        // {
-        //     id: '6',
-        //     title: 'Cash Pickup Prepay Report',
-        //     description:
-        //         'Money is picked up by RCE from the customer point or dropped off by the customer and through whatever medium the money is given to the company, the complete credit debit report will be in this ledger.',
-
-        //     nav: 'RadiantPrepayReport',
-        //     img: <CmsLedgerSvg color={svgColor} />,
-        // },
 
     ];
 
     const transactions2: TransactionItem[] = [
+        ...(rctype === 'PostPay'
+            ?
+            [{
+                id: '1',
+                title: "Pay picked & Due's Amount",
+                description:
+                    'Through this function, you will see a list of all payments to be transferred to the company, as per the uploaded pickup slip. All these payments can be made separately or together.',
+                nav: 'InprocessReportCms',
+                img: <RadintDeliverySvg color={svgColor} />,
+            },
+
+
+            {
+                id: '2',
+                title: 'Cash & Online Deposit Report',
+                description: 'In this report, the money deposited by RCE in the bank cash counter, the money deposited in the Cash Deposit Machine (CDM) and the money transferred by any other online mode can be seen in this report.',
+                nav: 'CashDepositReport',
+                img: <CmsOnlineSvg color={svgColor} />,
+            },
+            {
+                id: '3',
+                title: 'Transfer Report by Wallet',
+                description: 'The report of all the payments deposited through Main Wallet and POS Wallet is available here. Also, the report of live payments made through QR code, Intent UPI mode is also available here.',
+                nav: 'WalletTransferReport',
+                img: <MainWalletSvg color={svgColor} />,
+            },
+            ]
+            : []),
+
         {
-            id: '1',
-            title: "Pay picked & Due's Amount",
+            id: '4',
+            title: "Set Additional Pin Code",
             description:
-                'Through this function, you will see a list of all payments to be transferred to the company, as per the uploaded pickup slip. All these payments can be made separately or together.',
-            nav: 'InprocessReportCms',
-            img: <RadintDeliverySvg color={svgColor} />,
+                ' Your own Pin Code as per your documents is given above.If you can work in other Pin Code areas also, please add up to 4 Pin Codes by clicking on "ADD New ',
+
+            nav: 'CmsNewPin',
+            img: <CmsNewPinSvg color={svgColor} />,
         },
 
 
-        {
-            id: '2',
-            title: 'Cash & Online Deposit Report',
-            description: 'In this report, the money deposited by RCE in the bank cash counter, the money deposited in the Cash Deposit Machine (CDM) and the money transferred by any other online mode can be seen in this report.',
-            nav: 'CashDepositReport',
-            img: <CmsOnlineSvg color={svgColor} />,
-        },
-        {
-            id: '3',
-            title: 'Transfer Report by Wallet',
-            description: 'The report of all the payments deposited through Main Wallet and POS Wallet is available here. Also, the report of live payments made through QR code, Intent UPI mode is also available here.',
-            nav: 'WalletTransferReport',
-            img: <MainWalletSvg color={svgColor} />,
-        },
     ];
 
     const transactions3: TransactionItem[] = [
+        {
+            id: '5',
+            title: "Manual Add Money Report",
+            description:
+                ' Your own Pin Code as per your documents is given above.If you can work in other Pin Code areas also, please add up to 4 Pin Codes by clicking on "ADD New ',
+
+            nav: 'NewCashDepositReport',
+            img: <CmsNewPinSvg color={svgColor} />,
+        },
         {
             id: '1',
             title: 'Cash Deposit A/C List',
@@ -228,16 +242,7 @@ const CmsTab = () => {
             nav: 'CmsACList',
             img: <CmsCompanySvg color={svgColor} />,
         },
-        {
-            id: '4',
-            title: "Set Additional Pin Code",
-            description:
-                ' Your own Pin Code as per your documents is given above.If you can work in other Pin Code areas also, please add up to 4 Pin Codes by clicking on "ADD New ',
-
-            nav: 'CmsNewPin',
-            img: <CmsNewPinSvg color={svgColor} />,
-        },
-
+        
     ];
 
 
@@ -284,10 +289,11 @@ const CmsTab = () => {
     });
 
     const [index, setIndex] = useState(0);
+
     const [routes] = useState([
-        { key: 'cashPickup', title: 'Cash Pickup' },
-        { key: 'cashDeposit', title: 'Cash Deposit' },
-        { key: 'other', title: "Other's" },
+        { key: 'cashPickup', title: rctype === 'PrePay' ? 'Pickup & Payout' : 'Cash Pickup' },
+        { key: 'cashDeposit', title: rctype === 'PrePay' ? '+New business' : 'Cash Deposit' },
+        { key: 'other', title: rctype === 'PrePay' ? "Other's Info" : "Other's" },
     ]);
 
 
@@ -345,6 +351,7 @@ const CmsTab = () => {
                         style={{
                             backgroundColor: tabColor,
                             elevation: 0,
+                            width: '100%',
                         }}
                         labelStyle={styles.labelStyle}
                     />
@@ -400,6 +407,8 @@ const styles = StyleSheet.create({
         color: '#000',
         fontSize: wScale(14),
         fontWeight: '500',
+        width: '100%',
+
     },
 });
 

@@ -50,13 +50,13 @@ const ImageBottomSheet = ({
           <Text style={[styles.headerText]}>{`${modalTitle}`}</Text>
           {isUri && <TouchableOpacity onPress={ReUpload}>
             <LottieView
-                                         autoPlay={true}
-                                         loop={true}
-                                         style={styles.lotiimg}
-                                      //   source={require('../../utils/lottieIcons/upload-file.json')}
-           
-                                        source={require('../utils/lottieIcons/upload-file.json')}
-                                       />
+              autoPlay={true}
+              loop={true}
+              style={styles.lotiimg}
+              //   source={require('../../utils/lottieIcons/upload-file.json')}
+
+              source={require('../utils/lottieIcons/upload-file.json')}
+            />
           </TouchableOpacity>}
         </View>
         {isloading ? (
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
     flex: 1
-  },  lotiimg: {
+  }, lotiimg: {
     height: hScale(44),
     width: wScale(44),
   },

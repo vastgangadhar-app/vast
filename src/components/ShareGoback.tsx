@@ -6,6 +6,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { useSelector } from 'react-redux';
 import { RootState } from '../reduxUtils/store';
+import { useNavigation } from '../utils/navigation/NavigationService';
 
 const ShareGoback = ({
     onGoBack,
@@ -24,10 +25,14 @@ const ShareGoback = ({
     const { colorConfig } = useSelector((state: RootState) => state.userInfo);
     const color1 = `${colorConfig.primaryColor}20`;
     const finalBtnBgColor = btnBgColor || buttonBg || color1;
-
+    const navigation = useNavigation();
+ const handleHome = () => {
+    if (onHome) {
+      onHome();
+    } else { navigation.goBack(); }
+  };
     return (
         <View style={styles.container}>
-            {/* Go Back */}
             {onGoBack && (
                 <TouchableOpacity
                     style={[styles.goBack, { backgroundColor: finalBtnBgColor }]}
@@ -62,7 +67,7 @@ const ShareGoback = ({
             {onHome && (
                 <TouchableOpacity
                     style={[styles.button, { backgroundColor: finalBtnBgColor }]}
-                    onPress={onHome}
+                    onPress={handleHome}
                 >
                     <Icon name="home" size={wScale(30)} color={iconColor} />
                 </TouchableOpacity>

@@ -120,7 +120,7 @@ const CmsScreen = () => {
     {renderScreen()}
     {/* <CrePayout/> */}
     {/* <PickupSalaryCalendar/> */}
-    {/* <CmsShowPayoutStructure /> */}
+    {/* <AddMoneyPayResponse /> */}
   </View>;
 };
 

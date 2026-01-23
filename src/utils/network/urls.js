@@ -353,7 +353,8 @@ export const APP_URLS = {
   Pickupcalendars: 'api/Radiant/Pickupcalendars',
   RadiantPDFReport: 'api/Radiant/RadiantPDFReport?transid=',
   Bankinfo: 'api/Radiant/Bankinfo',
-  CashDepositRequest: 'api/Radiant/CashDepositRequest'
+  CashDepositRequest: 'api/Radiant/CashDepositRequest',
+  CashDepositReport: 'api/Radiant/CashDepositReport'
 };
 
 

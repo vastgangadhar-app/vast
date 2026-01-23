@@ -21,9 +21,9 @@ import OtheAddMOptions from './OtheAddMOptions';
 import { clearEntryScreen } from '../../reduxUtils/store/userInfoSlice';
 const { UpiNative } = NativeModules;
 const AddMoneyOptions = ({ route }) => {
-    
+
     const { colorConfig, IsDealer, Loc_Data, cmsAddMFrom } = useSelector((state: RootState) => state.userInfo);
-        console.log(cmsAddMFrom,'-==-==');
+    console.log(cmsAddMFrom, '-==-==');
 
     const color1 = `${colorConfig.secondaryColor}20`
     const { amount, jsonData, paymentMode, chargeType, from } = route.params;
@@ -850,6 +850,7 @@ const AddMoneyOptions = ({ route }) => {
         clearEntryScreen('')
         navigation.navigate("OtherPayMent", {
             paymentType: type,
+            addAmount: amount,
         });
 
     };
@@ -934,14 +935,14 @@ const AddMoneyOptions = ({ route }) => {
                             <FontAwesome6 name="chevron-right" size={22} color="#fff" />
                         )}
                     </TouchableOpacity>
-                   {(cmsAddMFrom === 'CmsPrePay' || cmsAddMFrom === 'PageA') && (
-  <>
-    <Text style={styles.otherTextS}>
-      Other Manual Payment Option's
-    </Text>
-    <OtheAddMOptions onSelect={handleOptionSelect} />
-  </>
-)}
+                    {(cmsAddMFrom === 'CmsPrePay' || cmsAddMFrom === 'PageA') && (
+                        <>
+                            <Text style={styles.otherTextS}>
+                                Other Manual Payment Option's
+                            </Text>
+                            <OtheAddMOptions onSelect={handleOptionSelect} />
+                        </>
+                    )}
                 </View>
 
 

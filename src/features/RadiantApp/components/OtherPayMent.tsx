@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert, FlatList, Platform, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Platform, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity, View } from "react-native";
 import { commonStyles } from "../../../utils/styles/commonStyles";
 import AppBarSecond from "../../drawer/headerAppbar/AppBarSecond";
 import FlotingInput from "../../drawer/securityPages/FlotingInput";
@@ -15,22 +15,34 @@ import DynamicButton from "../../drawer/button/DynamicButton";
 import { RootState } from "../../../reduxUtils/store";
 import { useSelector } from "react-redux";
 import DropdownInput from "../../../components/Dropdown/DropdownInput";
+import { useNavigation } from "../../../utils/navigation/NavigationService";
+import TransactionResultSheet from "../../../components/ReusableComponents/TransactionResultSheet";
+import { setCmsAddMFrom } from "../../../reduxUtils/store/userInfoSlice";
+import { useDispatch } from "react-redux";
+import { hScale, wScale } from "../../../utils/styles/dimensions";
+import ShowLoaderBtn from "../../../components/ShowLoaderBtn";
 
 const OtherPayMent = ({ route }) => {
-    const { paymentType } = route.params
+    const { colorConfig } = useSelector((state: RootState) => state.userInfo);
+    const { paymentType, addAmount } = route.params
     console.log(paymentType, 'ppppay');
     const [rePtype, setRePtype] = useState(paymentType)
-    const [amount, setAmount] = useState('')
+    const [amount, setAmount] = useState(addAmount)
     const [imagePath, setimagePath] = useState('')
     const { post } = useAxiosHook()
     const [isBankOpen, setIsBankOpen] = useState(false);
     const [bankList, setBankList] = useState([]);
     const [selectedBank, setSelectedBank] = useState<any>(null);
     const [slipNumber, setSlipNumber] = useState('')
+    const navigation = useNavigation();
+    const dispatch = useDispatch();
+    const [submitting, setSubmitting] = useState(false);
+
     useEffect(() => {
         fetchBank();
     }, [])
     const fetchBank = async () => {
+
         try {
             const response = await post({ url: `${APP_URLS.Bankinfo}` })
             console.log('Bank Info:', response);
@@ -65,13 +77,15 @@ const OtherPayMent = ({ route }) => {
 
         return null;
     };
-
     const fetchSubmit = async () => {
+        if (submitting) return; // 🔒 double click protection
+
         const errorMessage = validateForm();
         if (errorMessage) {
             showToast(errorMessage);
             return;
         }
+        setSubmitting(true); // ⏳ START loading
 
         try {
             const payload = {
@@ -81,9 +95,9 @@ const OtherPayMent = ({ route }) => {
                 AccountNo: selectedBank.accountnumber,
                 SlipID: slipNumber,
                 SlipName: currentPreviewImageRef.current,
-                // RetailerID: "",
-                Mode: paymentType,
+                Mode: rePtype,
             };
+
             console.log("📦 Request Body Payload:", payload);
 
             const response = await post({
@@ -92,11 +106,30 @@ const OtherPayMent = ({ route }) => {
             });
 
             console.log("Submit Response:", response);
-            showToast("Deposit submitted successfully");
+
+            if (response?.stsinfo === true) {
+                // Success message from API
+                showToast(response.message || "Deposit submitted successfully");
+
+                // 🔹 Clear inputs
+                setAmount("");
+                setSelectedBank(null);
+                setSlipNumber("");
+                setRePtype("");
+                // currentPreviewImageRef.current = null;
+                setCurrentPreviewImage('')
+                dispatch(setCmsAddMFrom("otherPayment"));
+                navigation.navigate('NewCashDepositReport');
+            } else {
+                // ❌ Failure message
+                showToast(response?.message || "Something went wrong, please try again");
+            }
 
         } catch (error) {
             console.error("Submit Error:", error);
             showToast("Submission failed");
+        } finally {
+            setSubmitting(false); // ✅ STOP loading (success / fail dono me)
         }
     };
 
@@ -150,15 +183,16 @@ const OtherPayMent = ({ route }) => {
     ];
     return (
         <View style={[commonStyles.screenContainer, styles.main]}>
-            <AppBarSecond title={'Manual Deposit'} />
+            <AppBarSecond title={'CMS Manual Deposit'} />
+            <View style={[styles.amoutView, { backgroundColor: colorConfig.secondaryColor + 20 }]}>
+                <Text style={styles.amoutText}>
+                    ₹ {amount}
+                </Text>
+                <Text style={styles.amoutshortText}>
+                    Added Amount
+                </Text>
+            </View>
             <View style={commonStyles.contentContainer}>
-                {/* <TouchableOpacity >
-                    <FlotingInput
-                        label="Payment Mode"
-                        value={paymentType}
-                        editable={false}
-                    />
-                </TouchableOpacity> */}
 
                 <DropdownInput
                     label="Payment Mode"
@@ -179,16 +213,14 @@ const OtherPayMent = ({ route }) => {
                 </TouchableOpacity>
 
 
-
-                <FlotingInput label={'Enter Amount'} value={amount}
-                    onChangeTextCallback={(text) => { setAmount(text) }}
-                    keyboardType="numeric"
-                />
-
                 <FlotingInput
-                    label={paymentType === 'IMPS' ? 'Enter Bank RRN Number' : 'Enter Slip Number'}
+                    label={rePtype === 'IMPS' ? 'Enter Bank RRN Number' : 'Enter Slip Number'}
                     value={slipNumber}
-                    onChangeTextCallback={(text) => { setSlipNumber(text) }} />
+                    onChangeTextCallback={(text) => { setSlipNumber(text) }}
+                    inputstyle={{
+                        textTransform: 'uppercase'
+                    }}
+                />
                 <TouchableOpacity
                     onPress={() => {
                         if (imagePath) {
@@ -203,7 +235,6 @@ const OtherPayMent = ({ route }) => {
                         <FlotingInput label={'Upload Slip'} editable={false} />
                         <View style={commonStyles.righticon2}>
 
-
                             <LottieView
                                 autoPlay
                                 loop
@@ -216,9 +247,14 @@ const OtherPayMent = ({ route }) => {
                             />
                         </View>
                     </View>
-                    <DynamicButton title={'submit'} onPress={fetchSubmit} />
+                                    </TouchableOpacity>
 
-                </TouchableOpacity>
+                    <DynamicButton title={submitting ? <ShowLoaderBtn size={'large'}/> : 'Submit'}
+                        onPress={fetchSubmit}
+                         disabled={submitting}
+                    />
+
+
                 <ImagePreviewModal
                     visible={previewVisible}
                     imageUri={currentPreviewImageRef.current}
@@ -241,6 +277,8 @@ const OtherPayMent = ({ route }) => {
                 />
 
             </View>
+
+
         </View>
     )
 }
@@ -257,5 +295,24 @@ const styles = StyleSheet.create({
     },
     InputStyle: {
         backgroundColor: "#CFF4E0"
+    },
+    amoutView: {
+        paddingVertical: hScale(5),
+        alignItems: 'center',
+        borderBottomRightRadius: 10,
+        borderBottomLeftRadius: 10
+    },
+    amoutText: {
+        fontSize: wScale(30),
+        fontWeight: 'bold',
+        color: '#000',
+        marginTop: hScale(-5)
+    },
+    amoutshortText: {
+        fontSize: wScale(16),
+        fontWeight: '',
+        alignSelf: 'center',
+        color: '#000',
+        marginTop: hScale(-6)
     }
 })

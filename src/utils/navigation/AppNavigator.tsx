@@ -188,6 +188,7 @@ import CrePayout from '../../features/RadiantApp/CmsSalarySheet/CrePayout';
 import CmsShowPayoutStructure from '../../features/RadiantApp/RadiantNewClient/CmsShowPayoutStructure';
 import PrepaySlipSummary from '../../features/History/CmsReport/PrepaySlipSummary';
 import OtherPayMent from '../../features/RadiantApp/components/OtherPayMent';
+import NewCashDepositReport from '../../features/RadiantApp/CmsReport/NewCashDepositReport copy';
 
 const Stack = createNativeStackNavigator();
 
@@ -1067,6 +1068,11 @@ export const AppNavigator = () => {
    <Stack.Screen
         name="OtherPayMent"
         component={OtherPayMent}
+        options={{ headerShown: false }}
+      />
+       <Stack.Screen
+        name="NewCashDepositReport"
+        component={NewCashDepositReport}
         options={{ headerShown: false }}
       />
 

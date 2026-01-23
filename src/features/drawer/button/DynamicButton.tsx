@@ -4,38 +4,55 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../reduxUtils/store';
 import { hScale, wScale } from '../../../utils/styles/dimensions';
-import { ALERT_TYPE, AlertNotificationRoot, Dialog } from 'react-native-alert-notification';
 
-const DynamicButton = ({ title, onPress, styleoveride }) => {
+type Props = {
+  title: string;
+  onPress: () => void;
+  styleoveride?: any;
+  disabled?: boolean; // ✅ NEW (optional)
+};
+
+const DynamicButton = ({
+  title,
+  onPress,
+  styleoveride,
+  disabled = false, // ✅ default
+}: Props) => {
   const { colorConfig } = useSelector((state: RootState) => state.userInfo);
 
   const handlePress = () => {
-
+    if (disabled) return; // 🔒 safety
     onPress();
   };
 
   return (
-    <View>
-
       <LinearGradient
         style={[styles.LinearGradient, styleoveride]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
-        colors={[colorConfig.primaryButtonColor, colorConfig.secondaryButtonColor]}>
-        <TouchableOpacity onPress={handlePress} style={[styles.subnitbtn]}>
-          <Text style={[styles.submittext, { color: colorConfig.labelColor }]}>
+        colors={
+           [colorConfig.primaryButtonColor, colorConfig.secondaryButtonColor]
+        }
+      >
+        <TouchableOpacity
+          // activeOpacity={disabled ? 1 : 0.7}
+          onPress={handlePress}
+          disabled={disabled}
+          style={styles.subnitbtn}
+        >
+          <Text
+            style={[
+              styles.submittext,
+              { color: colorConfig.labelColor },
+            ]}
+          >
             {title}
           </Text>
         </TouchableOpacity>
       </LinearGradient>
-      <AlertNotificationRoot>
-
-      </AlertNotificationRoot>
-
-
-    </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   subnitbtn: {

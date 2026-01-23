@@ -53,10 +53,10 @@ const DropdownInput: React.FC<Props> = ({
 
                     <View style={styles.container}>
                         <TouchableOpacity style={[styles.header, { backgroundColor: `${colorConfig.secondaryColor}33` }]}>
-                            <Text style={styles.title}>Select Your Bank</Text>
+                            <Text style={styles.title}>Select Your Payment Mode</Text>
                             <TouchableOpacity onPress={() => setVisible(false)}
                             >
-                                <ClosseModalSvg2 />
+                                <ClosseModalSvg2 size={35}/>
                             </TouchableOpacity>
                         </TouchableOpacity>
                         <FlatList

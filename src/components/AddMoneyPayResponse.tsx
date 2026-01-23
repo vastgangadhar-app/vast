@@ -107,16 +107,7 @@ export default function AddMoneyPayResponse() {
     return () => clearTimeout(timer);
   }, [status, cmsAddMFrom, radiantList]);
 
-  // const onPressGoBack = () => {
-  //   if (status === "success") {
-  //     if (cmsAddMFrom === "PageA") navigation.navigate("CashPickup");
-  //     else if (cmsAddMFrom === "CmsPrePay") navigation.navigate("CmsPrePay", { item: radiantList }, dispatch(setCmsAddMFrom("AddMoneyPayResponse")));
-  //     else navigation.navigate("DashboardScreen");
-  //     dispatch(clearEntryScreen(null));
-  //   } else {
-  //     navigation.goBack();
-  //   }
-  // };
+ 
 const onPressGoBack = () => {
   if (status === "success") {
 

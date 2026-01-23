@@ -9,6 +9,8 @@ import { BottomSheet } from "@rneui/themed";
 import { FlashList } from "@shopify/flash-list";
 import { SCREEN_HEIGHT, hScale, wScale } from "../utils/styles/dimensions";
 import ClosseModalSvg2 from "../features/drawer/svgimgcomponents/ClosseModal2";
+import { useSelector } from "react-redux";
+import { RootState } from "../reduxUtils/store";
 
 type BankItem = {
     idno: number;
@@ -20,7 +22,6 @@ type Props = {
     onClose: () => void;
     data: BankItem[];
     onSelect: (item: BankItem) => void;
-    headerColor?: string;
 };
 
 const BankListModal = ({
@@ -28,17 +29,18 @@ const BankListModal = ({
     onClose,
     data,
     onSelect,
-    headerColor = "#f2f2f2",
+    
 }: Props) => {
+const {colorConfig} = useSelector((status:RootState)=>status.userInfo)
     return (
         <BottomSheet isVisible={visible}>
             <View style={styles.container}>
                 
                 {/* Header */}
-                <View style={[styles.header, { backgroundColor: headerColor }]}>
+                <View style={[styles.header, { backgroundColor:`${colorConfig.secondaryColor}20`}]}>
                     <Text style={styles.title}>Select Your Bank</Text>
                     <TouchableOpacity onPress={onClose}>
-                        <ClosseModalSvg2 />
+                        <ClosseModalSvg2 size={35}/>
                     </TouchableOpacity>
                 </View>
 
@@ -75,9 +77,10 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: wScale(12),
+        paddingVertical: wScale(5),
         borderTopLeftRadius: hScale(15),
         borderTopRightRadius: hScale(15),
+        paddingHorizontal:wScale(10)
     },
     title: {
         fontSize: wScale(20),

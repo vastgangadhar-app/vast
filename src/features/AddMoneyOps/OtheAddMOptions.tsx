@@ -33,9 +33,9 @@ const OtheAddMOptions = ({ onSelect }: Props) => {
                     </Text>
                 </TouchableOpacity>
                 <BorderLine style={{ backgroundColor: '#FFF' }} height={'100%'} width={wScale(.5)} />
-                <TouchableOpacity style={[styles.btn, styles.btnExtra]} onPress={() => onSelect('ATM Cash Deposit')}>
+                <TouchableOpacity style={[styles.btn, ]} onPress={() => onSelect('ATM Cash Deposit')}>
                     <Text style={styles.btnText}>
-                        CDMA Deposit
+                        CDMA
                     </Text>
                 </TouchableOpacity>
                                 <BorderLine style={{ backgroundColor: '#FFF' }} height={'100%'} width={wScale(.5)} />
@@ -75,11 +75,12 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: '400',
         textAlign: 'center',
-        textAlignVertical:'center'
+        textAlignVertical:'center',
+        textTransform:'uppercase'
 
     },
     btnExtra:{
-        width:'30%',
+        width:'38%',
         flex:0
     }
 })

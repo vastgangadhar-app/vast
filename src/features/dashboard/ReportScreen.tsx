@@ -275,8 +275,8 @@ case 'Cash Pickup Prepay Report':
     'POS Wallet',
     'Wallet Unload',
     'Cash Pikup',
-    'FINO CMS',
-    'Airtel Report',
+    // 'FINO CMS',
+    // 'Airtel Report',
     // 'AEPS Charges'
     'Cms Wallet Transfer',
     'Cash Pickup Prepay Report',

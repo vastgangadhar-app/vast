@@ -5,6 +5,7 @@ import { hScale, wScale } from "./dimensions";
 export const commonStyles = StyleSheet.create({
     screenContainer: {
         flex: 1,
+        backgroundColor: "#fff",
     },
     contentContainer: {
         flex: 1,
