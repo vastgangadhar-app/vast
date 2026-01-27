@@ -354,7 +354,14 @@ export const APP_URLS = {
   RadiantPDFReport: 'api/Radiant/RadiantPDFReport?transid=',
   Bankinfo: 'api/Radiant/Bankinfo',
   CashDepositRequest: 'api/Radiant/CashDepositRequest',
-  CashDepositReport: 'api/Radiant/CashDepositReport'
+  CashDepositReport: 'api/Radiant/CashDepositReport',
+  Stateinfo: 'api/Radiant/Stateinfo',
+  Districtinfo: 'api/Radiant/Districtinfo',
+  Clientinfo: 'api/Radiant/Clientinfo',
+  Pickupoption: 'api/Radiant/Pickupoption',
+  DepositMode: 'api/Radiant/DepositMode',
+  LoiListReport: 'api/Radiant/LoiListReport',
+  InsertLOIList: 'api/Radiant/InsertLOIList',
 };
 
 

@@ -188,7 +188,8 @@ import CrePayout from '../../features/RadiantApp/CmsSalarySheet/CrePayout';
 import CmsShowPayoutStructure from '../../features/RadiantApp/RadiantNewClient/CmsShowPayoutStructure';
 import PrepaySlipSummary from '../../features/History/CmsReport/PrepaySlipSummary';
 import OtherPayMent from '../../features/RadiantApp/components/OtherPayMent';
-import NewCashDepositReport from '../../features/RadiantApp/CmsReport/NewCashDepositReport copy';
+import ReferredCusPoints from '../../features/RadiantApp/components/ReferredCusPoints';
+import NewCashDepositReport from '../../features/RadiantApp/CmsReport/NewCashDepositReport';
 
 const Stack = createNativeStackNavigator();
 
@@ -1060,19 +1061,24 @@ export const AppNavigator = () => {
         component={CmsShowPayoutStructure}
         options={{ headerShown: false }}
       />
-   <Stack.Screen
+      <Stack.Screen
         name="PrepaySlipSummary"
         component={PrepaySlipSummary}
         options={{ headerShown: false }}
       />
-   <Stack.Screen
+      <Stack.Screen
         name="OtherPayMent"
         component={OtherPayMent}
         options={{ headerShown: false }}
       />
-       <Stack.Screen
+      <Stack.Screen
         name="NewCashDepositReport"
         component={NewCashDepositReport}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ReferredCusPoints"
+        component={ReferredCusPoints}
         options={{ headerShown: false }}
       />
 

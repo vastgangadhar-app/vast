@@ -32,6 +32,8 @@ import { APP_URLS } from '../../utils/network/urls';
 import CmsNewPinSvg from '../drawer/svgimgcomponents/CmsNewPinSvg';
 import PickupCalendarSvg from '../drawer/svgimgcomponents/PickupCalendarSvg';
 import PayoutInfoSvg from '../drawer/svgimgcomponents/PayoutInfoSvg';
+import CmsReferredPointsSvg from '../drawer/svgimgcomponents/CmsReferredPointsSvg';
+import CashDepositReportSvg from '../drawer/svgimgcomponents/CashDepositReportSvg';
 
 
 const CmsTab = () => {
@@ -105,8 +107,8 @@ const CmsTab = () => {
             ?
             [
                 {
-                    id: '6',
-                    title: 'Cash Pickup Report',
+                    id: '2',
+                    title: 'RCE Cash Pickup Report',
                     description:
                         'Money is picked up by RCE from the customer point or dropped off by the customer and through whatever medium the money is given to the company, the complete credit debit report will be in this ledger.',
 
@@ -118,8 +120,8 @@ const CmsTab = () => {
         ...(rctype === 'PostPay'
             ?
             [{
-                id: '4',
-                title: 'Cash Pickup Report',
+                id: '3',
+                title: 'RCE Cash Pickup Report',
                 description:
                     'This report will give complete details of payment collection done by the RC from the customer location, whether the RCE has made the payment through digital slip or through physical slip.',
                 nav: 'CashPicUpReport',
@@ -127,15 +129,15 @@ const CmsTab = () => {
             }]
             : []),
         {
-            id: '2',
-            title: 'Cash Pickup Calendar',
+            id: '4',
+            title: 'RCE Cash Pickup calendar   ',
             description:
                 'The pickup calendar shows your activity every day. Your salary is calculated based on the number of working days. Your attendance and zero collection reports are also displayed.',
             nav: 'PickupSalaryCalendar',
             img: <PickupCalendarSvg color={svgColor} />,
         },
         {
-            id: '3',
+            id: '5',
             title: 'RCE Payout Information',
             description:
                 'Payout and payout structure (Calculation Method) are available. Payout amount is determined based on the number of working days, leave taken, penalties, cash deposit charges and travel allowance.',
@@ -147,7 +149,7 @@ const CmsTab = () => {
             ?
             [{
 
-                id: '5',
+                id: '6',
                 title: 'Pickup & Deposit Ledger',
                 description:
                     'Money is picked up by RCE from the customer point or dropped off by the customer and through whatever medium the money is given to the company, the complete credit debit report will be in this ledger.',
@@ -173,13 +175,14 @@ const CmsTab = () => {
             },
 
 
-            {
+            ...(rctype === 'PostPay' ? [{
                 id: '2',
                 title: 'Cash & Online Deposit Report',
                 description: 'In this report, the money deposited by RCE in the bank cash counter, the money deposited in the Cash Deposit Machine (CDM) and the money transferred by any other online mode can be seen in this report.',
                 nav: 'CashDepositReport',
                 img: <CmsOnlineSvg color={svgColor} />,
-            },
+            },] : []),
+
             {
                 id: '3',
                 title: 'Transfer Report by Wallet',
@@ -194,10 +197,20 @@ const CmsTab = () => {
             id: '4',
             title: "Set Additional Pin Code",
             description:
-                ' Your own Pin Code as per your documents is given above.If you can work in other Pin Code areas also, please add up to 4 Pin Codes by clicking on "ADD New ',
+                'Your own Pin Code as per your documents is given above.If you can work in other Pin Code areas also, please add up to 4 Pin Codes by clicking on "ADD New ',
 
             nav: 'CmsNewPin',
             img: <CmsNewPinSvg color={svgColor} />,
+        },
+
+        {
+            id: '5',
+            title: "My Referred Customer Points",
+            description:
+                'You can contact other customer points in your area and offer them your services. Fill out the customer point details form. The company will verify them and onboard them for you.',
+
+            nav: 'ReferredCusPoints',
+            img: <CmsReferredPointsSvg color={svgColor} />,
         },
 
 
@@ -205,16 +218,16 @@ const CmsTab = () => {
 
     const transactions3: TransactionItem[] = [
         {
-            id: '5',
+            id: '1',
             title: "Manual Add Money Report",
             description:
-                ' Your own Pin Code as per your documents is given above.If you can work in other Pin Code areas also, please add up to 4 Pin Codes by clicking on "ADD New ',
+                'Add funds to your CMS wallet manually through NEFT, RTGS, IMPS transfer, Cash deposit at CDMA machines, Cash deposits at branches, and by manually generating purchase order request.',
 
             nav: 'NewCashDepositReport',
-            img: <CmsNewPinSvg color={svgColor} />,
+            img: <CashDepositReportSvg color={svgColor} />,
         },
         {
-            id: '1',
+            id: '2',
             title: 'Cash Deposit A/C List',
             description:
                 'Through this function we are sharing with you the list of Radiant Cash Management Services Limited bank accounts and QR Codes in which you can Deposit Cash, Online Transfer and QR Code Scan.',
@@ -224,7 +237,7 @@ const CmsTab = () => {
         },
 
         {
-            id: '2',
+            id: '3',
             title: 'Deposit Slip for CMS',
             description:
                 'Some banks require a separate deposit slip to deposit money. All the slips required for these banks can be downloaded from here and you can use them by taking a print out (Print Slip)of them.',
@@ -234,7 +247,7 @@ const CmsTab = () => {
         },
 
         {
-            id: '3',
+            id: '4',
             title: "Company Doc's for Deposit",
             description:
                 'To deposit cash in banks, some important documents of the company may be required, such as PAN Card, which is required in most banks. Some banks may also ask for additional documents, download documents from here.',
@@ -242,7 +255,7 @@ const CmsTab = () => {
             nav: 'CmsACList',
             img: <CmsCompanySvg color={svgColor} />,
         },
-        
+
     ];
 
 
@@ -390,7 +403,8 @@ const styles = StyleSheet.create({
         color: '#000',
         fontSize: wScale(16),
         fontWeight: 'bold',
-        width: '120%'
+        width: '120%',
+        textTransform:'capitalize',
     },
     inveiw: {
         flex: 1,

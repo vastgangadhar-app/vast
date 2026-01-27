@@ -74,7 +74,7 @@ const StatusCalendar = ({ onSearch }) => {
                     <TouchableOpacity style={styles.datePickerButton} onPress={onFromDatePress}>
                         <Calendarsvg color="#fff" />
                         <View style={{ paddingLeft: wScale(5) }}>
-                            <Text style={styles.buttonText}>From</Text>
+                            <Text style={styles.buttonText}>From Date</Text>
                             <Text style={styles.dateText}>{fromDate}</Text>
                         </View>
                     </TouchableOpacity>
@@ -82,7 +82,7 @@ const StatusCalendar = ({ onSearch }) => {
                     <TouchableOpacity style={styles.datePickerButton} onPress={onToDatePress}>
                         <Calendarsvg color="#fff" />
                         <View style={{ paddingLeft: wScale(5) }}>
-                            <Text style={styles.buttonText}>To Date</Text>
+                            <Text style={styles.buttonText}>To   Date</Text>
                             <Text style={styles.dateText}>{toDate}</Text>
                         </View>
                     </TouchableOpacity>
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     },
     dateText: {
         color: '#fff',
-        fontSize: wScale(12),
+        fontSize: wScale(14),
     },
     searchButton: {
         borderRadius: 5,
